@@ -37,4 +37,4 @@ yarn-error.log*
 .vercel
 
 #used files
-._*
+_*
