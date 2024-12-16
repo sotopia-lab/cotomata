@@ -1,0 +1,163 @@
+import React, { useState } from 'react';
+import { Socket } from 'socket.io-client';
+import CodeMirror from '@uiw/react-codemirror';
+import { javascript } from '@codemirror/lang-javascript';
+import { html } from '@codemirror/lang-html';
+import { css } from '@codemirror/lang-css';
+import { python } from '@codemirror/lang-python';
+import { githubDark } from '@uiw/codemirror-theme-github';
+import { EditorView } from '@codemirror/view';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { X, Save, FileCode } from 'lucide-react';
+import { cn } from "@/lib/utils";
+
+interface OpenFile {
+  path: string;
+  content: string;
+}
+
+interface CodeEditorProps {
+  openFiles: OpenFile[];
+  activeFile?: string;
+  onFileClose: (path: string) => void;
+  onFileSelect: (path: string) => void;
+  onChange: (path: string, content: string) => void;
+  socket: Socket | null;
+}
+
+const getFileLanguage = (filename: string) => {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'js':
+      return [javascript({ jsx: true })];
+    case 'html':
+      return [html()];
+    case 'css':
+      return [css()];
+    case 'py':
+      return [python()];
+    default:
+      return [javascript()];
+  }
+};
+
+const getFileName = (path: string) => path.split('/').pop() || path;
+
+export const CodeEditor = ({
+  openFiles,
+  activeFile,
+  socket,
+  onFileClose,
+  onFileSelect,
+  onChange,
+}: CodeEditorProps) => {
+  const [unsavedChanges, setUnsavedChanges] = useState<{ [key: string]: boolean }>({});
+  const activeFileContent = openFiles.find(f => f.path === activeFile)?.content;
+
+  const handleSave = () => {
+    if (activeFile && activeFileContent) {
+      socket && socket.emit('save_file', { path: activeFile, content: activeFileContent });
+      setUnsavedChanges(prev => ({ ...prev, [activeFile]: false }));
+    }
+  };
+
+  const handleChange = (value: string) => {
+    if (activeFile) {
+      onChange(activeFile, value);
+      setUnsavedChanges(prev => ({ ...prev, [activeFile]: true }));
+    }
+  };
+
+  return (
+    <Card className="flex h-full w-full flex-col overflow-hidden rounded-none border-none bg-background">
+      <CardHeader className="border-b px-0 py-0">
+        <ScrollArea className="w-full">
+          <div className="flex min-w-max gap-1 px-2">
+            {openFiles.map((file) => (
+              <Button
+                key={file.path}
+                variant={file.path === activeFile ? "secondary" : "ghost"}
+                className={cn(
+                  "group relative h-9 rounded-none border-b-2 px-4",
+                  file.path === activeFile
+                    ? "border-primary"
+                    : "border-transparent"
+                )}
+                onClick={() => onFileSelect(file.path)}
+              >
+                <FileCode className="mr-2 h-4 w-4" />
+                <span className="max-w-[150px] truncate">
+                  {unsavedChanges[file.path] ? `• ${getFileName(file.path)}` : getFileName(file.path)}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFileClose(file.path);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="border-b px-2 py-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1"
+            onClick={handleSave}
+          >
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 p-0">
+        {activeFile && (
+          <CodeMirror
+            value={activeFileContent || ''}
+            height="100%"
+            theme={githubDark}
+            extensions={[
+              ...getFileLanguage(activeFile),
+              EditorView.lineWrapping,
+            ]}
+            onChange={handleChange}
+            className="h-full"
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLineGutter: true,
+              highlightSpecialChars: true,
+              foldGutter: true,
+              drawSelection: true,
+              dropCursor: true,
+              allowMultipleSelections: true,
+              indentOnInput: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              autocompletion: true,
+              rectangularSelection: true,
+              crosshairCursor: true,
+              highlightActiveLine: true,
+              highlightSelectionMatches: true,
+              closeBracketsKeymap: true,
+              defaultKeymap: true,
+              searchKeymap: true,
+              historyKeymap: true,
+              foldKeymap: true,
+              completionKeymap: true,
+              lintKeymap: true
+            }}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+};
