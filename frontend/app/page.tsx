@@ -41,6 +41,7 @@ import { CodeEditor } from '@/components/code-editor';
 import { ChatInterface } from '@/components/chat-interface';
 import { Terminal } from '@/components/terminal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 type PanelOption = 'fileSystem' | 'sceneContext';
 
@@ -105,27 +106,32 @@ export default function App() {
         />
       </div>
       <div className="flex-1 h-screen flex flex-col">
-      <div className="flex-1 overflow-hidden"> {/* Removed w-full */}
-        <Tabs defaultValue="editor" className="h-full flex flex-col">
-          <TabsList className='mx-2 mt-2'>
-            <TabsTrigger value="editor">Editor</TabsTrigger>
-            <TabsTrigger value="browser">Browser</TabsTrigger>
-          </TabsList>
-          <TabsContent value="editor" className='flex-1 min-h-0 overflow-hidden'>
-            <CodeEditor
-              openFiles={openFiles}
-              activeFile={activeFile}
-              onFileClose={handleFileClose}
-              onFileSelect={setActiveFile}
-              onChange={handleFileChange}
-              socket={socket}
-            />
-          </TabsContent>
-          <TabsContent value="browser" className='flex-1'>
-          </TabsContent>
-        </Tabs>
-        </div>
-        <Terminal externalMessages={terminalMessages} socket={socket}/>
+        <ResizablePanelGroup direction='vertical'>
+          <ResizablePanel defaultSize={75}>
+            <Tabs defaultValue="editor" className="h-full flex flex-col">
+              <TabsList className='mx-2 mt-2'>
+                <TabsTrigger value="editor">Editor</TabsTrigger>
+                <TabsTrigger value="browser">Browser</TabsTrigger>
+              </TabsList>
+              <TabsContent value="editor" className='flex-1 min-h-0 overflow-hidden'>
+                <CodeEditor
+                  openFiles={openFiles}
+                  activeFile={activeFile}
+                  onFileClose={handleFileClose}
+                  onFileSelect={setActiveFile}
+                  onChange={handleFileChange}
+                  socket={socket}
+                />
+              </TabsContent>
+              <TabsContent value="browser" className='flex-1'>
+              </TabsContent>
+            </Tabs>
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={25}>
+            <Terminal externalMessages={terminalMessages} socket={socket}/>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
       <div className="w-64 border-l">
         <ChatInterface
