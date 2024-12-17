@@ -92,17 +92,22 @@ export const Browser: React.FC<BrowserProps> = ({ url }) => {
         <ScrollArea className="w-full">
           <div className="flex min-w-max gap-1">
             {openTabs.map((tab, index) => (
-              <Button
+              <div
                 key={tab.path}
-                variant={index === activeTab ? "secondary" : "ghost"}
-                className="group relative h-9 rounded-none px-4"
-                onClick={() => handleTabSelect(index)}
+                className="group relative flex h-9 items-center rounded-none"
               >
-                <span className="max-w-[150px] truncate">{tab.path}</span>
+                <Button
+                  variant={index === activeTab ? "secondary" : "ghost"}
+                  className="h-full w-full justify-start rounded-none px-4"
+                  onClick={() => handleTabSelect(index)}
+                >
+                  <span className="max-w-[150px] truncate">{tab.path}</span>
+                </Button>
+                
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
+                  className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleTabClose(index);
@@ -110,7 +115,7 @@ export const Browser: React.FC<BrowserProps> = ({ url }) => {
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              </Button>
+              </div>
             ))}
           </div>
         </ScrollArea>
