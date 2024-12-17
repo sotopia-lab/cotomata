@@ -78,25 +78,30 @@ export const CodeEditor = ({
         <ScrollArea className="w-full">
           <div className="flex min-w-max gap-1 px-2">
             {openFiles.map((file) => (
-              <Button
+              <div
                 key={file.path}
-                variant={file.path === activeFile ? "secondary" : "ghost"}
-                className={cn(
-                  "group relative h-9 rounded-none border-b-2 px-4",
-                  file.path === activeFile
-                    ? "border-primary"
-                    : "border-transparent"
-                )}
-                onClick={() => onFileSelect(file.path)}
+                className="group relative flex h-9 items-center rounded-none"
               >
-                <FileCode className="mr-2 h-4 w-4" />
-                <span className="max-w-[150px] truncate">
-                  {unsavedChanges[file.path] ? `• ${getFileName(file.path)}` : getFileName(file.path)}
-                </span>
+                <Button
+                  variant={file.path === activeFile ? "secondary" : "ghost"}
+                  className={cn(
+                    "h-full w-full justify-start rounded-none border-b-2 px-4",
+                    file.path === activeFile
+                      ? "border-primary"
+                      : "border-transparent"
+                  )}
+                  onClick={() => onFileSelect(file.path)}
+                >
+                  <FileCode className="mr-2 h-4 w-4" />
+                  <span className="max-w-[150px] truncate">
+                    {unsavedChanges[file.path] ? `• ${getFileName(file.path)}` : getFileName(file.path)}
+                  </span>
+                </Button>
+                
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
+                  className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     onFileClose(file.path);
@@ -104,7 +109,7 @@ export const CodeEditor = ({
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              </Button>
+              </div>
             ))}
           </div>
         </ScrollArea>
