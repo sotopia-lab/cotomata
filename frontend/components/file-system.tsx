@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react';
 import { Socket } from 'socket.io-client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

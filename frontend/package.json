@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "bun server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "BUN_ENV=production bun server.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -29,6 +29,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-resizable-panels": "^2.1.7",
+    "react-markdown": "^9.0.1",
+    "redis": "^4.7.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.5.5",

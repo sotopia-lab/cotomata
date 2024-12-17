@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from 'react';
 import { Socket } from 'socket.io-client';
 import CodeMirror from '@uiw/react-codemirror';
@@ -119,43 +121,45 @@ export const CodeEditor = ({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 p-0">
+      <CardContent className="flex-1 overflow-hidden p-0">
         {activeFile && (
-          <CodeMirror
-            value={activeFileContent || ''}
-            height="100%"
-            theme={githubDark}
-            extensions={[
-              ...getFileLanguage(activeFile),
-              EditorView.lineWrapping,
-            ]}
-            onChange={handleChange}
-            className="h-full"
-            basicSetup={{
-              lineNumbers: true,
-              highlightActiveLineGutter: true,
-              highlightSpecialChars: true,
-              foldGutter: true,
-              drawSelection: true,
-              dropCursor: true,
-              allowMultipleSelections: true,
-              indentOnInput: true,
-              bracketMatching: true,
-              closeBrackets: true,
-              autocompletion: true,
-              rectangularSelection: true,
-              crosshairCursor: true,
-              highlightActiveLine: true,
-              highlightSelectionMatches: true,
-              closeBracketsKeymap: true,
-              defaultKeymap: true,
-              searchKeymap: true,
-              historyKeymap: true,
-              foldKeymap: true,
-              completionKeymap: true,
-              lintKeymap: true
-            }}
-          />
+          <div className="h-full overflow-auto">
+            <CodeMirror
+              value={activeFileContent || ''}
+              height="100%"
+              theme={githubDark}
+              extensions={[
+                ...getFileLanguage(activeFile),
+                EditorView.lineWrapping,
+              ]}
+              onChange={handleChange}
+              className="h-full"
+              basicSetup={{
+                lineNumbers: true,
+                highlightActiveLineGutter: true,
+                highlightSpecialChars: true,
+                foldGutter: true,
+                drawSelection: true,
+                dropCursor: true,
+                allowMultipleSelections: true,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: true,
+                rectangularSelection: true,
+                crosshairCursor: true,
+                highlightActiveLine: true,
+                highlightSelectionMatches: true,
+                closeBracketsKeymap: true,
+                defaultKeymap: true,
+                searchKeymap: true,
+                historyKeymap: true,
+                foldKeymap: true,
+                completionKeymap: true,
+                lintKeymap: true
+              }}
+            />
+          </div>
         )}
       </CardContent>
     </Card>

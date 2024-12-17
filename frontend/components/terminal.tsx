@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +44,7 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
   useEffect(() => {
     if (!initializedRef.current) {
       socket && socket.emit('terminal_command', 'whoami && hostname && pwd');
-      socket && socket.emit('terminal_command', "echo '**FILE_SYSTEM_REFRESH**' && find /workspace -type f");
+      socket && socket.emit('terminal_command', "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
       initializedRef.current = true;
     }
   }, [socket]);
@@ -146,7 +148,10 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
   };
 
   return (
-    <Card className="flex h-[33vh] flex-col rounded-none border-t bg-black">
+    <Card className={cn(
+      "flex flex-col rounded-none border-t bg-black", 
+      "h-full" // Use full parent height
+    )}>
       <CardHeader className="border-b border-border/50 px-4 py-2 space-y-0">
         <div className="flex items-center gap-2">
           <TerminalIcon className="h-4 w-4 text-muted-foreground" />
@@ -156,9 +161,9 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col flex-1 p-0 font-mono">
-        <ScrollArea ref={historyRef} className="flex-1">
-          <div className="p-4 space-y-2">
+      <CardContent className="flex flex-col flex-1 overflow-hidden p-0 font-mono">
+        <ScrollArea ref={historyRef} className="flex-1 overflow-y-auto">
+          <div className="p-4 space-y-2 min-h-full">
             {history.map((entry, index) => (
               <div key={index} className="space-y-1">
                 {entry.command && (
