@@ -30,6 +30,9 @@ kubernetes-deployment.yaml
 .env.development.local
 .env.test.local
 .env.production.local
+.venv/
+.env
+logs/
 
 npm-debug.log*
 yarn-debug.log*
