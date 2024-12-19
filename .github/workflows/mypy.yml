@@ -1,0 +1,23 @@
+name: Type Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          
+      - name: Run MyPy Check
+        run: |
+          cd backend
+          uv pip install mypy
+          uv run mypy .

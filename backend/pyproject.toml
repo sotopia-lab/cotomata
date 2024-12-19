@@ -17,3 +17,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+package-data = {"interview_case" = ["py.typed"]}
+
+[tool.mypy]
+strict = true
+plugins = [
+    "pydantic.mypy",
+    "pydantic.v1.mypy"
+]

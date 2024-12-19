@@ -1,9 +1,10 @@
 import logging
 import os
 import re
-from typing import TypeVar, Any, cast
+from typing import TypeVar, Any, cast, Callable, TypeAlias, ParamSpec
+from typing_extensions import TypeGuard
 
-import gin
+import gin  # type: ignore[import-untyped]
 from beartype import beartype
 from beartype.typing import Type
 from openai import OpenAI
@@ -63,6 +64,15 @@ LLM_Name = Literal[
 DEFAULT_BAD_OUTPUT_PROCESS_MODEL = "gpt-4o-mini"
 
 OutputType = TypeVar("OutputType", bound=object)
+
+DecoratedCallable = TypeVar("DecoratedCallable", bound=Callable[..., Any])
+P = ParamSpec("P")
+T = TypeVar("T")
+
+def gin_configurable(f: Callable[P, T]) -> Callable[P, T]:
+    """Type-annotated wrapper for gin.configurable"""
+    decorated = gin.configurable(f)
+    return cast(Callable[P, T], decorated)
 
 
 class EnvResponse(BaseModel):
@@ -291,7 +301,7 @@ def _return_fixed_model_version(model_name: str) -> str:
         return model_name
 
 
-@gin.configurable
+@gin_configurable
 @beartype
 def obtain_chain(
     model_name: str,
@@ -460,7 +470,7 @@ def format_bad_output(
     return reformat
 
 
-@gin.configurable
+@gin_configurable
 @beartype
 async def agenerate(
     model_name: str,
@@ -549,7 +559,7 @@ async def agenerate(
     return parsed_result
 
 
-@gin.configurable
+@gin_configurable
 @beartype
 async def agenerate_env_profile(
     model_name: str,
@@ -562,7 +572,7 @@ async def agenerate_env_profile(
     """
     Using langchain to generate the background
     """
-    return await agenerate(
+    result = await agenerate(
         model_name=model_name,
         template="""Please generate scenarios and goals based on the examples below as well as the inspirational prompt, when creating the goals, try to find one point that both sides may not agree upon initially and need to collaboratively resolve it.
         Examples:
@@ -580,6 +590,7 @@ async def agenerate_env_profile(
         bad_output_process_model=bad_output_process_model,
         use_fixed_model_version=use_fixed_model_version,
     )
+    return cast(tuple[EnvironmentProfile, str], result)
 
 
 @beartype
@@ -593,7 +604,7 @@ async def agenerate_relationship_profile(
     Using langchain to generate the background
     """
     agent_profile = "\n".join(agents_profiles)
-    return await agenerate(
+    result = await agenerate(
         model_name=model_name,
         template="""Please generate relationship between two agents based on the agents' profiles below. Note that you generate
         {agent_profile}
@@ -607,9 +618,10 @@ async def agenerate_relationship_profile(
         bad_output_process_model=bad_output_process_model,
         use_fixed_model_version=use_fixed_model_version,
     )
+    return cast(tuple[RelationshipProfile, str], result)
 
 
-@gin.configurable
+@gin_configurable
 @beartype
 async def agenerate_action(
     model_name: str,
@@ -660,7 +672,7 @@ async def agenerate_action(
                 Your action should follow the given format:
                 {format_instructions}
             """
-        return await agenerate(
+        result = await agenerate(
             model_name=model_name,
             template=template,
             input_values=dict(
@@ -674,11 +686,12 @@ async def agenerate_action(
             bad_output_process_model=bad_output_process_model,
             use_fixed_model_version=use_fixed_model_version,
         )
+        return cast(AgentAction, result)
     except Exception:
         return AgentAction(action_type="none", argument="")
 
 
-@gin.configurable
+@gin_configurable
 @beartype
 async def agenerate_script(
     model_name: str,
@@ -699,7 +712,7 @@ async def agenerate_script(
     """
     try:
         if single_step:
-            return await agenerate(
+            result = await agenerate(
                 model_name=model_name,
                 template="""Now you are a famous playwright, your task is to continue writing one turn for agent {agent} under a given background and history to help {agent} reach social goal. Please continue the script based on the previous turns. You can only generate one turn at a time.
 
@@ -717,7 +730,7 @@ async def agenerate_script(
                     history=history,
                     agent=agent_name,
                 ),
-                output_parser=ScriptOutputParser(  # type: ignore[arg-type]
+                output_parser=ScriptOutputParser(
                     agent_names=agent_names,
                     background=background.to_natural_language(),
                     single_turn=True,
@@ -726,9 +739,8 @@ async def agenerate_script(
                 bad_output_process_model=bad_output_process_model,
                 use_fixed_model_version=use_fixed_model_version,
             )
-
         else:
-            return await agenerate(
+            result = await agenerate(
                 model_name=model_name,
                 template="""
                 Please write the script between two characters based on their social goals with a maximum of 20 turns.
@@ -741,7 +753,7 @@ async def agenerate_script(
                 input_values=dict(
                     background=background.to_natural_language(),
                 ),
-                output_parser=ScriptOutputParser(  # type: ignore[arg-type]
+                output_parser=ScriptOutputParser(
                     agent_names=agent_names,
                     background=background.to_natural_language(),
                     single_turn=False,
@@ -750,6 +762,7 @@ async def agenerate_script(
                 bad_output_process_model=bad_output_process_model,
                 use_fixed_model_version=use_fixed_model_version,
             )
+        return cast(tuple[ScriptInteractionReturnType, str], result)
     except Exception as e:
         # TODO raise(e) # Maybe we do not want to return anything?
         print(f"Exception in agenerate {e}")
@@ -786,7 +799,7 @@ async def agenerate_init_profile(
     """
     Using langchain to generate the background
     """
-    return await agenerate(
+    result = await agenerate(
         model_name=model_name,
         template="""Please expand a fictional background for {name}. Here is the basic information:
             {name}'s age: {age}
@@ -819,6 +832,7 @@ async def agenerate_init_profile(
         bad_output_process_model=bad_output_process_model,
         use_fixed_model_version=use_fixed_model_version,
     )
+    return result
 
 
 @beartype
@@ -830,7 +844,7 @@ async def convert_narratives(
     use_fixed_model_version: bool = True,
 ) -> str:
     if narrative == "first":
-        return await agenerate(
+        result = await agenerate(
             model_name=model_name,
             template="""Please convert the following text into a first-person narrative.
             e.g, replace name, he, she, him, her, his, and hers with I, me, my, and mine.
@@ -841,7 +855,7 @@ async def convert_narratives(
             use_fixed_model_version=use_fixed_model_version,
         )
     elif narrative == "second":
-        return await agenerate(
+        result = await agenerate(
             model_name=model_name,
             template="""Please convert the following text into a second-person narrative.
             e.g, replace name, he, she, him, her, his, and hers with you, your, and yours.
@@ -853,6 +867,7 @@ async def convert_narratives(
         )
     else:
         raise ValueError(f"Narrative {narrative} is not supported.")
+    return result
 
 
 @beartype
@@ -865,7 +880,7 @@ async def agenerate_goal(
     """
     Using langchain to generate the background
     """
-    return await agenerate(
+    result = await agenerate(
         model_name=model_name,
         template="""Please generate your goal based on the background:
             {background}
@@ -875,3 +890,4 @@ async def agenerate_goal(
         bad_output_process_model=bad_output_process_model,
         use_fixed_model_version=use_fixed_model_version,
     )
+    return result
