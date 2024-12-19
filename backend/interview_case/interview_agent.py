@@ -10,9 +10,8 @@ from aact import Message, NodeFactory
 from aact.messages import Text, Tick, DataModel
 from aact.messages.registry import DataModelFactory
 
-from .base_agent import BaseAgent
-
-from .generate import agenerate
+from .base_agent import BaseAgent  # type: ignore[import-untyped]
+from .generate import agenerate # type: ignore[import-untyped]
 from .generate import StrOutputParser
 
 import json
@@ -85,7 +84,7 @@ class AgentAction(DataModel):
 
 
 @NodeFactory.register("llm_agent")
-class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]):
+class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignore[misc]
     def __init__(
         self,
         input_text_channels: list[str],
@@ -303,6 +302,15 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]):
     async def aact(self, message: AgentAction | Tick | Text) -> AgentAction:
         match message:
             case Text(text=text):
+                if "BrowserOutputObservation" in text:
+                    self.message_history.append(
+                        (
+                            self.name,
+                            "observation data",
+                            "BrowserOutputObservation received.",
+                        )
+                    )
+                    text = text.split("BrowserOutputObservation", 1)[1][:100]
                 self.message_history.append((self.name, "observation data", text))
                 return AgentAction(
                     agent_name=self.name, action_type="none", argument="", path=""

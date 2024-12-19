@@ -15,5 +15,16 @@ dependencies = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project.optional-dependencies]
+test = ["mypy"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+package-data = {"interview_case" = ["py.typed"]}
+
+[tool.mypy]
+strict = true
+plugins = [
+    "pydantic.mypy",
+    "pydantic.v1.mypy"
+]
