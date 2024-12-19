@@ -36,3 +36,8 @@ jobs:
       run: |
         cd backend
         uv run mypy --strict .
+
+    - name: Type-checking with ruff
+      run: |
+        cd backend
+        uv run ruff check .
