@@ -9,15 +9,30 @@ on:
 jobs:
   mypy:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
       
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          
-      - name: Run MyPy Check
-        run: |
-          cd backend
-          uv pip install mypy
-          uv run mypy .
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        python -m pip install uv
+        uv sync --extra test
+        
+    - name: Type-checking with mypy
+      run: |
+        cd backend
+        uv run mypy --strict .
