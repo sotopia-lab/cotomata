@@ -1,8 +1,7 @@
 import logging
 import os
 import re
-from typing import TypeVar, Any, cast, Callable, TypeAlias, ParamSpec
-from typing_extensions import TypeGuard
+from typing import TypeVar, Any, cast, Callable, ParamSpec
 
 import gin  # type: ignore[import-untyped]
 from beartype import beartype
