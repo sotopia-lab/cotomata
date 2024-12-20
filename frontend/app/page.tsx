@@ -88,7 +88,6 @@ export default function App() {
       transports: ['websocket'],
       reconnection: true
     });
-    console.log('socket build', socketInstance)
 
     // Log connection status
     socketInstance.on('connect', () => {
@@ -127,8 +126,6 @@ export default function App() {
     const handleNewMessage = (data: any) => {
       try {
         // Parse the incoming message data
-        console.log('handle nw')
-        console.log('in handle new message', data);
         const messageData = JSON.parse(data.message);
 
         // Log the entire messageData for debugging

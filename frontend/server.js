@@ -1,6 +1,3 @@
-//server.js
-"use client";
-
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
@@ -35,9 +32,8 @@ app.prepare().then(async () => {
   // Redis subscriber setup
   const subscriber = redisClient.duplicate();
   await subscriber.connect();
-  console.log('Redis subscriber connected');
 
-  await subscriber.subscribe(allowedChannels, async (message, channel) => {
+  await subscriber.subscribe(allowedChannels, (message, channel) => {
     console.log(`Received message from ${channel}: ${message}`);
     io.emit('new_message', { channel, message });
   });
