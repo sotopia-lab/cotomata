@@ -1,3 +1,6 @@
+//server.js
+"use client";
+
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
@@ -32,8 +35,9 @@ app.prepare().then(async () => {
   // Redis subscriber setup
   const subscriber = redisClient.duplicate();
   await subscriber.connect();
+  console.log('Redis subscriber connected');
 
-  await subscriber.subscribe(allowedChannels, (message, channel) => {
+  await subscriber.subscribe(allowedChannels, async (message, channel) => {
     console.log(`Received message from ${channel}: ${message}`);
     io.emit('new_message', { channel, message });
   });
@@ -102,6 +106,26 @@ app.prepare().then(async () => {
             }
           })
         });
+      }
+    });
+
+    // Handle process initialization
+    socket.on('init_process', async () => {
+      try {
+        const response = await fetch('http://localhost:5000/run-dataflow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to initialize process: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        socket.emit('init_process_result', result);
+        console.log('openhands connected')
+      } catch (err) {
+        console.error('Error initializing process:', err);
       }
     });
 

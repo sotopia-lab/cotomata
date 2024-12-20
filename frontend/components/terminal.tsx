@@ -43,6 +43,7 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
 
   useEffect(() => {
     if (!initializedRef.current) {
+      console.log("here", socket);
       socket && socket.emit('terminal_command', 'whoami && hostname && pwd');
       socket && socket.emit('terminal_command', "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
       initializedRef.current = true;

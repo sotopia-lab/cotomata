@@ -48,15 +48,17 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 
 type PanelOption = 'fileSystem' | 'sceneContext';
 
-async function runPythonCommand() {
-  const response = await fetch('/api/run-agent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ command: 'print("Hello, Python!")' }),
-  });
-  const result = await response.json();
-  console.log(result);
-}
+// need for run-dataflow post req 
+ 
+// async function runPythonCommand() {
+//   const response = await fetch('/api/run-agent', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({ command: 'print("Hello, Python!")' }),
+//   });
+//   const result = await response.json();
+//   console.log(result);
+// }
 
 export default function App() {
   const {
@@ -86,17 +88,29 @@ export default function App() {
       transports: ['websocket'],
       reconnection: true
     });
+    console.log('socket build', socketInstance)
 
     // Log connection status
     socketInstance.on('connect', () => {
       console.log('Connected to server with ID:', socketInstance.id);
-      runPythonCommand();
+      // runPythonCommand();
     });
+    console.log('socket connect', socketInstance)
 
     // Log connection errors
     socketInstance.on('connect_error', (error) => {
       console.error('Connection error:', error);
     });
+
+    socketInstance.emit('init_process');
+    socketInstance.on('init_process_result', (result) => {
+      if (result.status === 'error') {
+        console.error('Process initialization failed:', result.error);
+      } else {
+        console.log('Process started successfully');
+      }
+    });
+
 
     setSocket(socketInstance);
 
@@ -113,6 +127,8 @@ export default function App() {
     const handleNewMessage = (data: any) => {
       try {
         // Parse the incoming message data
+        console.log('handle nw')
+        console.log('in handle new message', data);
         const messageData = JSON.parse(data.message);
 
         // Log the entire messageData for debugging
