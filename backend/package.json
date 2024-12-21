@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "bun src/server.js",
+    "start": "node src/server.js",
     "dev": "bun --watch src/server.js"
   },
   "dependencies": {

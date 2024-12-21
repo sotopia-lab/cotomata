@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
+import config from '@/config';
 
 interface LoadingContextType {
   isReady: boolean;
@@ -28,7 +29,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     const initialize = async () => {
       try {
         console.log('Creating socket instance...');
-        socketInstance = io('http://localhost:8000', {
+        socketInstance = io(config.backendUrl, {
           transports: ['websocket'],
           reconnection: true,
           autoConnect: true

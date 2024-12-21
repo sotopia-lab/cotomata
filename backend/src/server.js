@@ -4,7 +4,7 @@ import { createServer } from 'http';
 
 // Redis client configuration
 const redisClient = createClient({
-  url: 'redis://localhost:6379/0'
+  url: process.env.REDIS_URL || 'redis://localhost:6379/0'
 });
 
 // Allowed channels for Redis pub/sub 
@@ -16,7 +16,9 @@ redisClient.on('error', (err) => {
 });
 
 const init = async () => {
+  console.log('Connecting to Redis...');
   await redisClient.connect();
+  console.log('Redis connected!');
 
   // Create HTTP server
   const httpServer = createServer((req, res) => {
@@ -28,14 +30,26 @@ const init = async () => {
   // Initialize Socket.IO server with CORS
   const io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:3000",
-      methods: ["GET", "POST"]
-    }
+      origin: [
+        "http://localhost:3000",
+        "https://sotopia-lab--cotomata-frontend.modal.run"
+      ],
+      methods: ["GET", "POST"],
+      credentials: true,
+      transports: ['websocket', 'polling']
+    },
+    allowEIO3: true,
+    path: '/socket.io',
+    serveClient: false,
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
 
   // Redis subscriber setup
+  console.log('Setting up Redis subscriber...');
   const subscriber = redisClient.duplicate();
   await subscriber.connect();
+  console.log('Redis subscriber connected!');
 
   await subscriber.subscribe(allowedChannels, (message, channel) => {
     console.log(`Received message from ${channel}: ${message}`);
@@ -44,7 +58,7 @@ const init = async () => {
 
   // Socket.IO connection handling
   io.on('connection', (socket) => {
-    console.log('A user connected');
+    console.log('A user connected:', socket.id);
 
     socket.on('chat_message', async (message) => {
       console.log('Received chat message:', message);
@@ -149,14 +163,14 @@ const init = async () => {
     });
 
     socket.on('disconnect', () => {
-      console.log('A user disconnected');
+      console.log('A user disconnected:', socket.id);
     });
   });
 
   // Start the server
   const port = process.env.PORT || 8000;
-  httpServer.listen(port, () => {
-    console.log(`> Backend server ready on http://localhost:${port}`);
+  httpServer.listen(port, '0.0.0.0', () => {
+    console.log(`> Backend server ready on http://0.0.0.0:${port}`);
   });
 };
 
