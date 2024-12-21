@@ -15,30 +15,8 @@
 //  */
 
 import React from 'react';
-import { Cog, FolderOpen } from 'lucide-react'; // Import the file icon
-
-// Define the props for the Sidebar component
-interface SidebarProps {
-    onSelect: (option: 'fileSystem' | 'sceneContext') => void; // Callback for selecting a panel
-}
-
-// // Main Sidebar component definition
-// export const Sidebar: React.FC<SidebarProps> = ({ onSelect }) => {
-//   return (
-//     <div className="sidebar">
-//       {/* Button to select the file system panel */}
-//       <button className="sidebar-button" onClick={() => onSelect('fileSystem')}>
-//         <FolderOpen size={24} /> {/* Icon for file system */}
-//       </button>
-//       {/* Button to select the scene context panel */}
-//       <button className="sidebar-button" onClick={() => onSelect('sceneContext')}>
-//         <Cog size={24} /> {/* Icon for scene context */}
-//       </button>
-//       {/* Add more icons as needed */}
-//     </div>
-//   );
-// };
-
+import { Cog, FolderOpen, Home, RefreshCcw } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   Sidebar,
@@ -65,11 +43,10 @@ const items = [
   },
 ]
 
-
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -86,6 +63,19 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* Refresh button at the bottom */}
+        <div className="mt-auto mb-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/" className="flex items-center justify-center gap-2">
+                  <RefreshCcw />
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   )
