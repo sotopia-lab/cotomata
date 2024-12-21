@@ -112,7 +112,7 @@ app.prepare().then(async () => {
           node_name: "openhands_node",
           input_channels: ["Agent:Runtime"],
           output_channels: ["Runtime:Agent"],
-          modal_session_id: "session_" + Date.now() // Generate unique session ID
+          modal_session_id: "arpan"
         };
 
         const response = await fetch('http://localhost:5000/initialize', {

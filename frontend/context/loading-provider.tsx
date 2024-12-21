@@ -23,34 +23,35 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    let initTimeout: NodeJS.Timeout;
     let socketInstance: Socket;
 
     const initialize = async () => {
       try {
+        console.log('Creating socket instance...');
         socketInstance = io('http://localhost:3000', {
           transports: ['websocket'],
           reconnection: true,
+          autoConnect: true
         });
 
-        initTimeout = setTimeout(() => {
-          setError('Initialization timed out after 5 minutes');
-          socketInstance?.disconnect();
-        }, 5 * 60 * 1000);
+        // Log all incoming events for debugging
+        socketInstance.onAny((eventName, ...args) => {
+          console.log(`[Socket Event] ${eventName}:`, args);
+        });
 
         socketInstance.on('connect', () => {
-          console.log('Connected to server with ID:', socketInstance.id);
-          socketInstance.emit('init_process');
+          console.log('Socket connected with ID:', socketInstance.id);
+          setSocket(socketInstance);
         });
 
         socketInstance.on('connect_error', (error) => {
+          console.error('Socket connection error:', error);
           setError(`Connection failed: ${error.message}`);
         });
 
         socketInstance.on('init_process_result', (result) => {
-          clearTimeout(initTimeout);
+          console.log('Received init_process_result:', result);
           if (result.success) {
-            setSocket(socketInstance);
             setIsReady(true);
           } else {
             setError(result.error || 'Failed to initialize OpenHands');
@@ -58,6 +59,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
           }
         });
       } catch (err) {
+        console.error('Socket initialization error:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       }
     };
@@ -65,7 +67,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     initialize();
 
     return () => {
-      clearTimeout(initTimeout);
+      console.log('Cleaning up socket connection...');
       socketInstance?.disconnect();
     };
   }, []);
