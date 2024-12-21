@@ -108,20 +108,38 @@ app.prepare().then(async () => {
     // Handle process initialization
     socket.on('init_process', async () => {
       try {
-        const response = await fetch('http://localhost:5000/run-dataflow', {
+        const initParams = {
+          node_name: "openhands_node",
+          input_channels: ["Agent:Runtime"],
+          output_channels: ["Runtime:Agent"],
+          modal_session_id: "session_" + Date.now() // Generate unique session ID
+        };
+
+        const response = await fetch('http://localhost:5000/initialize', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(initParams)
         });
         
         if (!response.ok) {
-          throw new Error(`Failed to initialize process: ${response.statusText}`);
+          const errorData = await response.json();
+          throw new Error(`Failed to initialize process: ${errorData.error || response.statusText}`);
         }
         
         const result = await response.json();
-        socket.emit('init_process_result', result);
-        console.log('openhands connected')
+        
+        if (result.status === 'initialized') {
+          socket.emit('init_process_result', { success: true });
+          console.log('OpenHands initialized successfully');
+        } else {
+          throw new Error(`Unexpected initialization status: ${result.status}`);
+        }
       } catch (err) {
         console.error('Error initializing process:', err);
+        socket.emit('init_process_result', { 
+          success: false, 
+          error: err.message 
+        });
       }
     });
 
