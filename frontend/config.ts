@@ -1,6 +1,7 @@
 const config = {
-  // Always connect to local backend for now
-  backendUrl: 'ws://localhost:8000',
+  backendUrl: process.env.NODE_ENV === 'production' 
+    ? 'wss://sotopia-lab--cotomata-backend.modal.run'  // Modal backend URL
+    : 'ws://localhost:8000',  // Local development
   basePath: process.env.NODE_ENV === 'production' ? '' : ''
 }
 

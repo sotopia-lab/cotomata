@@ -1,0 +1,34 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Install dependencies
+      run: poetry install
+
+    - name: Run type checks
+      run: poetry run mypy aact_openhands/
+
+    - name: Start Flask server and run tests
+      run: |
+        chmod +x aact_openhands/run_tests.sh
+        ./aact_openhands/run_tests.sh

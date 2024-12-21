@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "aact_openhands"
+version = "0.0.5"
+description = "Openhands integrated with aact"
+authors = ["Arpandeep Khatua <arpandeepk@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+keywords = []
+packages = [
+    { include = "aact_openhands" },
+    { include = "openhands", from = "openhands" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+aact = "*"
+rich = ">=13.6.0,<14.0.0"
+python-dotenv = "^1.0.0"
+flask = "^3.0.0"
+flask-cors = "^4.0.0"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.0.0"
+ruff = "^0.0.262"
+types-requests = "^2.32.0.20241016"
+
+[build-system]
+requires = ["poetry-core >= 1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120

@@ -134,8 +134,8 @@ const init = async () => {
           modal_session_id: "arpan"
         };
 
-        const response = await fetch('http://localhost:5000/initialize', {
-          method: 'POST',
+        const response = await fetch('http://0.0.0.0:5001/initialize', {  // Changed from localhost to 0.0.0.0
+            method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(initParams)
         });
