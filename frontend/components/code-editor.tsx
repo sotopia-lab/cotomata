@@ -75,54 +75,57 @@ export const CodeEditor = ({
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden rounded-none border-none bg-background">
       <CardHeader className="border-b px-0 py-0">
-        <ScrollArea className="w-full">
-          <div className="flex min-w-max gap-1 px-2">
-            {openFiles.map((file) => (
-              <div
-                key={file.path}
-                className="group relative flex h-9 items-center rounded-none"
-              >
-                <Button
-                  variant={file.path === activeFile ? "secondary" : "ghost"}
-                  className={cn(
-                    "h-full w-full justify-start rounded-none border-b-2 px-4",
-                    file.path === activeFile
-                      ? "border-primary"
-                      : "border-transparent"
-                  )}
-                  onClick={() => onFileSelect(file.path)}
+        <div className="flex items-center w-full justify-between">
+          <ScrollArea className="flex-1">
+            <div className="flex min-w-max gap-1 px-2">
+              {openFiles.map((file) => (
+                <div
+                  key={file.path}
+                  className="group relative flex h-9 items-center rounded-none"
                 >
-                  <FileCode className="mr-2 h-4 w-4" />
-                  <span className="max-w-[150px] truncate">
-                    {unsavedChanges[file.path] ? `• ${getFileName(file.path)}` : getFileName(file.path)}
-                  </span>
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onFileClose(file.path);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    variant={file.path === activeFile ? "secondary" : "ghost"}
+                    className={cn(
+                      "h-full w-full justify-start rounded-none border-b-2 px-4",
+                      file.path === activeFile
+                        ? "border-primary"
+                        : "border-transparent"
+                    )}
+                    onClick={() => onFileSelect(file.path)}
+                  >
+                    <FileCode className="mr-2 h-4 w-4" />
+                    <span className="max-w-[150px] truncate">
+                      {unsavedChanges[file.path] ? `• ${getFileName(file.path)}` : getFileName(file.path)}
+                    </span>
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onFileClose(file.path);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <div className="flex-none">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 px-3 flex items-center gap-2 min-w-[80px] border-l border-border"
+              onClick={handleSave}
+            >
+              <Save className="h-4 w-4" />
+              Save
+            </Button>
           </div>
-        </ScrollArea>
-        <div className="border-b px-2 py-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1"
-            onClick={handleSave}
-          >
-            <Save className="h-4 w-4" />
-            Save
-          </Button>
         </div>
       </CardHeader>
 
