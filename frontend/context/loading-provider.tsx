@@ -28,7 +28,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     const initialize = async () => {
       try {
         console.log('Creating socket instance...');
-        socketInstance = io('http://localhost:3000', {
+        socketInstance = io('http://localhost:8000', {
           transports: ['websocket'],
           reconnection: true,
           autoConnect: true

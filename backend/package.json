@@ -1,0 +1,17 @@
+{
+  "name": "cotomata-backend",
+  "version": "1.0.0",
+  "description": "Backend server for Cotomata",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.js",
+    "dev": "bun --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "redis": "^4.6.12",
+    "socket.io": "^4.8.1"
+  }
+} 

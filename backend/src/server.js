@@ -1,11 +1,6 @@
-import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
-import next from 'next';
-
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
-const handle = app.getRequestHandler();
+import { createServer } from 'http';
 
 // Redis client configuration
 const redisClient = createClient({
@@ -15,19 +10,28 @@ const redisClient = createClient({
 // Allowed channels for Redis pub/sub 
 const allowedChannels = ['Scene:Jack', 'Scene:Jane', 'Human:Jack', 'Jack:Human', 'Agent:Runtime', 'Runtime:Agent'];
 
-app.prepare().then(async () => {
-  // Connect Redis client
-  redisClient.on('error', (err) => {
-    console.error('Redis error:', err);
-  });
+// Connect Redis client
+redisClient.on('error', (err) => {
+  console.error('Redis error:', err);
+});
+
+const init = async () => {
   await redisClient.connect();
 
   // Create HTTP server
-  const server = createServer((req, res) => {
-    handle(req, res);
+  const httpServer = createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.writeHead(200);
+    res.end('Socket.IO server running');
   });
-  // Initialize Socket.IO server
-  const io = new Server(server);
+
+  // Initialize Socket.IO server with CORS
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:3000",
+      methods: ["GET", "POST"]
+    }
+  });
 
   // Redis subscriber setup
   const subscriber = redisClient.duplicate();
@@ -107,6 +111,7 @@ app.prepare().then(async () => {
 
     // Handle process initialization
     socket.on('init_process', async () => {
+      console.log('Received init_process request');
       try {
         const initParams = {
           node_name: "openhands_node",
@@ -149,11 +154,10 @@ app.prepare().then(async () => {
   });
 
   // Start the server
-  const port = process.env.PORT || 3000;
-  server.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`> Ready on http://localhost:3000`);
+  const port = process.env.PORT || 8000;
+  httpServer.listen(port, () => {
+    console.log(`> Backend server ready on http://localhost:${port}`);
   });
-});
+};
 
-export default app;
+init().catch(console.error); 
