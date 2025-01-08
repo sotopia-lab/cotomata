@@ -4,7 +4,7 @@
 
 1. Clone and set up the AACT-OpenHands repository:
 ```bash
-git clone https://github.com/sotopia-lab/aact-openhands.git
+git clone https://github.com/akhatua2/aact-openhands
 cd aact-openhands
 ```
 
