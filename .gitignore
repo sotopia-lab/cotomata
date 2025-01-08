@@ -75,3 +75,4 @@ package-lock.json
 yarn.lock
 bun.lockb
 uv.lock
+.codegpt
