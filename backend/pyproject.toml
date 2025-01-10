@@ -10,11 +10,13 @@ dependencies = [
     "python-dotenv",
     "aact",
     "flask==3.0.0",
-    "toml==0.10.2"
+    "toml==0.10.2",
+    "types-toml==0.10.8.7"
 ]
 
 [project.scripts]
 start-api = "interview_case.app:main"
+run-interview = "interview_case.app:run_interview"
 
 [build-system]
 requires = ["hatchling"]

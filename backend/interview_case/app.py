@@ -1,15 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import toml
 import subprocess
 import os
-from pathlib import Path
-import tempfile
 import sys
+from typing import Union, Tuple
 
 app = Flask(__name__)
 
 @app.route('/init-agents', methods=['POST'])
-def init_agents():
+def init_agents() -> Union[Response, Tuple[Response, int]]:
     try:
         data = request.get_json()
         if not data:
@@ -73,7 +72,7 @@ def init_agents():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def run_interview():
+def run_interview() -> int:
     """Run the interview directly using the default TOML configuration"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     toml_path = os.path.join(current_dir, 'interview.toml')
@@ -90,7 +89,7 @@ def run_interview():
         print(f"Error: {e.stderr}", file=sys.stderr)
         return 1
 
-def main():
+def main() -> None:
     """Entry point for the application script"""
     app.run(host='0.0.0.0', port=9000)
 

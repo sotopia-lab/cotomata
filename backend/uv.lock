@@ -351,6 +351,7 @@ dependencies = [
     { name = "rich" },
     { name = "sotopia" },
     { name = "toml" },
+    { name = "types-toml" },
 ]
 
 [package.optional-dependencies]
@@ -370,6 +371,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'test'" },
     { name = "sotopia", specifier = ">=0.1.2" },
     { name = "toml", specifier = "==0.10.2" },
+    { name = "types-toml", specifier = "==0.10.8.7" },
 ]
 
 [[package]]
@@ -1825,6 +1827,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c2/d2/15ede73bc3faf647af2c7bfefa90dde563a4b6bb580b1199f6255463c272/types_setuptools-75.6.0.20241126.tar.gz", hash = "sha256:7bf25ad4be39740e469f9268b6beddda6e088891fa5a27e985c6ce68bf62ace0", size = 48569 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/a0/898a1363592d372d4103b76b7c723d84fcbde5fa4ed0c3a29102805ed7db/types_setuptools-75.6.0.20241126-py3-none-any.whl", hash = "sha256:aaae310a0e27033c1da8457d4d26ac673b0c8a0de7272d6d4708e263f2ea3b9b", size = 72732 },
+]
+
+[[package]]
+name = "types-toml"
+version = "0.10.8.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/c3/290afb9e9263d6639fa60ac25d9c26fef86ea207fa9862a5a07afb6f2639/types-toml-0.10.8.7.tar.gz", hash = "sha256:58b0781c681e671ff0b5c0319309910689f4ab40e8a2431e205d70c94bb6efb1", size = 4222 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/0e/caa95b3a1ea0f9625c4dc980bfb0a1686529c6fbfa222fffc77c52918464/types_toml-0.10.8.7-py3-none-any.whl", hash = "sha256:61951da6ad410794c97bec035d59376ce1cbf4453dc9b6f90477e81e4442d631", size = 4610 },
 ]
 
 [[package]]
