@@ -10,6 +10,8 @@ cd aact-openhands
 
 2. Start the AACT runtime instance:
 ```bash
+cd openhands; poetry install; cd ..
+poetry install
 poetry run aact run-dataflow examples/openhands_node.toml
 ```
 Keep this running in a separate terminal window.
