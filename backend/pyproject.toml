@@ -8,8 +8,13 @@ dependencies = [
     "pydantic>=2.5.0,<3.0.0",
     "sotopia>=0.1.2",
     "python-dotenv",
-    "aact"
+    "aact",
+    "flask==3.0.0",
+    "toml==0.10.2"
 ]
+
+[project.scripts]
+start-api = "interview_case.app:main"
 
 [build-system]
 requires = ["hatchling"]
