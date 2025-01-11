@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+
 interface LoadingContextType {
   isReady: boolean;
   error: string | null;
@@ -21,6 +22,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     let socketInstance: Socket;
@@ -53,6 +55,16 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
           console.log('Received init_process_result:', result);
           if (result.success) {
             setIsReady(true);
+            // join session existing check implement after kill session
+            const storedSessionId = localStorage.getItem('cotomata-sessionId');
+            if (storedSessionId) {
+              if (storedSessionId !== result.sessionId) {
+                setError('Session ID mismatch. Please try again.');
+                socketInstance.disconnect();
+                return;
+              }
+            }
+            localStorage.setItem('cotomata-sessionId', result.sessionId);
           } else {
             setError(result.error || 'Failed to initialize OpenHands');
             socketInstance.disconnect();

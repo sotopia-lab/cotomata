@@ -13,9 +13,10 @@
 //  * - onSelect: A callback function that is called when a button is clicked, passing the selected option.
 //  *
 //  */
+"use client"
 
-import React from 'react';
-import { Cog, FolderOpen, Home, RefreshCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Cog, FolderOpen, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -28,6 +29,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Socket } from 'socket.io-client';
+import { useRouter } from "next/navigation";
+import { Button } from './ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 
 // Menu items.
 const items = [
@@ -43,8 +48,36 @@ const items = [
   },
 ]
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  socket: Socket | null;
+  sessionId: string | null;
+}
+
+export function AppSidebar({ socket, sessionId }: AppSidebarProps) {
+  const router = useRouter();
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleEndSession = () => {
+    const storedSessionId = localStorage.getItem('cotomata-sessionId');
+
+    if (!sessionId || !storedSessionId || sessionId !== storedSessionId) {
+      return;
+    }
+    
+    socket && socket.emit('kill_session', { sessionId: sessionId }, ( response: any) => {
+      if (response.success) {
+        localStorage.removeItem('cotomata-sessionId');
+        router.push("/");
+      } else {
+        setErrorMessage(response.error || 'Failed to end session');
+        setErrorDialogOpen(true);
+      }
+    });
+  }
+
   return (
+    <>
     <Sidebar>
       <SidebarContent className="flex flex-col h-full">
         <SidebarGroup>
@@ -69,14 +102,34 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/" className="flex items-center justify-center gap-2">
-                  <RefreshCcw />
-                </Link>
+                <Button
+                  onClick={handleEndSession}
+                  className="flex items-center justify-center gap-2 outline-none bg-transparent"
+                >
+                  <RefreshCcw className='text-white'/>
+                </Button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </div>
       </SidebarContent>
     </Sidebar>
+
+    <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Error Ending Session</AlertDialogTitle>
+          <AlertDialogDescription>
+            {errorMessage}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={() => setErrorDialogOpen(false)}>
+            OK
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

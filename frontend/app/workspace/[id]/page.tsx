@@ -25,7 +25,7 @@
  */
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 // import io from 'socket.io-client';
 // import { CodeEditor } from '@/components/CodeEditor/CodeEditor';
 // import { FileSystem } from '@/components/CodeEditor/FileSystem';
@@ -36,7 +36,6 @@ import React, { useEffect, useState } from 'react';
 // import { SceneContext } from '@/components/Sidebar/SceneContext';
 import { useFileSystem } from "@/hooks/useFileSystem";
 import { FileSystem } from "@/components/file-system";
-import { io, Socket } from 'socket.io-client';
 import { CodeEditor } from '@/components/code-editor';
 import { Browser } from '@/components/browser';
 import { SceneContext } from '@/components/scene-context';
@@ -45,24 +44,17 @@ import { Terminal } from '@/components/terminal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useLoading } from "../../context/loading-provider";
-import { redirect } from "next/navigation";
+import { useLoading } from "@/context/loading-provider";
+import { redirect, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { AppSidebar } from '@/components/sidebar';
 
 type PanelOption = 'fileSystem' | 'sceneContext';
 
-// need for run-dataflow post req 
- 
-// async function runPythonCommand() {
-//   const response = await fetch('/api/run-agent', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ command: 'print("Hello, Python!")' }),
-//   });
-//   const result = await response.json();
-//   console.log(result);
-// }
-
 export default function App() {
+  const router = useRouter();
+  const { id: currentId } = useParams();
+  
   const {
     fileSystem,
     openFiles,
@@ -75,58 +67,36 @@ export default function App() {
     updateFileSystemFromList
   } = useFileSystem();
 
-//   const [socket, setSocket] = useState<Socket | null>(null);
   const [activePanel, setActivePanel] = useState<PanelOption>('fileSystem');
   const [activeTab, setActiveTab] = useState<'editor' | 'browser'>('editor');
   const [browserUrl, setBrowserUrl] = useState('https://example.com');
-  const [messages, setMessages] = useState<Array<{text: string, type: 'message' | 'status'}>>([]);
+  const [messages, setMessages] = useState<Record<string, { text: string, type: 'message' | 'status' }[]>>({});
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
   const [sceneMessages, setSceneMessages] = useState<{ text: string, agentName: string }[]>([]);
   const { isReady, socket } = useLoading();
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
-  if (!isReady) {
-    redirect('/');
-  }
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedSessionId = localStorage.getItem("cotomata-sessionId");
+      if (storedSessionId) {
+        setSessionId(storedSessionId);
+      }
+    }
+  }, []);
 
-//   useEffect(() => {
+  // Memoize session logic to avoid multiple checks
+  useMemo(() => {
+    if (!isReady || (sessionId && sessionId !== currentId)) {
+      router.push("/");
+    }
+  }, [isReady, sessionId, currentId, router]);
 
-//     // Initialize socket connection to the server
-//     const socketInstance = io('http://localhost:3000', {
-//       transports: ['websocket'],
-//       reconnection: true
-//     });
-
-//     // Log connection status
-//     socketInstance.on('connect', () => {
-//       console.log('Connected to server with ID:', socketInstance.id);
-//       // runPythonCommand();
-//     });
-//     console.log('socket connect', socketInstance)
-
-//     // Log connection errors
-//     socketInstance.on('connect_error', (error) => {
-//       console.error('Connection error:', error);
-//     });
-
-//     socketInstance.emit('init_process');
-//     socketInstance.on('init_process_result', (result) => {
-//       if (result.status === 'error') {
-//         console.error('Process initialization failed:', result.error);
-//       } else {
-//         console.log('Process started successfully');
-//       }
-//     });
-
-
-//     setSocket(socketInstance);
-
-//     // Cleanup on component unmount
-//     return () => {
-//       if (socketInstance) {
-//         socketInstance.disconnect();
-//       }
-//     };
-//   }, []);
+  useEffect(() => {
+    if (sessionId) {
+      router.push(`/workspace/${sessionId}`); // Keep user on the same page if sessionId exists
+    }
+  }, [sessionId, router]);
 
   useEffect(() => {
     // Function to handle new messages received from the socket
@@ -145,10 +115,10 @@ export default function App() {
         }
 
         // Handle Scene context messages
-        if (data.channel.startsWith('Scene:')) {
+        if (data.channel && data.channel.startsWith('Scene:') && data.channel.endsWith(`:${sessionId}`)) {
           if (messageData.data.data_type === "text") {
             // Update scene messages and set active panel to scene context
-            setSceneMessages(prev => [...prev, { text: messageData.data.text, agentName: data.channel }]);
+            setSceneMessages(prev => [...prev, { text: messageData.data.text, agentName: data.channel.split(':')[1] }]);
             setActivePanel('sceneContext');
           }
           return;
@@ -156,7 +126,7 @@ export default function App() {
 
         // Check if it's an agent action
         if (messageData.data.data_type === "agent_action") {
-          handleAgentAction(messageData);
+          handleAgentAction(messageData, sessionId!);
         }
         // Check if it's a command output
         else if (messageData.data.data_type === "text" &&
@@ -222,7 +192,7 @@ export default function App() {
   }, [updateFileSystemFromList]);
 
   // Function to handle actions from agents
-  const handleAgentAction = (messageData: any) => {
+  const handleAgentAction = (messageData: any, currentSessionId: string) => {
     // Check if messageData.data is defined
     if (!messageData.data) {
       console.error('messageData.data is undefined:', messageData);
@@ -242,15 +212,26 @@ export default function App() {
           type: 'message' as const
         };
         // Update messages state with the new message
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => ({
+          ...prev,
+          [currentSessionId]: [
+            ...(prev[currentSessionId] || []),
+            newMessage,
+          ],
+        }));
         break;
 
       case "thought":
-        // Handle agent's thoughts
-        setMessages(prev => [...prev, {
-          text: `💭 ${agentName} is thinking: ${messageData.data.argument}`,
-          type: 'status' as const
-        }]);
+        setMessages(prev => ({
+          ...prev,
+          [currentSessionId]: [
+            ...(prev[currentSessionId] || []),
+            {
+              text: `💭 ${agentName} is thinking: ${messageData.data.argument}`,
+              type: 'status' as const,
+            },
+          ],
+        }));
         break;
 
       case "write":
@@ -273,28 +254,46 @@ export default function App() {
         setActiveFile(filePath);
         setActiveTab('editor');
         setActivePanel('fileSystem');
-        setMessages(prev => [...prev, {
-          text: `${agentName} is writing code...`,
-          type: 'status' as const
-        }]);
+        setMessages(prev => ({
+          ...prev,
+          [currentSessionId]: [
+            ...(prev[currentSessionId] || []),
+            {
+              text: `${agentName} is writing code...`,
+              type: 'status' as const,
+            },
+          ],
+        }));
         break;
 
         case "read":
           // Check if messageData.data.text is defined
-            setMessages(prev => [...prev, {
-              text: `${agentName} is reading file ${messageData.data.path}`,
-              type: 'status' as const
-            }]);
+          setMessages(prev => ({
+            ...prev,
+            [currentSessionId]: [
+              ...(prev[currentSessionId] || []),
+              {
+                text: `${agentName} is reading file ${messageData.data.path}`,
+                type: 'status' as const,
+              },
+            ],
+          }));
           break;
 
       case "run":
         // Check if messageData.data.text is defined
           // Handle command execution
           setTerminalMessages(prev => [...prev, `$ ${messageData.data.argument}`]);
-          setMessages(prev => [...prev, {
-            text: `${agentName} is executing a command...`,
-            type: 'status' as const
-          }]);
+          setMessages(prev => ({
+            ...prev,
+            [currentSessionId]: [
+              ...(prev[currentSessionId] || []),
+              {
+                text: `${agentName} is executing a command...`,
+                type: 'status' as const,
+              },
+            ],
+          }));
         break;
 
       case "browse":
@@ -302,10 +301,13 @@ export default function App() {
         const url = messageData.data.argument; // Get the URL to browse
         setBrowserUrl(url);
         setActiveTab('browser');
-        setMessages(prev => [...prev, {
-          text: `${agentName} is browsing ${url}`,
-          type: 'status' as const
-        }]);
+        setMessages(prev => ({
+          ...prev,
+          [currentSessionId]: [
+            ...(prev[currentSessionId] || []),
+            { text: `${agentName} is browsing ${url}`, type: 'status' as const },
+          ],
+        }));
         break;
 
       default:
@@ -315,16 +317,23 @@ export default function App() {
   };
 
   // Listen for chat messages from the socket
-  socket?.on('chat_message', (message: string) => {
-    // Update messages state with the new chat message
-    setMessages(prev => [...prev, {
-      text: message,
-      type: 'message' as const
-    }]);
+  socket?.on('chat_message', (sessionId: string, message: string) => {
+    setMessages(prev => ({
+      ...prev,
+      [sessionId]: [
+        ...(prev[sessionId] || []), // Get existing messages for the session
+        {
+          text: message,
+          type: 'message' as const,
+        }
+      ]
+    }));
   });
+  console.log("files", fileSystem)
 
   return (
     <div className="flex h-screen w-full">
+      <AppSidebar socket={socket} sessionId={sessionId} />
       <div className="w-64 border-r">
         {/* <SidebarTrigger onClick={() => setActivePanel('fileSystem')}>
           File System
@@ -337,6 +346,7 @@ export default function App() {
             fileSystem={fileSystem.tree}
             onFileSelect={handleFileSelect}
             socket={socket}
+            sessionId={sessionId}
           />
         ) : (
           <SceneContext messages={sceneMessages} />
@@ -366,6 +376,7 @@ export default function App() {
                   onFileSelect={setActiveFile}
                   onChange={handleFileChange}
                   socket={socket}
+                  sessionId={sessionId}
                 />
               </TabsContent>
               <TabsContent value="browser" className='flex-1'>
@@ -380,20 +391,27 @@ export default function App() {
             maxSize={45}
             className="overflow-hidden"
           >
-            <Terminal externalMessages={terminalMessages} socket={socket}/>
+            <Terminal externalMessages={terminalMessages} socket={socket} sessionId={sessionId}/>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
       <div className="w-64 border-l">
         <ChatInterface
-          messages={messages}
+          messages={messages[sessionId!] || []}
           socket={socket}
+          sessionId={sessionId}
           onSendMessage={(text: string) => {
             // Update messages state with the user's message
-            setMessages(prev => [...prev, {
-              text: `User: ${text}`,
-              type: 'message' as const
-            }]);
+            setMessages(prev => ({
+              ...prev,
+              [sessionId!]: [
+                ...(prev[sessionId!] || []), // Get existing messages for the session
+                {
+                  text: `User: ${text}`,
+                  type: 'message' as const,
+                }
+              ]
+            }));
           }}
         />
       </div>
