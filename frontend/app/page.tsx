@@ -29,6 +29,7 @@ export default function LandingPage() {
 
   const handleStartSession = () => {
     console.log('Start Session');
+    localStorage.removeItem("cotomata-sessionId");
     setIsInitializing(true);
     if (socket) {
       console.log('Emitting init_process event');
@@ -43,6 +44,7 @@ export default function LandingPage() {
 
   const handleJoinSession = () => {
     console.log('Join Existing Session');
+    localStorage.removeItem("cotomata-sessionId");
     setIsInitializing(true);
     if (socket) {
       socket.emit('join_session', { sessionId: sessionIdInput }, (response: any) => {
