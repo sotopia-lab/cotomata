@@ -67,7 +67,7 @@ export const ChatInterface = ({ messages, socket, sessionId, onSendMessage }: Ch
 
   const handleSend = () => {
     if (input.trim()) {
-      socket && socket.emit('chat_message', { sessionId: sessionId, messages: input.trim() });
+      socket && socket.emit('chat_message', { sessionId: sessionId, message: input.trim() });
       setInput('');
       if (textareaRef.current) {
         textareaRef.current.style.height = '40px';
