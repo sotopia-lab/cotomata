@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import TypeVar, Any, cast, Callable, ParamSpec
+from typing import TypeVar, Any, cast, Callable, ParamSpec, AsyncGenerator
 
 import gin  # type: ignore[import-untyped]
 from beartype import beartype
@@ -890,3 +890,98 @@ async def agenerate_goal(
         use_fixed_model_version=use_fixed_model_version,
     )
     return result
+
+
+@gin_configurable
+@beartype
+async def agenerate_chunked(
+    model_name: str,
+    template: str,
+    input_values: dict[str, str],
+    output_parser: BaseOutputParser[OutputType],
+    chunk_size: int = 30,
+    temperature: float = 0.7,
+    use_fixed_model_version: bool = True,
+) -> AsyncGenerator[OutputType, None]:
+    """
+    Using langchain to generate responses in chunks. This allows for more natural
+    interruption points in conversation.
+
+    Args:
+        model_name: The name of the model to use
+        template: The prompt template
+        input_values: The input values for the template
+        output_parser: The parser for the output
+        chunk_size: Number of tokens to generate per chunk
+        temperature: The temperature for generation
+        use_fixed_model_version: Whether to use a fixed model version
+
+    Yields:
+        Chunks of the generated response
+    """
+    input_variables = re.findall(
+        r"(?<!{){([^{}]+)}(?!})", template
+    )
+    assert (
+        set(input_variables) == set(list(input_values.keys()) + ["format_instructions"])
+        or set(input_variables) == set(list(input_values.keys()))
+    ), f"The variables in the template must match input_values except for format_instructions. Got {sorted(input_values.keys())}, expect {sorted(input_variables)}"
+
+    # Process template
+    template = format_docstring(template)
+    
+    # Get the OpenAI client
+    if model_name.startswith("custom"):
+        client = OpenAI(
+            base_url=model_name.split("@")[1],
+            api_key=os.environ.get("CUSTOM_API_KEY") or "EMPTY",
+        )
+        model_name = model_name.split("@")[0].split("/")[1]
+    else:
+        client = OpenAI()
+
+    if "format_instructions" not in input_values:
+        input_values["format_instructions"] = output_parser.get_format_instructions()
+
+    # Create the prompt
+    human_message_prompt = HumanMessagePromptTemplate(
+        prompt=PromptTemplate(
+            template=template,
+            input_variables=input_variables,
+        )
+    )
+    chat_prompt_template = ChatPromptTemplate.from_messages([human_message_prompt])
+    prompt_result = chat_prompt_template.invoke(input_values)
+    assert isinstance(prompt_result, ChatPromptValue)
+    instantiated_prompt = prompt_result.messages[0].content
+    assert isinstance(instantiated_prompt, str)
+
+    # Stream the response
+    stream = client.chat.completions.create(
+        model=model_name,
+        messages=[{"role": "user", "content": instantiated_prompt}],
+        temperature=temperature,
+        stream=True,
+        max_tokens=chunk_size
+    )
+
+    current_chunk = ""
+    for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            current_chunk += chunk.choices[0].delta.content
+            if len(current_chunk) >= chunk_size:
+                try:
+                    parsed_chunk = output_parser.invoke(current_chunk)
+                    yield parsed_chunk
+                    current_chunk = ""
+                except Exception as e:
+                    log.debug(f"Failed to parse chunk: {e}")
+                    current_chunk = ""  # Reset on error
+
+    # Handle any remaining content
+    if current_chunk:
+        try:
+            parsed_chunk = output_parser.invoke(current_chunk)
+            yield parsed_chunk
+        except Exception as e:
+            log.debug(f"Failed to parse final chunk: {e}")

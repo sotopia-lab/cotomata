@@ -300,6 +300,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
         )
 
     async def aact(self, message: AgentAction | Tick | Text) -> AgentAction:
+        print(f"[{self.name}] AACT called with message type: {type(message).__name__}")
         match message:
             case Text(text=text):
                 if "BrowserOutputObservation" in text:
