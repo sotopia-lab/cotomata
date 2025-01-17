@@ -22,13 +22,14 @@ interface HistoryEntry {
 interface TerminalProps {
   externalMessages: string[];
   socket: Socket | null;
+  sessionId: string | null;
 }
 
 const stripAnsiCodes = (text: string): string => {
   return text.replace(/\[\d+(?:;\d+)*m|\[\d+m|\[0m|\[1m/g, '');
 };
 
-export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
+export const Terminal = ({ externalMessages, socket, sessionId }: TerminalProps) => {
   const [terminalState, setTerminalState] = useState<TerminalState>({
     user: '',
     hostname: '',
@@ -43,8 +44,8 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
 
   useEffect(() => {
     if (!initializedRef.current) {
-      socket && socket.emit('terminal_command', 'whoami && hostname && pwd');
-      socket && socket.emit('terminal_command', "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
+      socket && socket.emit('terminal_command', { sessionId: sessionId, command: 'whoami && hostname && pwd' });
+      socket && socket.emit('terminal_command', { sessionId: sessionId, command: "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f" });
       initializedRef.current = true;
     }
   }, [socket]);
@@ -111,9 +112,9 @@ export const Terminal = ({ externalMessages, socket }: TerminalProps) => {
           ? `${terminalState.currentPath}/..`.replace(/\/+/g, '/')
           : `${terminalState.currentPath}/${newPath}`.replace(/\/+/g, '/');
 
-      socket && socket.emit('terminal_command', `cd "${targetPath}" && pwd`);
+      socket && socket.emit('terminal_command', { sessionId: sessionId, command: `cd "${targetPath}" && pwd` });
     } else {
-      socket && socket.emit('terminal_command', command);
+      socket && socket.emit('terminal_command', { sessionId: sessionId, command: command});
     }
 
     setInput('');

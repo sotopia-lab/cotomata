@@ -44,7 +44,7 @@ const initialFileSystem: FileSystemState = {
 
 // Custom hook for managing the file system
 export const useFileSystem = () => {
-  const [fileSystem, setFileSystem] = useState<FileSystemState>(initialFileSystem); // State for the file system
+  const [fileSystem, setFileSystem] = useState<FileSystemState>(initialFileSystem); // State for the file syste
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([
     {
       path: '/workspace/main.py',

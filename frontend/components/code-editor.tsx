@@ -27,6 +27,7 @@ interface CodeEditorProps {
   onFileSelect: (path: string) => void;
   onChange: (path: string, content: string) => void;
   socket: Socket | null;
+  sessionId: string | null;
 }
 
 const getFileLanguage = (filename: string) => {
@@ -51,6 +52,7 @@ export const CodeEditor = ({
   openFiles,
   activeFile,
   socket,
+  sessionId,
   onFileClose,
   onFileSelect,
   onChange,
@@ -60,7 +62,7 @@ export const CodeEditor = ({
 
   const handleSave = () => {
     if (activeFile && activeFileContent) {
-      socket && socket.emit('save_file', { path: activeFile, content: activeFileContent });
+      socket && socket.emit('save_file', { sessionId: sessionId, path: activeFile, content: activeFileContent });
       setUnsavedChanges(prev => ({ ...prev, [activeFile]: false }));
     }
   };

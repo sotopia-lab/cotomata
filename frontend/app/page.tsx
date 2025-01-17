@@ -5,24 +5,53 @@ import { useRouter } from "next/navigation";
 import { useLoading } from "../context/loading-provider";
 import Loading from "./loading";
 import Error from "./error";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Code2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function LandingPage() {
+  const sessionOptions = [
+    { value: "Human/Human", label: "Human/ Human" },
+    { value: "Human/AI", label: "Human/ AI" },
+  ];
+
   const router = useRouter();
   const { isReady, error, socket } = useLoading();
   const [isInitializing, setIsInitializing] = useState(false);
+  const [sessionType, setSessionType] = useState<'Human/AI' | 'Human/Human'>('Human/AI');
+  const [sessionIdInput, setSessionIdInput] = useState('');
 
   const handleStartSession = () => {
-    console.log('Start Session button clicked');
+    console.log('Start Session');
+    localStorage.removeItem("cotomata-sessionId");
     setIsInitializing(true);
     if (socket) {
       console.log('Emitting init_process event');
-      socket.emit('init_process');
+      socket.emit('create_session', { sessionType }, (response: any) => {
+        socket.emit('init_process', response.sessionId );
+      }); 
     } else {
       console.error('Socket not available');
       setIsInitializing(false);
+    }
+  };
+
+  const handleJoinSession = () => {
+    console.log('Join Existing Session');
+    localStorage.removeItem("cotomata-sessionId");
+    setIsInitializing(true);
+    if (socket) {
+      socket.emit('join_session', { sessionId: sessionIdInput }, (response: any) => {
+        if (response.success) {
+          socket.emit('init_process', sessionIdInput );
+        }
+      });
     }
   };
 
@@ -30,10 +59,14 @@ export default function LandingPage() {
     return <Error error={error} reset={() => router.refresh()} />;
   }
 
-  if (isReady) {
-    router.push('/workspace');
-    return null;
-  }
+  useEffect(() => {
+    if (isReady) {
+      const sessionId = localStorage.getItem("cotomata-sessionId");
+      if (sessionId) {
+        router.push(`/workspace/${sessionId}`);
+      }
+    }
+  }, [isReady, router]);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0A0A0A]">
@@ -161,19 +194,84 @@ export default function LandingPage() {
                   <Loading />
                 </div>
               ) : (
-                <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button 
-                    size="lg"
-                    onClick={handleStartSession}
-                    className="w-full h-16 bg-white hover:bg-gray-100 text-black text-xl font-medium rounded-2xl shadow-lg"
+                <div className="flex flex-row gap-5 justify-center">
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <Code2 className="mr-3 h-6 w-6" />
-                    Start Session
-                  </Button>
-                </motion.div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          size="lg"
+                          className="w-full h-16 bg-white hover:bg-gray-100 text-black text-xl font-medium rounded-2xl shadow-lg"
+                        >
+                          <Code2 className="mr-3 h-6 w-6" />
+                          Start New Session
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent>
+                        <div className="relative flex flex-col gap-5 rounded-lg items-center">
+                          <Select value={sessionType} onValueChange={(value) => setSessionType(value as "Human/AI" | "Human/Human")}>
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue/>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {sessionOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            onClick={handleStartSession}
+                            className="mt-4 text-black bg-white hover:bg-gray-100 font-medium"
+                          >
+                            Start Chat
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button 
+                          size="lg"
+                          className="w-full h-16 bg-white hover:bg-gray-100 text-black text-xl font-medium rounded-2xl shadow-lg"
+                        >
+                          <Code2 className="mr-3 h-6 w-6" />
+                          Join Existing Session
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent>
+                        <div className="relative flex flex-col gap-5 rounded-lg items-center">
+                          <input
+                            type="text"
+                            placeholder="Enter Session ID"
+                            value={sessionIdInput}
+                            onChange={(e) => setSessionIdInput(e.target.value)}
+                            className="w-full mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg outline-none"
+                          />
+                          <Button
+                            onClick={handleJoinSession}
+                            className="mt-4 text-black bg-white hover:bg-gray-100 font-medium"
+                          >
+                            Join Session
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </motion.div>
+                </div>
               )}
             </motion.div>
           </div>

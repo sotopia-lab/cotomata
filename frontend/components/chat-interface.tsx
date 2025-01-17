@@ -19,10 +19,11 @@ interface Message {
 interface ChatInterfaceProps {
   messages: Array<{ text: string; type: 'message' | 'status' }>;
   socket: Socket | null;
+  sessionId: string | null;
   onSendMessage: (text: string) => void;
 }
 
-export const ChatInterface = ({ messages, socket, onSendMessage }: ChatInterfaceProps) => {
+export const ChatInterface = ({ messages, socket, sessionId, onSendMessage }: ChatInterfaceProps) => {
   const [input, setInput] = useState('');
   const [showIndicator, setShowIndicator] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -66,7 +67,7 @@ export const ChatInterface = ({ messages, socket, onSendMessage }: ChatInterface
 
   const handleSend = () => {
     if (input.trim()) {
-      socket && socket.emit('chat_message', input.trim());
+      socket && socket.emit('chat_message', { sessionId: sessionId, message: input.trim() });
       setInput('');
       if (textareaRef.current) {
         textareaRef.current.style.height = '40px';
