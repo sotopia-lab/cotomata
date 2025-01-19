@@ -44,7 +44,7 @@ const initialFileSystem: FileSystemState = {
 
 // Custom hook for managing the file system
 export const useFileSystem = () => {
-  const [fileSystem, setFileSystem] = useState<FileSystemState>(initialFileSystem); // State for the file system
+  const [fileSystem, setFileSystem] = useState<FileSystemState>(initialFileSystem); // State for the file syste
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([
     {
       path: '/workspace/main.py',
@@ -164,14 +164,11 @@ export const useFileSystem = () => {
 
         // If we're at the last segment, it's a file
         if (index === segments.length - 1) {
-          // Check if the file already exists
-          if (!existingFiles.has(currentPath)) {
-            currentLevel.push({
-              name: segment,
-              type: 'file',
-              path: currentPath
-            });
-          }
+          currentLevel.push({
+            name: segment,
+            type: 'file',
+            path: currentPath
+          });
         } else {
           // It's a folder
           let folder = currentLevel.find(
@@ -223,8 +220,8 @@ export const useFileSystem = () => {
 
     // Update the file system state while preserving existing file contents
     setFileSystem(prev => ({
-      ...prev,
-      tree: newTree
+      tree: newTree,
+      files: prev.files  // Preserve all existing file contents
     }));
   };
 

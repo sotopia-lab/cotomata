@@ -1,14 +1,15 @@
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createServer } from 'http';
+import { v4 as uuidv4 } from 'uuid';
 
 // Redis client configuration
 const redisClient = createClient({
   url: 'redis://localhost:6379/0'
 });
 
-// Allowed channels for Redis pub/sub 
-const allowedChannels = ['Scene:Jack', 'Scene:Jane', 'Human:Jack', 'Jack:Human', 'Agent:Runtime', 'Runtime:Agent'];
+// // Allowed channels for Redis pub/sub 
+// const allowedChannels = ['Scene:Jack', 'Scene:Jane', 'Human:Jack', 'Jack:Human', 'Agent:Runtime', 'Runtime:Agent'];
 
 // Connect Redis client
 redisClient.on('error', (err) => {
@@ -37,17 +38,75 @@ const init = async () => {
   const subscriber = redisClient.duplicate();
   await subscriber.connect();
 
-  await subscriber.subscribe(allowedChannels, (message, channel) => {
-    console.log(`Received message from ${channel}: ${message}`);
-    io.emit('new_message', { channel, message });
-  });
+  // await subscriber.subscribe(allowedChannels, (message, channel) => {
+  //   console.log(`Received message from ${channel}: ${message}`);
+  //   io.emit('new_message', { channel, message });
+  // });
+
+  // Store active sessions and their Redis channels
+  const activeSessions = {};
+
+  const getAllowedChannels = (sessionId, sessionType) => {
+    if (sessionType === 'Human/AI') {
+      return [
+        `Scene:Jack:${sessionId}`,
+        `Scene:Jane:${sessionId}`,
+        `Human:Jack:${sessionId}`,
+        `Jack:Human:${sessionId}`,
+        `Agent:Runtime:${sessionId}`,
+        `Runtime:Agent:${sessionId}`,
+      ];
+    }
+    return [
+      `Human:Jack:${sessionId}`,
+      `Jack:Human:${sessionId}`,
+      `Agent:Runtime:${sessionId}`,
+      `Runtime:Agent:${sessionId}`,
+    ];
+  };
 
   // Socket.IO connection handling
   io.on('connection', (socket) => {
-    console.log('A user connected');
 
-    socket.on('chat_message', async (message) => {
-      console.log('Received chat message:', message);
+    console.log('A user connected');
+    // const socketState = {
+    //   currentSessionId: null
+    // };
+
+    socket.on('create_session', async ({sessionType}, callback) => {
+      const sessionId = uuidv4();
+      const channels = getAllowedChannels(sessionId, sessionType)
+      activeSessions[sessionId] = {channels, sessionType}
+
+      console.log(`New session created: ${sessionId}, Type: ${sessionType}`);
+
+      await subscriber.subscribe(channels, (message, channels) => {
+        console.log(`Received message from ${channels}: ${message}`);
+        io.to(sessionId).emit('new_message', { channels, message });
+      })
+
+      callback({ sessionId });
+
+      socket.join(sessionId);
+    });
+
+    // Join an existing session
+    socket.on('join_session', async ({ sessionId }, callback) => {
+      if (!activeSessions[sessionId]) {
+        callback({ success: false, error: 'Session does not exist' });
+        return;
+      }
+
+      console.log(`User joined session: ${sessionId}`);
+      socket.join(sessionId);
+      // socketState.currentSessionId = sessionId;
+      callback({ success: true });
+    });
+
+    socket.on('chat_message', async ({ sessionId, message}) => {
+      if (!sessionId) return;
+
+      console.log(`Chat message in session ${sessionId}:`, message);
       try {
         const agentAction = {
           data: {
@@ -58,14 +117,16 @@ const init = async () => {
             data_type: "agent_action"
           }
         };
-        await redisClient.publish('Human:Jack', JSON.stringify(agentAction));
+        await redisClient.publish(`Human:Jack:${sessionId}`, JSON.stringify(agentAction));
       } catch (err) {
         console.error('Error publishing chat message:', err);
       }
     });
 
-    socket.on('save_file', async ({ path, content }) => {
-      console.log('Saving file:', path);
+    socket.on('save_file', async ({ sessionId, path, content }) => {
+      if (!sessionId) return;
+
+      console.log(`Saving file in session ${sessionId}:`, path);
       try {
         const saveMessage = {
           data: {
@@ -76,14 +137,16 @@ const init = async () => {
             data_type: "agent_action"
           }
         };
-        await redisClient.publish('Agent:Runtime', JSON.stringify(saveMessage));
+        await redisClient.publish(`Agent:Runtime:${sessionId}`, JSON.stringify(saveMessage));
       } catch (err) {
         console.error('Error publishing save file message:', err);
       }
     });
 
-    socket.on('terminal_command', async (command) => {
-      console.log('Received terminal command:', command);
+    socket.on('terminal_command', async ({ sessionId, command }) => {
+      if (!sessionId) return;
+      console.log(`Terminal command in session ${sessionId}:`, command);
+
       try {
         const messageEnvelope = {
           data: {
@@ -94,11 +157,11 @@ const init = async () => {
             data_type: "agent_action"
           }
         };
-        await redisClient.publish('Agent:Runtime', JSON.stringify(messageEnvelope));
+        await redisClient.publish(`Agent:Runtime:${sessionId}`, JSON.stringify(messageEnvelope));
       } catch (err) {
         console.error('Error publishing command:', err);
         socket.emit('new_message', {
-          channel: 'Runtime:Agent',
+          channel: `Runtime:Agent:${sessionId}`,
           message: JSON.stringify({
             data: {
               data_type: "text",
@@ -110,14 +173,16 @@ const init = async () => {
     });
 
     // Handle process initialization
-    socket.on('init_process', async () => {
-      console.log('Received init_process request');
+    socket.on('init_process', async (sessionId) => {
+      if (!sessionId) return;
+
+      console.log(`Initializing process in session ${sessionId}`);
       try {
         const initParams = {
           node_name: "openhands_node",
-          input_channels: ["Agent:Runtime"],
-          output_channels: ["Runtime:Agent"],
-          modal_session_id: "arpan"
+          input_channels: [`Agent:Runtime:${sessionId}`],
+          output_channels: [`Runtime:Agent:${sessionId}`],
+          modal_session_id: sessionId
         };
 
         const response = await fetch('http://localhost:5000/initialize', {
@@ -134,7 +199,8 @@ const init = async () => {
         const result = await response.json();
         
         if (result.status === 'initialized') {
-          socket.emit('init_process_result', { success: true });
+          socket.emit('init_process_result', { success: true, sessionId: sessionId });
+          // callback({ success: true });
           console.log('OpenHands initialized successfully');
         } else {
           throw new Error(`Unexpected initialization status: ${result.status}`);
@@ -145,7 +211,25 @@ const init = async () => {
           success: false, 
           error: err.message 
         });
+        // callback({ success: false, error: err.message });
       }
+    });
+
+    // Stop/Kill a session
+    socket.on('kill_session', async ( { sessionId }, callback ) => {
+      if (!activeSessions[sessionId]) {
+        callback({ success: false, error: 'Session does not exist' });
+        return;
+      }
+
+      console.log(`Killing session: ${sessionId}`);
+      const { channels } = activeSessions[sessionId];
+      await subscriber.unsubscribe(channels);
+
+      io.to(sessionId).emit('session_terminated');
+      delete activeSessions[sessionId];
+
+      callback({ success: true });
     });
 
     socket.on('disconnect', () => {

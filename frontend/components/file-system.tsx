@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   ChevronRight,
   ChevronDown,
@@ -16,16 +16,17 @@ import {
   RefreshCw,
   Plus,
   Check,
-  X
+  X,
+  Command
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { FileNode } from '@/types/FileSystem';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
 
 interface FileSystemProps {
   fileSystem: FileNode[];
   onFileSelect: (path: string) => void;
   socket: Socket | null;
+  sessionId: string | null;
 }
 
 // Utility function to get appropriate icon and color for file types
@@ -58,7 +59,7 @@ const sortNodes = (a: FileNode, b: FileNode): number => {
   return a.name.localeCompare(b.name);
 };
 
-export const FileSystem = ({ fileSystem, onFileSelect, socket }: FileSystemProps) => {
+export const FileSystem = ({ fileSystem, onFileSelect, socket, sessionId }: FileSystemProps) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['/workspace']));
   const [newFileName, setNewFileName] = useState('');
   const [isInputVisible, setInputVisible] = useState(false);
@@ -73,9 +74,10 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket }: FileSystemProps
     y: 0,
     node: null,
   });
+  console.log("files", fileSystem)
 
   const handleRefresh = () => {
-    socket && socket.emit('terminal_command', "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
+    socket && socket.emit('terminal_command', { sessionId: sessionId, command: "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f" });
   };
 
   const toggleFolder = (folderName: string, e: React.MouseEvent) => {
@@ -92,12 +94,12 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket }: FileSystemProps
   };
 
   const handleFileDoubleClick = (path: string) => {
-    socket && socket.emit('terminal_command', `echo '**FILE_CONTENT**' && echo '${path}' && cat ${path}`);
+    socket && socket.emit('terminal_command', { sessionId: sessionId, command: `echo '**FILE_CONTENT**' && echo '${path}' && cat ${path}`});
   };
 
   const handleAddFile = () => {
     if (newFileName) {
-      socket && socket.emit('terminal_command', `touch /workspace/${newFileName}`);
+      socket && socket.emit('terminal_command', { sessionId: sessionId, command: `touch /workspace/${newFileName}`});
       handleRefresh();
       setNewFileName('');
       setInputVisible(false);
@@ -115,7 +117,7 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket }: FileSystemProps
   };
 
   const handleDeleteFile = (path: string) => {
-    socket && socket.emit('terminal_command', `rm "${path}"`);
+    socket && socket.emit('terminal_command', { sessionId: sessionId, command: `rm "${path}"` });
     handleRefresh();
     setContextMenuState({ visible: false, x: 0, y: 0, node: null });
   };
