@@ -2,11 +2,54 @@ import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createServer } from 'http';
 import { v4 as uuidv4 } from 'uuid';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 // Redis client configuration
 const redisClient = createClient({
   url: 'redis://localhost:6379/0'
 });
+
+// Supabase client configuration
+const supabase = createSupabaseClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+const saveMessageToSupabase = async (sessionId, channel, message, messageType) => {
+  try {
+    const messageData = JSON.parse(message);
+    const timestamp = new Date().toISOString();
+
+    if (messageType === 'scene') {
+      const { data, error } = await supabase
+        .from('scene_messages')
+        .insert([{
+          session_id: sessionId,
+          channel: channel,
+          content: messageData.data.text,
+          timestamp: timestamp
+        }]);
+      
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert([{
+          session_id: sessionId,
+          channel: channel,
+          agent_name: messageData.data.agent_name,
+          action_type: messageData.data.action_type,
+          argument: messageData.data.argument,
+          path: messageData.data.path || '',
+          timestamp: timestamp
+        }]);
+      
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.error('Error saving message to Supabase:', err);
+  }
+};
 
 // // Allowed channels for Redis pub/sub 
 // const allowedChannels = ['Scene:Jack', 'Scene:Jane', 'Human:Jack', 'Jack:Human', 'Agent:Runtime', 'Runtime:Agent'];
@@ -84,6 +127,13 @@ const init = async () => {
 
       await subscriber.subscribe(channels, (message, channels) => {
         console.log(`Received message from ${channels}: ${message}`);
+
+        // // Determine message type based on channel
+        // const messageType = channels.startsWith('Scene:') ? 'scene' : 'message';
+        
+        // // Save message to Supabase
+        // saveMessageToSupabase(sessionId, channels, message, messageType);
+
         io.to(sessionId).emit('new_message', { channels, message });
       })
 
@@ -251,7 +301,7 @@ const init = async () => {
               "node_name": "record",
               "node_class": "record",
               "node_args": {
-                "jsonl_file_path": "/Users/arpan/Desktop/cotomata/backend/logs/interview_openhands.jsonl",
+                "jsonl_file_path": "../logs/interview_openhands.jsonl",
                 "record_channel_types": {
                   [`Jane:Jack:${sessionId}`]: "agent_action",
                   [`Jack:Jane:${sessionId}`]: "agent_action",
@@ -265,7 +315,7 @@ const init = async () => {
           ]
         };
 
-        const response = await fetch('http://localhost:6000/init-agents', {
+        const response = await fetch('http://localhost:9000/init-agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(init_params),
