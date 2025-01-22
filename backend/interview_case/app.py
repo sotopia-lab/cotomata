@@ -7,6 +7,11 @@ from typing import Union, Tuple
 
 app = Flask(__name__)
 
+
+@app.route('/health', methods=['GET'])
+def health() -> str:
+    return 'OK'
+
 @app.route('/init-agents', methods=['POST'])
 def init_agents() -> Union[Response, Tuple[Response, int]]:
     try:
@@ -91,7 +96,7 @@ def run_interview() -> int:
 
 def main() -> None:
     """Entry point for the application script"""
-    app.run(host='0.0.0.0', port=9000)
+    app.run(host='0.0.0.0', port=6000)
 
 if __name__ == '__main__':
     main() 

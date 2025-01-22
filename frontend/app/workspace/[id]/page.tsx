@@ -48,6 +48,7 @@ import { useLoading } from "@/context/loading-provider";
 import { redirect, useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { AppSidebar } from '@/components/sidebar';
+import { m } from 'framer-motion';
 
 type PanelOption = 'fileSystem' | 'sceneContext';
 
@@ -72,7 +73,7 @@ export default function App() {
   const [browserUrl, setBrowserUrl] = useState('https://example.com');
   const [messages, setMessages] = useState<Record<string, { text: string, type: 'message' | 'status' }[]>>({});
   const [terminalMessages, setTerminalMessages] = useState<string[]>([]);
-  const [sceneMessages, setSceneMessages] = useState<{ text: string, agentName: string }[]>([]);
+  const [sceneMessages, setSceneMessages] = useState<Record<string, Array<{ text: string, agentName: string }>>>({});
   const { isReady, socket } = useLoading();
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -115,11 +116,19 @@ export default function App() {
         }
 
         // Handle Scene context messages
-        if (data.channel && data.channel.startsWith('Scene:') && data.channel.endsWith(`:${sessionId}`)) {
+        if (data.channels && data.channels.startsWith('Scene:') && data.channels.endsWith(`:${sessionId}`)) {
           if (messageData.data.data_type === "text") {
-            // Update scene messages and set active panel to scene context
-            setSceneMessages(prev => [...prev, { text: messageData.data.text, agentName: data.channel.split(':')[1] }]);
-            setActivePanel('sceneContext');
+            setSceneMessages(prev => ({
+              ...prev,
+              [sessionId!]: [
+                ...(prev[sessionId!] || []),
+                { 
+                  text: messageData.data.text, 
+                  agentName: data.channels.split(':')[1] 
+                }
+              ]
+            }));
+            // setActivePanel('sceneContext');
           }
           return;
         }
@@ -349,7 +358,7 @@ export default function App() {
             sessionId={sessionId}
           />
         ) : (
-          <SceneContext messages={sceneMessages} />
+          <SceneContext messages={sceneMessages[sessionId!]} />
         )}
       </div>
       <div className="flex-1 h-screen flex flex-col overflow-hidden">
@@ -395,9 +404,10 @@ export default function App() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-      <div className="w-64 border-l">
+      <div className="w-80 border-l">
         <ChatInterface
           messages={messages[sessionId!] || []}
+          sceneMessages={sceneMessages[sessionId!] || []}
           socket={socket}
           sessionId={sessionId}
           onSendMessage={(text: string) => {
