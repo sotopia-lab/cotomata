@@ -80,10 +80,10 @@ function buildPromptFromFile(filePath) {
  * 4) Parse and store results in output JSON.
  */
 async function main(
-  inputFile = 'sample_data/interview_openhands_2025-01-08_14-00-52.jsonl',
-  outputFile = 'results/evaluation_output.json',
-  projectId = 'gcp-multi-agent',
-  location = 'us-east5'
+  inputFile,
+  outputFile,
+  projectId, 
+  location
 ) {
   // Check if the input file exists
   if (!fs.existsSync(inputFile)) {
