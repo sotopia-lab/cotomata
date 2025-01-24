@@ -1,0 +1,19 @@
+{
+  "name": "cotomata-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"cd backend && bun run dev\" \"cd frontend && bun run dev\"",
+    "install:all": "cd backend && bun install && cd ../frontend && bun install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "type": "module",
+  "dependencies": {
+    "@genkit-ai/googleai": "^0.9.12",
+    "@genkit-ai/vertexai": "^0.9.12",
+    "axios": "^1.7.9",
+    "genkit": "^0.9.12"
+  }
+}
