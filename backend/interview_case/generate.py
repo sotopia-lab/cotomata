@@ -40,6 +40,8 @@ load_dotenv()
 log = logging.getLogger("generate")
 logging_handler = LoggingCallbackHandler("langchain")
 
+logger = logging.getLogger(__name__)
+
 LLM_Name = Literal[
     "together_ai/meta-llama/Llama-2-7b-chat-hf",
     "together_ai/meta-llama/Llama-2-70b-chat-hf",
@@ -480,14 +482,17 @@ async def agenerate(
     structured_output: bool = False,
     bad_output_process_model: str | None = None,
     use_fixed_model_version: bool = True,
+    stream: bool = False,
 ) -> OutputType:
+    """Generate a response with optional streaming support"""
     input_variables = re.findall(
         r"(?<!{){([^{}]+)}(?!})", template
-    )  # Add negative lookbehind and lookahead to avoid matching {{}}; note that {ab{ab}ab} will not be matched
+    )
     assert (
         set(input_variables) == set(list(input_values.keys()) + ["format_instructions"])
         or set(input_variables) == set(list(input_values.keys()))
     ), f"The variables in the template must match input_values except for format_instructions. Got {sorted(input_values.keys())}, expect {sorted(input_variables)}"
+    
     # process template
     template = format_docstring(template)
     chain = obtain_chain(
@@ -502,9 +507,6 @@ async def agenerate(
         input_values["format_instructions"] = output_parser.get_format_instructions()
 
     if structured_output:
-        assert model_name == "gpt-4o-2024-08-06" or model_name.startswith(
-            "custom"
-        ), "Structured output is only supported in gpt-4o-2024-08-06 or custom models"
         human_message_prompt = HumanMessagePromptTemplate(
             prompt=PromptTemplate(
                 template=template,
@@ -517,6 +519,7 @@ async def agenerate(
         instantiated_prompt = prompt_result.messages[0].content
         assert isinstance(output_parser, PydanticOutputParser)
         assert isinstance(instantiated_prompt, str)
+        
         if model_name.startswith("custom"):
             client = OpenAI(
                 base_url=model_name.split("@")[1],
@@ -526,36 +529,79 @@ async def agenerate(
         else:
             client = OpenAI()
 
-        completion = client.beta.chat.completions.parse(
-            model=model_name,
-            messages=[
-                {"role": "user", "content": instantiated_prompt},
-            ],
-            response_format=output_parser.pydantic_object,
-        )
-        result = completion.choices[0].message.parsed
-        casted_result = cast(OutputType, result)
-        return casted_result
+        if stream:
+            # Stream the response
+            stream = client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "user", "content": instantiated_prompt}],
+                stream=True,
+            )
+            collected_chunks = []
+            collected_messages = []
+            
+            # Print the assistant's response as it's received
+            for chunk in stream:
+                chunk_message = chunk.choices[0].delta.content
+                collected_chunks.append(chunk)
+                if chunk_message:
+                    print(chunk_message, end="", flush=True)
+                    collected_messages.append(chunk_message)
+            
+            # Combine the message chunks
+            full_reply_content = "".join([m for m in collected_messages if m is not None])
+            
+            # Parse the complete response
+            result = output_parser.parse(full_reply_content)
+            return cast(OutputType, result)
+        else:
+            completion = client.beta.chat.completions.parse(
+                model=model_name,
+                messages=[
+                    {"role": "user", "content": instantiated_prompt},
+                ],
+                response_format=output_parser.pydantic_object,
+            )
+            result = completion.choices[0].message.parsed
+            return cast(OutputType, result)
 
-    result = await chain.ainvoke(input_values, config={"callbacks": [logging_handler]})
-    try:
-        parsed_result = output_parser.invoke(result)
-    except Exception as e:
-        if isinstance(output_parser, ScriptOutputParser):
-            raise e  # the problem has been handled in the parser
-        log.debug(
-            f"[red] Failed to parse result: {result}\nEncounter Exception {e}\nstart to reparse",
-            extra={"markup": True},
-        )
-        reformat_parsed_result = format_bad_output(
-            result,
-            format_instructions=output_parser.get_format_instructions(),
-            model_name=bad_output_process_model or model_name,
-            use_fixed_model_version=use_fixed_model_version,
-        )
-        parsed_result = output_parser.invoke(reformat_parsed_result)
-    log.info(f"Generated result: {parsed_result}")
-    return parsed_result
+    if stream:
+        # Use astream for async streaming
+        collected_chunks = []
+        async for chunk in chain.astream(input_values, config={"callbacks": [logging_handler]}):
+            collected_chunks.append(chunk)
+            if hasattr(chunk, 'content'):
+                print(chunk.content, end="", flush=True)
+        
+        # Combine chunks and parse
+        full_response = "".join([str(chunk.content) for chunk in collected_chunks if hasattr(chunk, 'content')])
+        try:
+            parsed_result = output_parser.invoke(full_response)
+        except Exception as e:
+            if isinstance(output_parser, ScriptOutputParser):
+                raise e
+            reformat_parsed_result = format_bad_output(
+                BaseMessage(content=full_response),
+                format_instructions=output_parser.get_format_instructions(),
+                model_name=bad_output_process_model or model_name,
+                use_fixed_model_version=use_fixed_model_version,
+            )
+            parsed_result = output_parser.invoke(reformat_parsed_result)
+        return parsed_result
+    else:
+        result = await chain.ainvoke(input_values, config={"callbacks": [logging_handler]})
+        try:
+            parsed_result = output_parser.invoke(result)
+        except Exception as e:
+            if isinstance(output_parser, ScriptOutputParser):
+                raise e
+            reformat_parsed_result = format_bad_output(
+                result,
+                format_instructions=output_parser.get_format_instructions(),
+                model_name=bad_output_process_model or model_name,
+                use_fixed_model_version=use_fixed_model_version,
+            )
+            parsed_result = output_parser.invoke(reformat_parsed_result)
+        return parsed_result
 
 
 @gin_configurable
@@ -890,3 +936,61 @@ async def agenerate_goal(
         use_fixed_model_version=use_fixed_model_version,
     )
     return result
+
+from .agent_models import AgentResponse, AgentResponseOutputParser
+
+@gin_configurable
+@beartype
+async def agenerate_agent_response(
+    model_name: str,
+    agent_name: str,
+    history: str,
+    goal: str,
+    temperature: float = 0.7,
+    bad_output_process_model: str | None = None,
+    use_fixed_model_version: bool = True,
+) -> AgentResponse:
+    """Generate a structured agent response with reasoning"""
+    print(f"\n{agent_name}:", end="", flush=True)
+    
+    parser = AgentResponseOutputParser()
+    model_name = "gpt-4o-mini"
+    
+    try:
+        result = await agenerate(
+            model_name=model_name,
+            template="""You are {agent_name}. Based on your goal and the conversation history, decide what action to take next.
+            
+            Goal: {goal}
+            History: {history}
+            
+            Think through your decision carefully and explain your reasoning.
+            Then output a structured response with your thinking and chosen action.
+            
+            Remember:
+            1. First explain your thinking in the 'thinking' field
+            2. Choose an action from: 'speak', 'none', or 'leave'
+            3. For 'speak' action, provide the message in the args.content
+            4. For 'none' action, use empty dict as args
+            5. For 'leave' action, use empty dict as args
+            
+            {format_instructions}
+            """,
+            input_values={
+                "agent_name": agent_name,
+                "goal": goal,
+                "history": history,
+            },
+            output_parser=parser,
+            temperature=temperature,
+            structured_output=True,
+            stream=False,
+            bad_output_process_model=bad_output_process_model,
+            use_fixed_model_version=use_fixed_model_version,
+        )
+        # Print the complete response when not streaming
+        print(str(result))
+        return result
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise

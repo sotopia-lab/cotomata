@@ -13,6 +13,8 @@ from aact.messages.registry import DataModelFactory
 from .base_agent import BaseAgent  # type: ignore[import-untyped]
 from .generate import agenerate # type: ignore[import-untyped]
 from .generate import StrOutputParser
+from .generate import agenerate_agent_response
+from .agent_models import AgentResponse, ActionType
 
 import json
 
@@ -31,6 +33,7 @@ logging.basicConfig(
     handlers=[RichHandler()],
 )
 
+logger = logging.getLogger(__name__)
 
 class ActionType(Enum):
     NONE = "none"
@@ -303,14 +306,8 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
         match message:
             case Text(text=text):
                 if "BrowserOutputObservation" in text:
-                    self.message_history.append(
-                        (
-                            self.name,
-                            "observation data",
-                            "BrowserOutputObservation received.",
-                        )
-                    )
                     text = text.split("BrowserOutputObservation", 1)[1][:100]
+                    print(f"[dim]Browser: {text}...[/]")
                 self.message_history.append((self.name, "observation data", text))
                 return AgentAction(
                     agent_name=self.name, action_type="none", argument="", path=""
@@ -319,132 +316,55 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                 self.count_ticks += 1
                 if self.count_ticks % self.query_interval == 0:
                     try:
-                        template = self.get_action_template(
-                            [action for action in ActionType]
-                        )
-
-                        agent_action = await agenerate(
+                        # Use the new structured output format
+                        response: AgentResponse = await agenerate_agent_response(
                             model_name=self.model_name,
-                            template=template,
-                            input_values={
-                                "message_history": self._format_message_history(
-                                    self.message_history
-                                ),
-                                "goal": self.goal,
-                                "agent_name": self.name,
-                            },
+                            agent_name=self.name,
+                            history=self._format_message_history(self.message_history),
+                            goal=self.goal,
                             temperature=0.7,
-                            output_parser=StrOutputParser(),
                         )
-                    except Exception as e:
-                        print(f"Error during agenerate: {e}")
-
-                    agent_action = (
-                        agent_action.replace("```", "")
-                        .replace("json", "")
-                        .strip('"')
-                        .strip()
-                    )
-
-                    try:
-                        data = json.loads(agent_action)
-                        action = data["action"]
-                        if action == "thought":
-                            content = data["args"]["content"]
-                            self.message_history.append((self.name, action, content))
+                        
+                        # Convert the structured response to AgentAction
+                        if response.action == ActionType.SPEAK:
+                            content = response.args.content  # type: ignore
+                            self.message_history.append((self.name, "speak", content))
                             return AgentAction(
                                 agent_name=self.name,
-                                action_type="thought",
+                                action_type="speak",
                                 argument=content,
                                 path="",
                             )
-
-                        elif action == "speak":
-                            content = data["args"]["content"]
-                            self.message_history.append((self.name, action, content))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=content,
-                                path="",
-                            )
-
-                        elif action == "non-verbal":
-                            content = data["args"]["content"]
-                            self.message_history.append((self.name, action, content))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=content,
-                                path="",
-                            )
-
-                        elif action == "browse":
-                            url = data["args"]["url"]
-                            self.message_history.append((self.name, action, url))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=url,
-                                path="",
-                            )
-
-                        elif action == "browse_action":
-                            command = data["args"]["command"]
-                            self.message_history.append((self.name, action, command))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=command,
-                                path="",
-                            )
-
-                        elif action == "run":
-                            command = data["args"]["command"]
-                            self.message_history.append((self.name, action, command))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=command,
-                                path="",
-                            )
-
-                        elif action == "write":
-                            path = data["args"]["path"]
-                            content = data["args"]["content"]
-                            self.message_history.append((self.name, action, content))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument=content,
-                                path=path,
-                            )
-
-                        elif action == "read":
-                            path = data["args"]["path"]
-                            self.message_history.append((self.name, action, path))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type=action,
-                                argument="Nan",
-                                path=path,
-                            )
-
-                        elif action == "none":
+                        elif response.action == ActionType.NONE:
                             return AgentAction(
                                 agent_name=self.name,
                                 action_type="none",
                                 argument="",
                                 path="",
                             )
-                        else:
-                            print(f"Unknown action: {action}")
-                    except json.JSONDecodeError as e:
-                        print(f"Error decoding JSON: {e}")
-                else:
-                    return AgentAction(
-                        agent_name=self.name, action_type="none", argument="", path=""
-                    )
+                        elif response.action == ActionType.LEAVE:
+                            print(f"[yellow]{self.name} has left the conversation[/]")
+                            return AgentAction(
+                                agent_name=self.name,
+                                action_type="leave",
+                                argument="",
+                                path="",
+                            )
+                        
+                    except Exception as e:
+                        print(f"[red]Error: {str(e)}[/]")
+                        return AgentAction(
+                            agent_name=self.name,
+                            action_type="none",
+                            argument="",
+                            path="",
+                        )
+                return AgentAction(
+                    agent_name=self.name,
+                    action_type="none",
+                    argument="",
+                    path="",
+                )
             case AgentAction(
                 agent_name=agent_name, action_type=action_type, argument=text
             ):
@@ -453,4 +373,5 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                 return AgentAction(
                     agent_name=self.name, action_type="none", argument="", path=""
                 )
+        
         raise ValueError(f"Unexpected message type: {type(message)}")
