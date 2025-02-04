@@ -2,7 +2,7 @@
 
 const nextConfig = {
   output: "export",
-  basePath: "/nextjs-github-pages",
+  basePath: "/cotomata",
 };
 
 export default nextConfig;
