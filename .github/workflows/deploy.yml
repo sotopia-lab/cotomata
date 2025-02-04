@@ -78,7 +78,7 @@ jobs:
           bun install
 
       - name: Build with Next.js
-        run: | 
+        run: |
           cd frontend
           bun run build
 
