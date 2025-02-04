@@ -22,7 +22,6 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     let socketInstance: Socket;
@@ -30,10 +29,12 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     const initialize = async () => {
       try {
         console.log('Creating socket instance...');
-        socketInstance = io('http://localhost:8000', {
+        socketInstance = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}:8000`, {
           transports: ['websocket'],
           reconnection: true,
-          autoConnect: true
+          autoConnect: true,
+          rejectUnauthorized: false,
+          secure: true,
         });
 
         // Log all incoming events for debugging

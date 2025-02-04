@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+
+const nextConfig = {
+  output: "export",
+  basePath: "/nextjs-github-pages",
+};
 
 export default nextConfig;

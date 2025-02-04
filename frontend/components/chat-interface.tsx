@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageCircle, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,8 +88,9 @@ export const ChatInterface = ({ messages, sceneMessages, socket, sessionId, onSe
   };
 
   const startAgentConversation = () => {
-    console.log('Join Agent Session');
+    console.log('Join Agent Session', sessionId);
     socket && socket.emit('init_agent_conversation', { sessionId: sessionId }, (response: any) => {
+      console.log("here", response);
       if (response.success) {
         setAgentStatus(true);
       }
