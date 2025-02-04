@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "server": "^1.0.41"
   }
-} 
+}
