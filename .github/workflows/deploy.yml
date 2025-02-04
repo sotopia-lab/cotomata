@@ -72,22 +72,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
 
+      - name: Check .env variable
+        run: |
+          cd frontend
+          echo "NEXT_PUBLIC_SOCKET_URL=${{ vars.NEXT_PUBLIC_SOCKET_URL }}"
+      
       - name: Install dependencies
         run: |
           cd frontend 
           bun install
-
-      - name: Create .env file
-        run: |
-          cd frontend
-          echo "NEXT_PUBLIC_SOCKET_URL=${{ env.NEXT_PUBLIC_SOCKET_URL }}" >> .env
 
       - name: Build with Next.js
         run: |
           cd frontend
           bun run build
         env:
-          NEXT_PUBLIC_SOCKET_URL: ${{ env.NEXT_PUBLIC_SOCKET_URL }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ vars.NEXT_PUBLIC_SOCKET_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
