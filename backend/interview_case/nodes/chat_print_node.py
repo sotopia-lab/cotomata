@@ -30,7 +30,7 @@ logging.basicConfig(
 
 
 @NodeFactory.register("chat_print")
-class ChatPrint(PrintNode):
+class ChatPrintNode(PrintNode):
     def __init__(self, env_agents: list[str], *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.env_agents: list[str] = env_agents

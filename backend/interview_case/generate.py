@@ -951,28 +951,86 @@ async def agenerate_agent_response(
     use_fixed_model_version: bool = True,
 ) -> AgentResponse:
     """Generate a structured agent response with reasoning"""
-    print(f"\n{agent_name}:", end="", flush=True)
+    
     
     parser = AgentResponseOutputParser()
+    format_instructions = parser.get_format_instructions()
     model_name = "gpt-4o-mini"
+    # print("="*100)
+    # print(f"\n{agent_name}:", end="", flush=True)
+    # print(f"Using model: {model_name}")
+    # print(f"Using format instructions: {format_instructions}")
+    # print(f"Using history: {history}")
+    # print(f"Using goal: {goal}")
+    # print("="*100)
     
     try:
         result = await agenerate(
             model_name=model_name,
-            template="""You are {agent_name}. Based on your goal and the conversation history, decide what action to take next.
+            template="""You are {agent_name}, an AI agent conversing with another someone. Follow your role carefully:
+
+            Your Goal: {goal}
+            Conversation History: {history}
             
-            Goal: {goal}
-            History: {history}
+            You should try your best to achieve your goal in a way that align with your character traits.
+            Additionally, maintaining the conversation's naturalness and realism is essential (e.g., do not repeat what other people has already said before).
+            Also start the conversation naturally as you would communicate with the other person based on the content provided.
+
+            Available actions (use appropriately for your role):
+
+            Communication:
+            [1] `speak` - Primary method for interview dialogue
+                * Arguments: content (str) - your message
             
-            Think through your decision carefully and explain your reasoning.
-            Then output a structured response with your thinking and chosen action.
+            [2] `non-verbal` - Professional gestures
+                * Arguments: content (str) - gesture description
+                * Examples: non-verbal("nods attentively"), non-verbal("smiles professionally")
+            
+            Documentation Actions:
+            [3] `write` - Write code or take notes
+                * Arguments:
+                  - path (str) - file path
+                  - content (str) - content to write
+                * Example: write("/workspace/solution.py", "def solve():\\n    pass")
+            
+            [4] `read` - Review code or documentation
+                * Arguments: path (str) - path to file
+                * Example: read("/workspace/interview.py")
+            
+            Technical Actions:
+            [5] `run` - Execute code or commands
+                * Arguments: command (str) - command to run
+                * Example: run("python3 test_solution.py")
+            
+            [6] `browse` - Look up documentation
+                * Arguments: url (str) - the URL to open
+                * Example: browse("https://python.org/docs")
+            
+            Control Actions:
+            [7] `thought` - Internal planning (limited use)
+                * Arguments: content (str) - your thought process
+                * Example: thought("Should ask about system design next")
+            
+            [8] `none` - Brief pause
+                * No arguments needed
+            
+            [9] `leave` - End interview
+                * No arguments needed
+                * Use only when interview is properly concluded
+            
+            Interview Etiquette Guidelines:
+            1. Maintain professional communication
+            2. Follow proper interview structure
+            3. Use technical actions appropriately
+            4. Document important points (interviewer)
+            5. Respond thoughtfully (candidate)
+            6. Conclude professionally
             
             Remember:
-            1. First explain your thinking in the 'thinking' field
-            2. Choose an action from: 'speak', 'none', or 'leave'
-            3. For 'speak' action, provide the message in the args.content
-            4. For 'none' action, use empty dict as args
-            5. For 'leave' action, use empty dict as args
+            1. Stay in character for your role
+            2. Follow proper interview etiquette
+            3. Use actions appropriate to your role
+            4. Keep the interaction professional
             
             {format_instructions}
             """,
@@ -980,16 +1038,16 @@ async def agenerate_agent_response(
                 "agent_name": agent_name,
                 "goal": goal,
                 "history": history,
+                "format_instructions": format_instructions,
             },
             output_parser=parser,
             temperature=temperature,
             structured_output=True,
-            stream=False,
+            stream=True,
             bad_output_process_model=bad_output_process_model,
             use_fixed_model_version=use_fixed_model_version,
         )
-        # Print the complete response when not streaming
-        print(str(result))
+        print()
         return result
     except Exception as e:
         print(f"Error: {str(e)}")

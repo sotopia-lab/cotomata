@@ -6,12 +6,30 @@ node_name = "Jack"
 node_class = "llm_agent"
 
 [nodes.node_args]
-query_interval = 5
+turn_order = 1
 output_channel = "Jack:Jane"
 input_text_channels = ["Jane:Jack"]
 input_env_channels = ["Scene:Jack", "Runtime:Agent"]
 input_tick_channel = "tick/secs/1"
-goal = "Your goal is to effectively test Jane's technical ability and finally decide if she has passed the interview. Make sure to also evaluate her communication skills, problem-solving approach, and enthusiasm."
+goal = """Your goal is to effectively test Jane's technical ability and finally decide if she has passed the interview. 
+IMPORTANT GUIDELINES:
+1. NEVER repeat questions or responses
+2. Use 'none' action when waiting for Jane to work
+3. After asking a question, wait for a complete response before proceeding
+4. Start by setting up the coding environment:
+   - First use 'write' action to create the interview.py file
+   - Then use 'run' action to install JAX
+5. For each coding task:
+   - Give clear requirements
+   - Wait for Jane's solution
+   - Use 'run' action to test her code
+   - Provide feedback
+6. If Jane seems stuck:
+   - Ask if she needs clarification
+   - Suggest checking documentation
+   - Provide hints without giving away the solution
+7. Track the conversation to avoid loops
+"""
 model_name = "gpt-4o-mini"
 agent_name = "Jack"
 
@@ -20,12 +38,29 @@ node_name = "Jane"
 node_class = "llm_agent"
 
 [nodes.node_args]
-query_interval = 7
+turn_order = 2
 output_channel = "Jane:Jack"
 input_text_channels = ["Jack:Jane"]
 input_env_channels = ["Scene:Jane", "Runtime:Agent"]
 input_tick_channel = "tick/secs/1"
-goal = "Your goal is to perform well in the interview by demonstrating your technical skills, clear communication, and enthusiasm for the position. Stay calm, ask clarifying questions when needed, and confidently explain your thought process."
+goal = """Your goal is to perform well in the interview by demonstrating your technical skills, clear communication, and enthusiasm.
+IMPORTANT GUIDELINES:
+1. NEVER repeat responses or questions
+2. Use available tools effectively:
+   - 'browse' action to check documentation
+   - 'write' action to implement solutions
+   - 'run' action to test your code
+3. When implementing solutions:
+   - First browse documentation
+   - Write code in small, testable chunks
+   - Run tests to verify
+4. If stuck:
+   - Ask specific questions
+   - Check documentation URLs
+   - Break down the problem
+5. Keep responses concise and focused
+6. Track conversation to avoid loops
+"""
 model_name = "gpt-4o-mini"
 agent_name = "Jane"
 
@@ -116,11 +151,11 @@ Keep your conversations short and to the point and NEVER repeat yourself
 
 5. **Assessment**: Review Jane's solutions for correctness, efficiency, and clarity. Ask her to explain her solution and discuss any optimizations.
     - Afetr Jane solves something and asks you to check if please verfy the answer and ask leading questions if required.
-6. **Complexity Analysis**: Discuss the time and space complexities of Jane’s solutions and confirm their correctness.
+6. **Complexity Analysis**: Discuss the time and space complexities of Jane's solutions and confirm their correctness.
 7. **Follow-Up**: After the technical part, invite Jane to ask any questions she has about the role, team, or the company.
 8. **Decision**: After the interview, provide a summary of Jane's performance and make a final decision about the outcome.
 
-This interview not only evaluates Jane’s technical skills but also her communication, problem-solving approach, and fit for the team.
+This interview not only evaluates Jane's technical skills but also her communication, problem-solving approach, and fit for the team.
 """
 
 [[nodes]]

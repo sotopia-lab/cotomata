@@ -4,7 +4,7 @@ from enum import Enum
 from rich.logging import RichHandler
 from pydantic import Field
 
-from typing import Optional
+from typing import Optional, Any
 
 from aact import Message, NodeFactory
 from aact.messages import Text, Tick, DataModel
@@ -17,23 +17,38 @@ from .generate import agenerate_agent_response
 from .agent_models import AgentResponse, ActionType
 
 import json
+import asyncio
 
-# Check Python version
-if sys.version_info >= (3, 11):
-    pass
-else:
-    pass
-
-# Configure logging
-FORMAT = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+# Configure basic logging
+FORMAT = "%(message)s"
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.INFO,
     format=FORMAT,
     datefmt="[%X]",
-    handlers=[RichHandler()],
+    handlers=[RichHandler(show_time=False, show_path=False)]
 )
 
 logger = logging.getLogger(__name__)
+
+def format_box_message(title: str, content: str) -> str:
+    """Format a message in a nice box with title."""
+    width = min(100, max(len(line) for line in content.split('\n')) + 4)
+    horizontal_line = "─" * width
+    padded_content = "\n".join(f"│ {line:<{width-2}} │" for line in content.split('\n'))
+    
+    title_line = f"╭─ {title} "
+    title_line += "─" * (width - len(title_line) - 1) + "╮"
+    bottom_line = "╰" + horizontal_line + "╯"
+    
+    return f"{title_line}\n{padded_content}\n{bottom_line}"
+
+def log_agent_action(agent_name: str, thinking: str | None = None, action: str | None = None) -> None:
+    """Log agent thoughts and actions to the logger only."""
+    if thinking:
+        logger.info(f"[{agent_name}] Thinking: {thinking}")
+    
+    if action:
+        logger.info(f"[{agent_name}] Action: {action}")
 
 class ActionType(Enum):
     NONE = "none"
@@ -58,7 +73,6 @@ class ActionType(Enum):
         else:
             return NotImplemented
 
-
 @DataModelFactory.register("agent_action")
 class AgentAction(DataModel):
     agent_name: str = Field(description="the name of the agent")
@@ -69,6 +83,7 @@ class AgentAction(DataModel):
         description="the utterance if choose to speak, the expression or gesture if choose non-verbal communication, or the physical action if choose action"
     )
     path: Optional[str] = Field(description="path of file")
+    thinking: Optional[str] = Field(description="the agent's thought process before taking the action", default=None)
 
     def to_natural_language(self) -> str:
         action_descriptions = {
@@ -82,19 +97,20 @@ class AgentAction(DataModel):
             ActionType.NON_VERBAL: f"[{self.action_type.value}] {self.argument}",
             ActionType.LEAVE: "left the conversation",
         }
-
-        return action_descriptions.get(self.action_type, "performed an unknown action")
-
+        description = action_descriptions.get(self.action_type, "performed an unknown action")
+        if self.thinking:
+            description = f'(thinking: "{self.thinking}") ' + description
+        return description
 
 @NodeFactory.register("llm_agent")
-class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignore[misc]
+class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]):
     def __init__(
         self,
         input_text_channels: list[str],
         input_tick_channel: str,
         input_env_channels: list[str],
         output_channel: str,
-        query_interval: int,
+        turn_order: int,
         agent_name: str,
         goal: str,
         model_name: str,
@@ -113,211 +129,149 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
             redis_url,
         )
         self.output_channel = output_channel
-        self.query_interval = query_interval
+        self.turn_order = turn_order
+        self.current_turn = turn_order  # Start at own turn order
+        self.last_action_time = 0
         self.count_ticks = 0
         self.message_history: list[tuple[str, str, str]] = []
         self.name = agent_name
         self.model_name = model_name
         self.goal = goal
+        self.MIN_TICKS_BETWEEN_ACTIONS = 10  # Increased delay between actions
+        self.error_count = 0  # Track consecutive errors
+        self.MAX_ERRORS = 3  # Maximum number of consecutive errors before backing off
+        self.none_action_count = 0  # Track consecutive none actions
+        self.MAX_NONE_ACTIONS = 20  # Maximum consecutive none actions before forcing turn
+
+    def _should_force_turn(self) -> bool:
+        """Determine if we should force a turn due to deadlock."""
+        return self.none_action_count >= self.MAX_NONE_ACTIONS
 
     async def send(self, message: AgentAction) -> None:
-        if message.action_type in ("speak", "thought"):
-            await self.r.publish(
-                self.output_channel,
-                Message[AgentAction](data=message).model_dump_json(),
-            )
-
-        elif message.action_type in ("browse", "browse_action", "write", "read", "run"):
-            await self.r.publish(
-                "Agent:Runtime",
-                Message[AgentAction](data=message).model_dump_json(),
-            )
-
-    def _format_message_history(
-        self, message_history: list[tuple[str, str, str]]
-    ) -> str:
-        ## TODO: akhatua Fix the mapping of action to be gramatically correct
-        return "\n".join(
-            (f"{speaker} {action} {message}")
-            for speaker, action, message in message_history
-        )
-
-    def get_action_template(self, selected_actions: list[ActionType]) -> str:
-        """
-        Returns the action template string with selected actions.
-
-        Args:
-            selected_actions (list[ActionType]): List of ActionType enum members to include in the template.
-
-        Returns:
-            str: The action template with the selected actions.
-        """
-        base_template = """ You are talking to another agent.
-        You are {agent_name}.\n
-        {message_history}\nand you plan to {goal}.
-        ## Action
-        What is your next thought or action? Your response must be in JSON format.
-
-        It must be an object, and it must contain two fields:
-        * `action`, which is one of the actions below
-        * `args`, which is a map of key-value pairs, specifying the arguments for that action
-        """
-
-        action_descriptions = {
-            str(
-                ActionType.SPEAK
-            ): """`speak` - you can talk to the other agents to share information or ask them something. Arguments:
-                * `content` - the message to send to the other agents (should be short)""",
-            str(
-                ActionType.THOUGHT
-            ): """`thought` - only use this rarely to make a plan, set a goal, record your thoughts. Arguments:
-                * `content` - the message you send yourself to organize your thoughts (should be short). You cannot think more than 2 turns.""",
-            str(
-                ActionType.NONE
-            ): """`none` - you can choose not to take an action if you are waiting for some data""",
-            str(
-                ActionType.NON_VERBAL
-            ): """`non-verbal` - you can choose to do a non verbal action
-                * `content` - the non veral action you want to send to other agents. eg: smile, shrug, thumbs up""",
-            str(ActionType.BROWSE): """`browse` - opens a web page. Arguments:
-                * `url` - the URL to open, when you browse the web you must use `none` action until you get some information back. When you get the information back you must summarize the article and explain the article to the other agents.""",
-            str(
-                ActionType.BROWSE_ACTION
-            ): """`browse_action` - actions you can take on a web browser
-                * `command` - the command to run. You have 15 available commands. These commands must be a single string value of command
-                    Options for `command`:
-                        `command` = goto(url: str)
-                            Description: Navigate to a url.
-                            Examples:
-                                goto('http://www.example.com')
-
-                        `command` = go_back()
-                            Description: Navigate to the previous page in history.
-                            Examples:
-                                go_back()
-
-                        `command` = go_forward()
-                            Description: Navigate to the next page in history.
-                            Examples:
-                                go_forward()
-
-                        `command` = noop(wait_ms: float = 1000)
-                            Description: Do nothing, and optionally wait for the given time (in milliseconds).
-                            You can use this to get the current page content and/or wait for the page to load.
-                            Examples:
-                                noop()
-                                noop(500)
-
-                        `command` = scroll(delta_x: float, delta_y: float)
-                            Description: Scroll horizontally and vertically. Amounts in pixels, positive for right or down scrolling, negative for left or up scrolling. Dispatches a wheel event.
-                            Examples:
-                                scroll(0, 200)
-                                scroll(-50.2, -100.5)
-
-                        `command` = fill(bid, value)
-                            Description: Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
-                            Examples:
-                                fill('237', 'example value')
-                                fill('45', 'multi-line\nexample')
-                                fill('a12', 'example with "quotes"')
-
-                        `command` = select_option(bid: str, options: str | list[str])
-                            Description: Select one or multiple options in a <select> element. You can specify option value or label to select. Multiple options can be selected.
-                            Examples:
-                                select_option('a48', 'blue')
-                                select_option('c48', ['red', 'green', 'blue'])
-
-                        `command`= click(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
-                            Description: Click an element.
-                            Examples:
-                                click('a51')
-                                click('b22', button='right')
-                                click('48', button='middle', modifiers=['Shift'])
-
-                        `command` = dblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
-                            Description: Double click an element.
-                            Examples:
-                                dblclick('12')
-                                dblclick('ca42', button='right')
-                                dblclick('178', button='middle', modifiers=['Shift'])
-
-                        `command` = hover(bid: str)
-                            Description: Hover over an element.
-                            Examples:
-                                hover('b8')
-
-                        `command` = press(bid: str, key_comb: str)
-                            Description: Focus the matching element and press a combination of keys. It accepts the logical key names that are emitted in the keyboardEvent.key property of the keyboard events: Backquote, Minus, Equal, Backslash, Backspace, Tab, Delete, Escape, ArrowDown, End, Enter, Home, Insert, PageDown, PageUp, ArrowRight, ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc. You can alternatively specify a single character you'd like to produce such as "a" or "#". Following modification shortcuts are also supported: Shift, Control, Alt, Meta, ShiftLeft, ControlOrMeta. ControlOrMeta resolves to Control on Windows and Linux and to Meta on macOS.
-                            Examples:
-                                press('88', 'Backspace')
-                                press('a26', 'ControlOrMeta+a')
-                                press('a61', 'Meta+Shift+t')
-
-                        `command` = focus(bid: str)
-                            Description: Focus the matching element.
-                            Examples:
-                                focus('b455')
-
-                        `command` = clear(bid: str)
-                            Description: Clear the input field.
-                            Examples:
-                                clear('996')
-
-                        `command` = drag_and_drop(from_bid: str, to_bid: str)
-                            Description: Perform a drag & drop. Hover the element that will be dragged. Press left mouse button. Move mouse to the element that will receive the drop. Release left mouse button.
-                            Examples:
-                                drag_and_drop('56', '498')
-
-                        `command`=  upload_file(bid: str, file: str | list[str])
-                            Description: Click an element and wait for a "filechooser" event, then select one or multiple input files for upload. Relative file paths are resolved relative to the current working directory. An empty list clears the selected files.
-                            Examples:
-                                upload_file('572', '/home/user/my_receipt.pdf')
-                                upload_file('63', ['/home/bob/Documents/image.jpg', '/home/bob/Documents/file.zip'])""",
-            str(ActionType.READ): """`read` - reads the content of a file. Arguments:
-                * `path` - the path of the file to read""",
-            str(ActionType.WRITE): """`write` - writes the content to a file. Arguments:
-                * `path` - the path of the file to write
-                * `content` - the content to write to the file""",
-            str(
-                ActionType.RUN
-            ): """`run` - runs a command on the command line in a Linux shell. Arguments:
-                * `command` - the command to run""",
-            str(
-                ActionType.LEAVE
-            ): """`leave` - if your goals have been completed or abandoned, and you're absolutely certain that you've completed your task and have tested your work, use the leave action to stop working.""",
-        }
-
-        selected_action_descriptions = "\n\n".join(
-            f"[{i+1}] {action_descriptions[str(action)]}"
-            for i, action in enumerate(selected_actions)
-            if str(action) in action_descriptions
-        )
-
-        return (
-            base_template
-            + selected_action_descriptions
-            + """
-                You must prioritize actions that move you closer to your goal. Communicate briefly when necessary and focus on executing tasks effectively. Always consider the next actionable step to avoid unnecessary delays.
-                Again, you must reply with JSON, and only with JSON.
-            """
-        )
+        try:
+            # Actions that should be sent to the output channel
+            output_channel_actions = {
+                "speak", "thought", "non-verbal", "leave"
+            }
+            
+            # Actions that should be sent to the runtime channel
+            runtime_channel_actions = {
+                "browse", "browse_action", "write", "read", "run"
+            }
+            
+            logger.info(f"[{self.name}] Sending action: {message.action_type}")
+            
+            if str(message.action_type) in output_channel_actions:
+                logger.info(f"[{self.name}] Publishing to output channel: {message.action_type}")
+                await self.r.publish(
+                    self.output_channel,
+                    Message[AgentAction](data=message).model_dump_json(),
+                )
+                # Add to message history immediately for output actions
+                if message.argument:
+                    self.message_history.append(
+                        (self.name, str(message.action_type), message.argument)
+                    )
+                    logger.info(f"[{self.name}] Added to history: {message.action_type} - {message.argument[:50]}...")
+            
+            elif str(message.action_type) in runtime_channel_actions:
+                logger.info(f"[{self.name}] Publishing to runtime channel: {message.action_type}")
+                await self.r.publish(
+                    "Agent:Runtime",
+                    Message[AgentAction](data=message).model_dump_json(),
+                )
+                
+                # Add to message history after sending to runtime
+                if message.argument:
+                    self.message_history.append(
+                        (self.name, str(message.action_type), message.argument)
+                    )
+                    logger.info(f"[{self.name}] Added to history: {message.action_type} - {message.argument[:50]}...")
+                elif message.path:
+                    self.message_history.append(
+                        (self.name, str(message.action_type), message.path)
+                    )
+                    logger.info(f"[{self.name}] Added to history: {message.action_type} - {message.path}")
+            
+            # Update timing for any non-none action
+            if str(message.action_type) != "none":
+                self.last_action_time = self.count_ticks
+                logger.info(f"[{self.name}] Updated action time to: {self.last_action_time}")
+                
+        except Exception as e:
+            logger.error(f"[{self.name}] Error sending message: {e}")
+            raise
 
     async def aact(self, message: AgentAction | Tick | Text) -> AgentAction:
-        match message:
-            case Text(text=text):
-                if "BrowserOutputObservation" in text:
-                    text = text.split("BrowserOutputObservation", 1)[1][:100]
-                    print(f"[dim]Browser: {text}...[/]")
-                self.message_history.append((self.name, "observation data", text))
-                return AgentAction(
-                    agent_name=self.name, action_type="none", argument="", path=""
-                )
-            case Tick():
-                self.count_ticks += 1
-                if self.count_ticks % self.query_interval == 0:
+        try:
+            logger.info(f"[{self.name}] Processing message type: {type(message)}")
+            
+            match message:
+                case Text(text=text):
+                    logger.info(f"[{self.name}] Processing Text message: {text[:100]}...")
+                    
+                    if "BrowserOutputObservation" in text:
+                        text = text.split("BrowserOutputObservation", 1)[1][:100]
+                        logger.info(f"[{self.name}] Processing browser observation: {text}")
+                        self.message_history.append((self.name, "observation data", text))
+                        self.error_count = 0  # Reset error count on successful action
+                        self.none_action_count = 0  # Reset none action count on successful action
+                    else:
+                        # Add observation to history
+                        logger.info(f"[{self.name}] Processing observation data: {text[:100]}...")
+                        self.message_history.append((self.name, "observation data", text))
+                        self.error_count = 0  # Reset error count on successful action
+                        self.none_action_count = 0  # Reset none action count on successful action
+                    
+                    return AgentAction(
+                        agent_name=self.name, action_type="none", argument="", path=""
+                    )
+                    
+                case Tick():
+                    current_time = self.count_ticks
+                    self.count_ticks += 1
+                    
+                    # Check if enough time has passed since last action
+                    time_since_last = current_time - self.last_action_time
+                    if time_since_last < self.MIN_TICKS_BETWEEN_ACTIONS:
+                        self.none_action_count += 1
+                        return AgentAction(
+                            agent_name=self.name, action_type="none", argument="", path=""
+                        )
+                    
+                    # Simple turn check - if we've seen too many none actions, force our turn
+                    if self._should_force_turn():
+                        logger.warning(f"[{self.name}] Forcing turn after {self.none_action_count} none actions")
+                        self.current_turn = self.turn_order  # Reset to our turn
+                        self.none_action_count = 0
+                    else:
+                        # Normal turn alternation
+                        is_my_turn = (self.current_turn == self.turn_order)
+                        if not is_my_turn:
+                            self.none_action_count += 1
+                            return AgentAction(
+                                agent_name=self.name, action_type="none", argument="", path=""
+                            )
+                    
+                    logger.info(f"[{self.name}] Turn info - Current: {self.current_turn}, Taking Turn: {True}")
+
+                    # If we've had too many errors, back off for longer
+                    if self.error_count >= self.MAX_ERRORS:
+                        logger.warning(f"[{self.name}] Too many consecutive errors ({self.error_count}), backing off")
+                        self.last_action_time = current_time  # Reset timing to force delay
+                        self.error_count = 0  # Reset error count
+                        self.none_action_count = 0  # Reset none action count
+                        return AgentAction(
+                            agent_name=self.name,
+                            action_type="none",
+                            argument="",
+                            path="",
+                            thinking="Backing off after multiple errors"
+                        )
+
                     try:
-                        # Use the new structured output format
-                        response: AgentResponse = await agenerate_agent_response(
+                        logger.info(f"[{self.name}] Generating response...")
+                        response = await agenerate_agent_response(
                             model_name=self.model_name,
                             agent_name=self.name,
                             history=self._format_message_history(self.message_history),
@@ -325,53 +279,283 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             temperature=0.7,
                         )
                         
-                        # Convert the structured response to AgentAction
-                        if response.action == ActionType.SPEAK:
-                            content = response.args.content  # type: ignore
-                            self.message_history.append((self.name, "speak", content))
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type="speak",
-                                argument=content,
-                                path="",
-                            )
-                        elif response.action == ActionType.NONE:
+                        if not response:
+                            self.error_count += 1
+                            self.none_action_count += 1
+                            logger.error(f"[{self.name}] Failed to generate response (error #{self.error_count})")
                             return AgentAction(
                                 agent_name=self.name,
                                 action_type="none",
                                 argument="",
                                 path="",
-                            )
-                        elif response.action == ActionType.LEAVE:
-                            print(f"[yellow]{self.name} has left the conversation[/]")
-                            return AgentAction(
-                                agent_name=self.name,
-                                action_type="leave",
-                                argument="",
-                                path="",
+                                thinking=f"Encountered error #{self.error_count}, will retry after delay"
                             )
                         
+                        # On successful response, update turn and reset counters
+                        self.current_turn = 3 - self.turn_order  # Toggle between 1 and 2
+                        self.none_action_count = 0
+                        self.error_count = 0
+                        
+                        logger.info(f"[{self.name}] Generated response: {response.action}")
+                        
+                        # Log agent's thinking and response
+                        if hasattr(response, 'thinking'):
+                            log_agent_action(self.name, thinking=response.thinking)
+                        
+                        # Update timing info ONLY for non-none actions
+                        if response.action != "none":
+                            self.last_action_time = current_time
+                            logger.info(f"[{self.name}] Updated action timing")
+                        
+                        # For runtime actions, set a longer delay
+                        if response.action in ["write", "run", "read", "browse", "browse_action"]:
+                            self.last_action_time = current_time + 3  # Extra delay for runtime actions
+                        
+                        # Process response into action
+                        try:
+                            if response.action == "speak":
+                                content = response.args.content
+                                log_agent_action(self.name, action=f'Says: "{content}"')
+                                self.message_history.append((self.name, "speak", content))
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="speak",
+                                    argument=content,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "write":
+                                path = response.args.path
+                                content = response.args.content
+                                
+                                # Check recent history for similar write actions
+                                recent_writes = [msg for msg in self.message_history[-10:]
+                                               if msg[1] == "write"]
+                                
+                                if any(content in write[2] for write in recent_writes):
+                                    # If we've tried this write before, skip it
+                                    logger.info(f"[{self.name}] Skipping duplicate write to: {path}")
+                                    return AgentAction(
+                                        agent_name=self.name,
+                                        action_type="none",
+                                        argument="",
+                                        path="",
+                                        thinking=f"Already attempted to write similar content to {path}"
+                                    )
+                                
+                                log_agent_action(self.name, action=f'Writes to file: {path}')
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="write",
+                                    argument=content,
+                                    path=path,
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "thought":
+                                content = response.args.content
+                                log_agent_action(self.name, action=f'Thinks: "{content}"')
+                                self.message_history.append((self.name, "thought", content))
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="thought",
+                                    argument=content,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "non-verbal":
+                                content = response.args.content
+                                log_agent_action(self.name, action=f'Gestures: {content}')
+                                self.message_history.append((self.name, "non-verbal", content))
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="non-verbal",
+                                    argument=content,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "browse":
+                                url = response.args.url
+                                log_agent_action(self.name, action=f'Browses: {url}')
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="browse",
+                                    argument=url,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "browse_action":
+                                command = response.args.command
+                                log_agent_action(self.name, action=f'Browser action: {command}')
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="browse_action",
+                                    argument=command,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "read":
+                                path = response.args.path
+                                log_agent_action(self.name, action=f'Reads file: {path}')
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="read",
+                                    argument="",
+                                    path=path,
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "run":
+                                command = response.args.command
+                                log_agent_action(self.name, action=f'Runs command: {command}')
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="run",
+                                    argument=command,
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "none":
+                                log_agent_action(self.name, action="Does nothing")
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="none",
+                                    argument="",
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            elif response.action == "leave":
+                                log_agent_action(self.name, action="Leaves the conversation")
+                                return AgentAction(
+                                    agent_name=self.name,
+                                    action_type="leave",
+                                    argument="",
+                                    path="",
+                                    thinking=response.thinking if hasattr(response, 'thinking') else None
+                                )
+                            
+                        except AttributeError as e:
+                            logger.error(f"[{self.name}] Error processing response action: {e}")
+                            # If we can't process the action, return none and try again next turn
+                            return AgentAction(
+                                agent_name=self.name,
+                                action_type="none",
+                                argument="",
+                                path="",
+                                thinking="Had trouble processing the last action, will retry"
+                            )
+                            
                     except Exception as e:
-                        print(f"[red]Error: {str(e)}[/]")
+                        logger.error(f"[{self.name}] Error generating response: {e}")
+                        # Don't raise, just return none action and try again next turn
                         return AgentAction(
                             agent_name=self.name,
                             action_type="none",
                             argument="",
                             path="",
+                            thinking="Encountered an error, will retry next turn"
                         )
-                return AgentAction(
-                    agent_name=self.name,
-                    action_type="none",
-                    argument="",
-                    path="",
-                )
-            case AgentAction(
-                agent_name=agent_name, action_type=action_type, argument=text
-            ):
-                if action_type == "speak":
-                    self.message_history.append((agent_name, str(action_type), text))
-                return AgentAction(
-                    agent_name=self.name, action_type="none", argument="", path=""
-                )
+
+                case AgentAction(agent_name=agent_name, action_type=action_type, argument=text):
+                    # Track all actions in message history, not just speak
+                    action_str = str(action_type)
+                    
+                    try:
+                        # Update turn based on other agent's action
+                        if action_str != "none" and agent_name != self.name:
+                            # Other agent took action, next turn is ours
+                            self.current_turn = self.turn_order
+                            self.none_action_count = 0  # Reset none count when turn changes
+                            logger.info(f"[{self.name}] Updated turn to {self.current_turn} after {agent_name}'s action")
+                        
+                        # Add thinking to history if present
+                        if message.thinking:
+                            self.message_history.append((agent_name, "thinking", message.thinking))
+                            logger.info(f"[{self.name}] Added thinking to history: {message.thinking[:50]}...")
+                        
+                        if action_str in ["speak", "thought", "non-verbal", "browse", "browse_action", "run"]:
+                            self.message_history.append((agent_name, action_str, text))
+                            logger.info(f"[{self.name}] Added action to history: {action_str} - {text[:50]}...")
+                        elif action_str in ["read", "write"]:
+                            # For file operations, include both path and content
+                            if message.path:
+                                content = f"{message.path}: {text}" if text else message.path
+                                self.message_history.append((agent_name, action_str, content))
+                                logger.info(f"[{self.name}] Added file operation to history: {action_str} - {content}")
+                        
+                    except Exception as e:
+                        logger.error(f"[{self.name}] Error processing agent action: {e}")
+                        self.error_count += 1
+                    
+                    return AgentAction(
+                        agent_name=self.name,
+                        action_type="none",
+                        argument="",
+                        path="",
+                        thinking=None
+                    )
         
-        raise ValueError(f"Unexpected message type: {type(message)}")
+        except Exception as e:
+            logger.error(f"[{self.name}] Unexpected error in aact: {e}")
+            # Return none action instead of raising
+            return AgentAction(
+                agent_name=self.name,
+                action_type="none",
+                argument="",
+                path="",
+                thinking="Encountered an unexpected error, will retry"
+            )
+
+    def _format_message_history(self, message_history: list[tuple[str, str, str]]) -> str:
+        logger.info(f"[{self.name}] Formatting message history with {len(message_history)} messages")
+        formatted_messages = []
+        scene_setup = None
+        workspace_state = []
+        
+        for speaker, action, message in message_history:
+            logger.debug(f"[{self.name}] Processing history entry: {speaker} - {action}")
+            match action:
+                case "scene_setup":
+                    scene_setup = message
+                    logger.info(f"[{self.name}] Found scene setup message")
+                case "thinking":
+                    formatted_messages.append(f"{speaker} thinking: {message}")
+                case "speak":
+                    formatted_messages.append(f"{speaker}: {message}")
+                case "thought":
+                    formatted_messages.append(f"{speaker} thinks: {message}")
+                case "non-verbal":
+                    formatted_messages.append(f"{speaker} {message}")
+                case "browse":
+                    formatted_messages.append(f"{speaker} browses documentation: {message}")
+                case "browse_action":
+                    formatted_messages.append(f"{speaker} browser action: {message}")
+                case "read":
+                    formatted_messages.append(f"Content from {message} is available in workspace")
+                    workspace_state.append(f"File {message} has been read")
+                case "write":
+                    formatted_messages.append(f"Content has been written to {message}")
+                    workspace_state.append(f"File {message} has been updated")
+                case "run":
+                    formatted_messages.append(f"{speaker} executed command: {message}")
+                case "observation data":
+                    if "file contents" in message.lower():
+                        workspace_state.append(message)
+                    else:
+                        formatted_messages.append(f"Runtime output: {message}")
+                case _:
+                    formatted_messages.append(f"{speaker} {action}: {message}")
+        
+        # Add scene setup at the beginning if it exists
+        if scene_setup:
+            formatted_messages.insert(0, scene_setup)
+            logger.info(f"[{self.name}] Added scene setup to history")
+        
+        # Add workspace state after scene setup
+        if workspace_state:
+            formatted_messages.insert(1, "\nWorkspace State:")
+            for state in workspace_state[-5:]:  # Only show last 5 workspace states
+                formatted_messages.insert(2, f"- {state}")
+            formatted_messages.insert(len(workspace_state) + 2, "")
+        
+        result = "\n".join(formatted_messages)
+        logger.info(f"[{self.name}] Final history length: {len(result)} characters")
+        return result
