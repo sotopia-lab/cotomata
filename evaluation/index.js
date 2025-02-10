@@ -33,26 +33,14 @@ function getAccessToken() {
 }
 
 /**
- * Builds the system instruction message
+ * Reads the system instruction message from a file.
  */
-function constructSystemMessage() {
-  return (
-    "You are an AI assistant that evaluates technical interview performance. " +
-    "Read the provided interview transcript and rate the candidate on the following criteria using a 5-point Likert scale, " +
-    "then output VALID JSON ONLY with this structure:\n\n" +
-    "{\n" +
-    "  \"evaluation_scores\": {\n" +
-    "    \"problem_solving\": (integer 1-5),\n" +
-    "    \"oral_clarity\": (integer 1-5),\n" +
-    "    \"clear_examples\": (integer 1-5),\n" +
-    "    \"enthusiasm\": (integer 1-5),\n" +
-    "    \"confidence\": (integer 1-5),\n" +
-    "    \"overall_score\": (float average of the above)\n" +
-    "  }\n" +
-    "}\n\n" +
-    "Do NOT add additional keys or text outside the JSON. This is not allowed. Please only return a valid JSON output without additional text.\n\n" +
-    "..." // Keep the rest of this function unchanged
-  );
+function constructSystemMessage(systemMessageFilePath) {
+  if (!fs.existsSync(systemMessageFilePath)) {
+    console.error('Invalid system message file name!');
+    process.exit(1);
+  }
+  return fs.readFileSync(systemMessageFilePath, { encoding: 'utf-8' }).trim();
 }
 
 /**
@@ -82,8 +70,9 @@ function buildPromptFromFile(filePath) {
 async function main(
   inputFile,
   outputFile,
-  projectId, 
-  location
+  projectId,
+  location,
+  systemMessageFilePath
 ) {
   // Check if the input file exists
   if (!fs.existsSync(inputFile)) {
@@ -91,8 +80,8 @@ async function main(
     process.exit(1);
   }
 
-  // Prepare system message
-  const systemMessage = constructSystemMessage();
+  // Prepare system message from file
+  const systemMessage = constructSystemMessage(systemMessageFilePath);
 
   // Read transcript from local file
   const transcriptText = fs.readFileSync(inputFile, { encoding: 'utf-8' }).trim();
@@ -194,6 +183,7 @@ async function main(
 
 // Generate a timestamped output file name
 const inputFilePath = process.argv[2];
+const systemMessageFilePath = process.argv[3];
 const timestamp = getTimestamp();
 const outputFilePath = `results/evaluation_output_${timestamp}.json`;
 
@@ -201,4 +191,4 @@ const outputFilePath = `results/evaluation_output_${timestamp}.json`;
 const PROJECT_ID = 'gcp-multi-agent';
 const LOCATION = 'us-east5';
 
-main(inputFilePath, outputFilePath, PROJECT_ID, LOCATION);
+main(inputFilePath, outputFilePath, PROJECT_ID, LOCATION, systemMessageFilePath);
