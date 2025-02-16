@@ -1,0 +1,230 @@
+redis_url = "redis://localhost:6379/0"
+extra_modules = ["group_disscussion_case.group_agent", "interview_case.nodes.initial_message_node", "interview_case.nodes.chat_print_node"]
+
+[[nodes]]
+node_name = "Jack"
+node_class = "group_agent"
+
+[nodes.node_args]
+query_interval = 5
+output_channels = ["Jack:All", "Jack:Bob", "Jake:Jane"]
+input_text_channels = ["Jane:All", "Bob:All", "Jane:Jack", "Bob:Jack"]
+input_env_channels = ["Scene:Jack", "Runtime:Agent"]
+input_tick_channel = "tick/secs/1"
+goal = """As the Project Manager and Coding Expert, implement and coordinate the team's technical work for the customer churn prediction project:
+1. Write and review implementation code for data pipelines and model deployment
+2. Implement code quality checks and testing frameworks
+3. Set up version control and documentation systems
+4. Code review Jane's preprocessing pipelines
+5. Review and optimize Bob's model implementations
+6. Implement deployment infrastructure for selected models"""
+model_name = "gpt-4o-mini"
+agent_name = "Jack"
+
+[[nodes]]
+node_name = "Jane"
+node_class = "group_agent"
+
+[nodes.node_args]
+query_interval = 7
+output_channels = ["Jane:All", "Jane:Jack", "Jane:Bob"]
+input_text_channels = ["Jack:All", "Bob:All", "Jack:Jane", "Bob:Jane"]
+input_env_channels = ["Scene:Jane", "Runtime:Agent"]
+input_tick_channel = "tick/secs/1"
+goal = """As the Data Expert, actively work on data analysis and feature engineering:
+1. Run and document exploratory data analysis on transaction data
+2. Implement data cleaning and preprocessing pipelines
+3. Code feature extraction from transaction histories
+4. Write unit tests for preprocessing steps
+5. Generate feature importance analysis scripts
+6. Share code and results with Bob for model integration"""
+model_name = "gpt-4o-mini"
+agent_name = "Jane"
+
+[[nodes]]
+node_name = "Bob"
+node_class = "group_agent"
+
+[nodes.node_args]
+query_interval = 6
+output_channels = ["Bob:All", "Bob:Jack", "Bob:Jane"]
+input_text_channels = ["Jack:All", "Jane:All", "Jack:Bob", "Jane:Bob"]
+input_env_channels = ["Scene:Bob", "Runtime:Agent"]
+input_tick_channel = "tick/secs/1"
+goal = """As the Machine Learning Expert, implement and optimize prediction models:
+1. Code model architectures using scikit-learn/pytorch
+2. Implement cross-validation and evaluation scripts
+3. Write class balancing and sampling code
+4. Create model evaluation notebooks
+5. Implement ensemble methods
+6. Code integration with Jane's feature pipeline"""
+model_name = "gpt-4o-mini"
+agent_name = "Bob"
+
+[[nodes]]
+node_name = "tick"
+node_class = "tick"
+
+[[nodes]]
+node_name = "JaneScene"
+node_class = "initial_message"
+
+[nodes.node_args]
+input_tick_channel = "tick/secs/1"
+output_channels = ["Scene:Jane"]
+env_scenario = """
+You are Jane, actively working on data analysis and feature engineering. Take immediate actions:
+
+Current Tasks:
+- Run initial EDA on transaction data
+- Implement data cleaning functions
+- Code feature extraction pipeline
+- Write preprocessing unit tests
+
+Work Products:
+- Share EDA notebooks and findings
+- Push preprocessing code to repository
+- Document feature engineering results
+- Generate feature importance plots
+
+Collaboration Focus:
+- Share code snippets with Bob for integration
+- Request code reviews from Jack
+- Provide feature documentation
+
+Project Context:
+- Working with 6 months transaction data
+- Handling 10% churn rate
+- Optimizing for ROC-AUC
+- Top 15% ranking goal
+
+Take Action Now:
+- Start coding data analysis scripts
+- Implement feature extraction
+- Run and document experiments
+- Share results and code
+"""
+
+[[nodes]]
+node_name = "JackScene"
+node_class = "initial_message"
+
+[nodes.node_args]
+input_tick_channel = "tick/secs/1"
+output_channels = ["Scene:Jack"]
+env_scenario = """
+You are Jack, actively implementing and reviewing code. Take immediate actions:
+
+Current Tasks:
+- Review and optimize preprocessing code
+- Implement testing frameworks
+- Set up deployment infrastructure
+- Code quality automation
+
+Work Products:
+- Code review comments
+- Test implementation PRs
+- Deployment scripts
+- Documentation updates
+
+Technical Focus:
+- Code efficiency and scalability
+- Test coverage and quality
+- Deployment readiness
+- Integration testing
+
+Project Context:
+- Improving model pipeline
+- Optimizing for production
+- Ensuring code quality
+- Meeting competition deadline
+
+Take Action Now:
+- Review pending code
+- Write test cases
+- Implement CI/CD
+- Document architecture
+"""
+
+[[nodes]]
+node_name = "BobScene"
+node_class = "initial_message"
+
+[nodes.node_args]
+input_tick_channel = "tick/secs/1"
+output_channels = ["Scene:Bob"]
+env_scenario = """
+You are Bob, actively implementing ML models. Take immediate actions:
+
+Current Tasks:
+- Code model architectures
+- Implement cross-validation
+- Write evaluation scripts
+- Handle class imbalance
+
+Work Products:
+- Model implementation code
+- Evaluation notebooks
+- Performance reports
+- Integration tests
+
+Technical Focus:
+- Model optimization
+- Feature integration
+- Performance metrics
+- Code efficiency
+
+Project Context:
+- Binary classification
+- Imbalanced dataset
+- ROC-AUC optimization
+- Production deployment
+
+Take Action Now:
+- Implement models
+- Run experiments
+- Optimize performance
+- Share results
+"""
+
+[[nodes]]
+node_name = "chat_print"
+node_class = "chat_print"
+
+[nodes.node_args.print_channel_types]
+"Jane:All" = "agent_action"
+"Jack:All" = "agent_action"
+"Bob:All" = "agent_action"
+"Jane:Jack" = "agent_action"
+"Jack:Jane" = "agent_action"
+"Jane:Bob" = "agent_action"
+"Bob:Jane" = "agent_action"
+"Jack:Bob" = "agent_action"
+"Bob:Jack" = "agent_action"
+"Agent:Runtime" = "agent_action"
+
+[nodes.node_args]
+env_agents = ["Jack", "Jane", "Bob"]
+
+[[nodes]]
+node_name = "record"
+node_class = "record"
+
+[nodes.node_args]
+jsonl_file_path = "logs/kaggle.jsonl"
+
+[nodes.node_args.record_channel_types]
+"Jane:All" = "agent_action"
+"Jack:All" = "agent_action"
+"Bob:All" = "agent_action"
+"Jane:Jack" = "agent_action"
+"Jack:Jane" = "agent_action"
+"Jane:Bob" = "agent_action"
+"Bob:Jane" = "agent_action"
+"Jack:Bob" = "agent_action"
+"Bob:Jack" = "agent_action"
+"Agent:Runtime" = "agent_action"
+"Runtime:Agent" = "text"
+"Scene:Jane" = "text"
+"Scene:Jack" = "text"
+"Scene:Bob" = "text"

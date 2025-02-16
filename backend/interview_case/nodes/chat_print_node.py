@@ -39,20 +39,19 @@ class ChatPrint(PrintNode):
         if "action_type" in data:
             action = data["action_type"]
 
-            # Unpack the two agents from self.env_agents
-            agent1, agent2 = self.env_agents
-
-            # Define color styles based on agent_name
-            name_color_map = {
-                agent1: "green",
-                agent2: "blue",
-            }
+            # Create a color map for all agents
+            colors = ["green", "blue", "yellow", "red", "magenta", "cyan"]
+            name_color_map = {agent: colors[i % len(colors)] for i, agent in enumerate(self.env_agents)}
 
             panel_style = name_color_map.get(agent_name, "white")
 
-            # Determine alignment based on agent name using self.env_agents
+            # Determine alignment based on agent's position
+            agent_index = self.env_agents.index(agent_name) if agent_name in self.env_agents else -1
+            total_agents = len(self.env_agents)
             alignment: Literal["left", "center", "right"] = (
-                "left" if agent_name == agent1 else "right"
+                "left" if agent_index < total_agents // 2
+                else "right" if agent_index >= total_agents // 2
+                else "center"
             )
 
             if action == "write":
