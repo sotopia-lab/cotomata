@@ -10,10 +10,7 @@ const redisClient = createClient({
 });
 
 // Supabase client configuration
-const supabase = createSupabaseClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+
 
 const saveMessageToSupabase = async (sessionId, channel, message, messageType) => {
   try {

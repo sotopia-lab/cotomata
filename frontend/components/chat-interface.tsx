@@ -21,7 +21,7 @@ interface Message {
 interface ChatInterfaceProps {
   messages: Array<{ text: string; type: 'message' | 'status' }>;
   sceneMessages: Array<{ text: string; agentName: string }>;
-  socket: Socket | null;
+  socket: WebSocket | null;
   sessionId: string | null;
   onSendMessage: (text: string) => void;
 }
@@ -70,12 +70,17 @@ export const ChatInterface = ({ messages, sceneMessages, socket, sessionId, onSe
     };
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim()) {
-      socket && socket.emit('chat_message', { sessionId: sessionId, message: input.trim() });
-      setInput('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '40px';
+      try {
+        const clean_msg = input.trim().replace(/\\n/g, '\n');
+        await onSendMessage(clean_msg);
+        setInput('');
+        if (textareaRef.current) {
+          textareaRef.current.style.height = '40px';
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
       }
     }
   };
@@ -87,14 +92,13 @@ export const ChatInterface = ({ messages, sceneMessages, socket, sessionId, onSe
     }
   };
 
-  const startAgentConversation = () => {
-    console.log('Join Agent Session', sessionId);
-    socket && socket.emit('init_agent_conversation', { sessionId: sessionId }, (response: any) => {
-      console.log("here", response);
-      if (response.success) {
-        setAgentStatus(true);
-      }
-    });
+  const startAgentConversation = async () => {
+    try {
+      await startAgentConversation();
+      setAgentStatus(true);
+    } catch (error) {
+      console.error('Error starting agent conversation:', error);
+    }
   };
 
   const renderMessages = (messageList: Array<Message>, isScene: boolean = false) => {

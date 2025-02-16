@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useLoading } from "../context/loading-provider";
 import Loading from "./loading";
 import Error from "./error";
 import { useEffect, useState } from "react";
@@ -14,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function LandingPage() {
   const sessionOptions = [
@@ -22,51 +22,69 @@ export default function LandingPage() {
   ];
 
   const router = useRouter();
-  const { isReady, error, socket } = useLoading();
+  // const { isReady, error, socket } = useLoading();
   const [isInitializing, setIsInitializing] = useState(false);
   const [sessionType, setSessionType] = useState<'Human/AI' | 'Human/Human'>('Human/AI');
   const [sessionIdInput, setSessionIdInput] = useState('');
+  const {
+    connected,
+    error,
+    createSession,
+    joinSession,
+    initProcess,
+  } = useWebSocket();
 
-  const handleStartSession = () => {
-    console.log('Start Session');
-    localStorage.removeItem("cotomata-sessionId");
+  const handleStartSession = async () => {
     setIsInitializing(true);
-    if (socket) {
-      console.log('Emitting init_process event');
-      socket.emit('create_session', { sessionType }, (response: any) => {
-        socket.emit('init_process', response.sessionId );
-      }); 
-    } else {
-      console.error('Socket not available');
+    try {
+      // Create new session and initialize process
+      const sessionId = await createSession(sessionType);
+      if (sessionId) {
+        const success = await initProcess();
+        if (success) {
+          // Store session ID in localStorage for persistence
+          localStorage.setItem("cotomata-sessionId", sessionId);
+          window.location.href = `/workspace/${sessionId}`;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to start session:", err);
+    } finally {
       setIsInitializing(false);
     }
   };
 
-  const handleJoinSession = () => {
-    console.log('Join Existing Session');
-    localStorage.removeItem("cotomata-sessionId");
+  const handleJoinSession = async () => {
+    if (!sessionIdInput) return;
+    
     setIsInitializing(true);
-    if (socket) {
-      socket.emit('join_session', { sessionId: sessionIdInput }, (response: any) => {
-        if (response.success) {
-          socket.emit('init_process', sessionIdInput );
+    try {
+      // remove existing sessionId from local storage
+      const success = await joinSession(sessionIdInput);
+      if (success) {
+        const processInitialized = await initProcess();
+        if (processInitialized) {
+          localStorage.setItem("cotomata-sessionId", sessionIdInput);
+          window.location.href = `/workspace/${sessionIdInput}`;
         }
-      });
+      }
+    } catch (err) {
+      console.error("Failed to join session:", err);
+    } finally {
+      setIsInitializing(false);
     }
   };
+
+  useEffect(() => {
+    const existingSessionId = localStorage.getItem("cotomata-sessionId");
+    if (existingSessionId && connected) {
+      window.location.href = `/workspace/${existingSessionId}`;
+    }
+  }, [connected]);
 
   if (error) {
     return <Error error={error} reset={() => router.refresh()} />;
   }
-
-  useEffect(() => {
-    if (isReady) {
-      const sessionId = localStorage.getItem("cotomata-sessionId");
-      if (sessionId) {
-        router.push(`/workspace/${sessionId}`);
-      }
-    }
-  }, [isReady, router]);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0A0A0A]">

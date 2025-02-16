@@ -29,10 +29,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Socket } from 'socket.io-client';
 import { useRouter } from "next/navigation";
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 // Menu items.
 const items = [
@@ -49,7 +49,7 @@ const items = [
 ]
 
 interface AppSidebarProps {
-  socket: Socket | null;
+  socket: WebSocket | null;
   sessionId: string | null;
 }
 
@@ -57,23 +57,24 @@ export function AppSidebar({ socket, sessionId }: AppSidebarProps) {
   const router = useRouter();
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { killSession } = useWebSocket();
 
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
     const storedSessionId = localStorage.getItem('cotomata-sessionId');
 
     if (!sessionId || !storedSessionId || sessionId !== storedSessionId) {
       return;
     }
-    
-    socket && socket.emit('kill_session', { sessionId: sessionId }, ( response: any) => {
-      if (response.success) {
-        localStorage.removeItem('cotomata-sessionId');
-        router.push("/");
-      } else {
-        setErrorMessage(response.error || 'Failed to end session');
-        setErrorDialogOpen(true);
-      }
-    });
+
+    try {
+      await killSession(sessionId);
+      localStorage.removeItem('cotomata-sessionId');
+      router.push("/");
+    } catch (err) {
+      console.error("Failed to end session:", err);
+      setErrorMessage('Failed to end session');
+      setErrorDialogOpen(true);
+    }
   }
 
   return (

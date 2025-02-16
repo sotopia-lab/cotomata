@@ -21,11 +21,12 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { FileNode } from '@/types/FileSystem';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface FileSystemProps {
   fileSystem: FileNode[];
   onFileSelect: (path: string) => void;
-  socket: Socket | null;
+  socket: WebSocket | null;
   sessionId: string | null;
 }
 
@@ -74,10 +75,15 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket, sessionId }: File
     y: 0,
     node: null,
   });
+  const { sendTerminalCommand } = useWebSocket();
   console.log("files", fileSystem)
 
-  const handleRefresh = () => {
-    socket && socket.emit('terminal_command', { sessionId: sessionId, command: "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f" });
+  const handleRefresh = async () => {
+    try {
+      await sendTerminalCommand("echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
+    } catch (error) {
+      console.error('Error refreshing file system:', error);
+    }
   };
 
   const toggleFolder = (folderName: string, e: React.MouseEvent) => {
@@ -93,16 +99,24 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket, sessionId }: File
     });
   };
 
-  const handleFileDoubleClick = (path: string) => {
-    socket && socket.emit('terminal_command', { sessionId: sessionId, command: `echo '**FILE_CONTENT**' && echo '${path}' && cat ${path}`});
+  const handleFileDoubleClick = async (path: string) => {
+    try {
+      await sendTerminalCommand(`echo '**FILE_CONTENT**' && echo '${path}' && cat ${path}`);
+    } catch (error) {
+      console.error('Error refreshing file system:', error);
+    }
   };
 
-  const handleAddFile = () => {
-    if (newFileName) {
-      socket && socket.emit('terminal_command', { sessionId: sessionId, command: `touch /workspace/${newFileName}`});
-      handleRefresh();
-      setNewFileName('');
-      setInputVisible(false);
+  const handleAddFile = async () => {
+    try {
+      if (newFileName) {
+        await sendTerminalCommand(`touch /workspace/${newFileName}`);
+        handleRefresh();
+        setNewFileName('');
+        setInputVisible(false);
+      }
+    } catch (error) {
+      console.error('Error refreshing file system:', error);
     }
   };
 
@@ -116,10 +130,14 @@ export const FileSystem = ({ fileSystem, onFileSelect, socket, sessionId }: File
     });
   };
 
-  const handleDeleteFile = (path: string) => {
-    socket && socket.emit('terminal_command', { sessionId: sessionId, command: `rm "${path}"` });
-    handleRefresh();
-    setContextMenuState({ visible: false, x: 0, y: 0, node: null });
+  const handleDeleteFile = async (path: string) => {
+    try {
+      await sendTerminalCommand(`rm "${path}"`);
+      handleRefresh();
+      setContextMenuState({ visible: false, x: 0, y: 0, node: null });
+    } catch (error) {
+      console.error('Error refreshing file system:', error);
+    }
   };
 
   const renderContextMenu = () => {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { LoadingProvider } from '../context/loading-provider';
+import { WebSocketProvider } from "@/context/loading-provider";
 
 export const metadata: Metadata = {
   title: "Cotomata",
@@ -15,9 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body>
-        <LoadingProvider>
+        <WebSocketProvider>
           {children}
-        </LoadingProvider>
+        </WebSocketProvider>
       </body>
     </html>
   );

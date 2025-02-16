@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Save, FileCode } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface OpenFile {
   path: string;
@@ -26,7 +27,7 @@ interface CodeEditorProps {
   onFileClose: (path: string) => void;
   onFileSelect: (path: string) => void;
   onChange: (path: string, content: string) => void;
-  socket: Socket | null;
+  socket: WebSocket | null;
   sessionId: string | null;
 }
 
@@ -47,6 +48,7 @@ const getFileLanguage = (filename: string) => {
 };
 
 const getFileName = (path: string) => path.split('/').pop() || path;
+const { saveFile } = useWebSocket();
 
 export const CodeEditor = ({
   openFiles,
@@ -60,10 +62,14 @@ export const CodeEditor = ({
   const [unsavedChanges, setUnsavedChanges] = useState<{ [key: string]: boolean }>({});
   const activeFileContent = openFiles.find(f => f.path === activeFile)?.content;
 
-  const handleSave = () => {
-    if (activeFile && activeFileContent) {
-      socket && socket.emit('save_file', { sessionId: sessionId, path: activeFile, content: activeFileContent });
-      setUnsavedChanges(prev => ({ ...prev, [activeFile]: false }));
+  const handleSave = async () => {
+    try {
+      if (activeFile && activeFileContent) {
+        await saveFile(activeFile, activeFileContent);
+        setUnsavedChanges(prev => ({ ...prev, [activeFile]: false }));
+      }
+    } catch (error) {
+      console.error('Error saving file:', error);
     }
   };
 

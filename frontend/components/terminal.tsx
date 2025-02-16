@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Terminal as TerminalIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface TerminalState {
   user: string;
@@ -21,7 +22,7 @@ interface HistoryEntry {
 
 interface TerminalProps {
   externalMessages: string[];
-  socket: Socket | null;
+  socket: WebSocket | null;
   sessionId: string | null;
 }
 
@@ -41,14 +42,23 @@ export const Terminal = ({ externalMessages, socket, sessionId }: TerminalProps)
   const historyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const initializedRef = useRef(false);
+  const { sendTerminalCommand } = useWebSocket();
 
   useEffect(() => {
-    if (!initializedRef.current) {
-      socket && socket.emit('terminal_command', { sessionId: sessionId, command: 'whoami && hostname && pwd' });
-      socket && socket.emit('terminal_command', { sessionId: sessionId, command: "echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f" });
-      initializedRef.current = true;
-    }
-  }, [socket]);
+    const initializeFileSystem = async () => {
+      if (!initializedRef.current) {
+        try {
+          await sendTerminalCommand("whoami && hostname && pwd");
+          await sendTerminalCommand("echo '**FILE_SYSTEM_REFRESH**' && find -L /workspace -type f");
+          initializedRef.current = true;
+        } catch (error) {
+          console.error("Error initializing file system:", error);
+        }
+      }
+    };
+  
+    initializeFileSystem();
+  }, []);
 
   useEffect(() => {
     historyRef.current?.scrollTo({
@@ -97,7 +107,7 @@ export const Terminal = ({ externalMessages, socket, sessionId }: TerminalProps)
     return `${user}@${hostname}:${currentPath}$ `;
   };
 
-  const handleCommand = (command: string) => {
+  const handleCommand = async (command: string) => {
     if (!command.trim()) return;
 
     const currentPrompt = getPrompt();
@@ -112,9 +122,17 @@ export const Terminal = ({ externalMessages, socket, sessionId }: TerminalProps)
           ? `${terminalState.currentPath}/..`.replace(/\/+/g, '/')
           : `${terminalState.currentPath}/${newPath}`.replace(/\/+/g, '/');
 
-      socket && socket.emit('terminal_command', { sessionId: sessionId, command: `cd "${targetPath}" && pwd` });
+      try {
+        await sendTerminalCommand(`cd "${targetPath}" && pwd`);
+      } catch (error) {
+        console.error('Error sending terminal command:', error);
+      }
     } else {
-      socket && socket.emit('terminal_command', { sessionId: sessionId, command: command});
+      try {
+        await sendTerminalCommand(command);
+      } catch (error) {
+        console.error('Error sending terminal command:', error);
+      }
     }
 
     setInput('');
