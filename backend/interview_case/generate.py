@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import TypeVar, Any, cast, Callable, ParamSpec
+from typing import TypeVar, Any, cast, Callable, ParamSpec, Optional
 
 import gin  # type: ignore[import-untyped]
 from beartype import beartype
@@ -22,7 +22,7 @@ from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from pydantic import BaseModel, Field
 from pydantic.v1 import SecretStr
 from rich import print
-from typing_extensions import Literal
+from typing_extensions import Literal, Union
 
 from sotopia.database import EnvironmentProfile, RelationshipProfile
 from sotopia.messages import ActionType, AgentAction, ScriptBackground
@@ -500,11 +500,11 @@ async def agenerate(
 
     if "format_instructions" not in input_values:
         input_values["format_instructions"] = output_parser.get_format_instructions()
-
+        
     if structured_output:
-        assert model_name == "gpt-4o-2024-08-06" or model_name.startswith(
-            "custom"
-        ), "Structured output is only supported in gpt-4o-2024-08-06 or custom models"
+        # assert model_name == "gpt-4o-2024-08-06" or model_name.startswith(
+        #     "custom"
+        # ), "Structured output is only supported in gpt-4o-2024-08-06 or custom models"
         human_message_prompt = HumanMessagePromptTemplate(
             prompt=PromptTemplate(
                 template=template,
@@ -525,7 +525,6 @@ async def agenerate(
             model_name = model_name.split("@")[0].split("/")[1]
         else:
             client = OpenAI()
-
         completion = client.beta.chat.completions.parse(
             model=model_name,
             messages=[
@@ -890,3 +889,48 @@ async def agenerate_goal(
         use_fixed_model_version=use_fixed_model_version,
     )
     return result
+
+
+from .agent_models import AgentResponse, AgentResponseOutputParser
+
+@gin_configurable
+@beartype
+async def agenerate_agent_response(
+    template: str,
+    model_name: str,
+    agent_name: str,
+    history: str,
+    goal: str,
+    temperature: float = 0.7,
+    bad_output_process_model: str | None = None,
+    use_fixed_model_version: bool = True,
+) -> AgentResponse:
+    """Generate a structured agent response with reasoning"""
+    
+    
+    parser = AgentResponseOutputParser()
+    format_instructions = parser.get_format_instructions()
+    
+     
+    try:
+        result = await agenerate(
+            model_name=model_name,
+            template=template,
+            input_values={
+                "agent_name": agent_name,
+                "goal": goal,
+                "message_history": history,
+                # "format_instructions": format_instructions,
+            },
+            output_parser=parser,
+            temperature=temperature,
+            structured_output=True,
+            bad_output_process_model=bad_output_process_model,
+            use_fixed_model_version=use_fixed_model_version,
+        )
+        return result
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise
+            
+    

@@ -11,8 +11,7 @@ from aact.messages import Text, Tick, DataModel
 from aact.messages.registry import DataModelFactory
 
 from .base_agent import BaseAgent  # type: ignore[import-untyped]
-from .generate import agenerate # type: ignore[import-untyped]
-from .generate import StrOutputParser
+from .generate import agenerate, agenerate_agent_response # type: ignore[import-untyped]
 
 import json
 
@@ -59,11 +58,12 @@ class ActionType(Enum):
 @DataModelFactory.register("agent_action")
 class AgentAction(DataModel):
     agent_name: str = Field(description="the name of the agent")
+    thinking: Optional[str] = Field(description="The agent's internal thought process and reasoning before taking action")
     action_type: ActionType = Field(
-        description="whether to speak at this turn or choose to not do anything"
+        description="type of action you want to take"
     )
     argument: str = Field(
-        description="the utterance if choose to speak, the expression or gesture if choose non-verbal communication, or the physical action if choose action"
+        description="required argument for the action type"
     )
     path: Optional[str] = Field(description="path of file")
 
@@ -153,11 +153,11 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
         You are {agent_name}.\n
         {message_history}\nand you plan to {goal}.
         ## Action
-        What is your next thought or action? Your response must be in JSON format.
+        What is your next thought or action? Your response must be in a structured format that includes:
+        1. Your internal thought process and reasoning about what action to take
+        2. The action type and its details
 
-        It must be an object, and it must contain two fields:
-        * `action`, which is one of the actions below
-        * `args`, which is a map of key-value pairs, specifying the arguments for that action
+        Available actions are:
         """
 
         action_descriptions = {
@@ -181,91 +181,91 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
             str(
                 ActionType.BROWSE_ACTION
             ): """`browse_action` - actions you can take on a web browser
-                * `command` - the command to run. You have 15 available commands. These commands must be a single string value of command
-                    Options for `command`:
-                        `command` = goto(url: str)
+                * `content` - the content to run. You have 15 available contents. These contents must be a single string value of content
+                    Options for `content`:
+                        `content` = goto(url: str)
                             Description: Navigate to a url.
                             Examples:
                                 goto('http://www.example.com')
 
-                        `command` = go_back()
+                        `content` = go_back()
                             Description: Navigate to the previous page in history.
                             Examples:
                                 go_back()
 
-                        `command` = go_forward()
+                        `content` = go_forward()
                             Description: Navigate to the next page in history.
                             Examples:
                                 go_forward()
 
-                        `command` = noop(wait_ms: float = 1000)
+                        `content` = noop(wait_ms: float = 1000)
                             Description: Do nothing, and optionally wait for the given time (in milliseconds).
                             You can use this to get the current page content and/or wait for the page to load.
                             Examples:
                                 noop()
                                 noop(500)
 
-                        `command` = scroll(delta_x: float, delta_y: float)
+                        `content` = scroll(delta_x: float, delta_y: float)
                             Description: Scroll horizontally and vertically. Amounts in pixels, positive for right or down scrolling, negative for left or up scrolling. Dispatches a wheel event.
                             Examples:
                                 scroll(0, 200)
                                 scroll(-50.2, -100.5)
 
-                        `command` = fill(bid, value)
+                        `content` = fill(bid, value)
                             Description: Fill out a form field. It focuses the element and triggers an input event with the entered text. It works for <input>, <textarea> and [contenteditable] elements.
                             Examples:
                                 fill('237', 'example value')
                                 fill('45', 'multi-line\nexample')
                                 fill('a12', 'example with "quotes"')
 
-                        `command` = select_option(bid: str, options: str | list[str])
+                        `content` = select_option(bid: str, options: str | list[str])
                             Description: Select one or multiple options in a <select> element. You can specify option value or label to select. Multiple options can be selected.
                             Examples:
                                 select_option('a48', 'blue')
                                 select_option('c48', ['red', 'green', 'blue'])
 
-                        `command`= click(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
+                        `content`= click(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
                             Description: Click an element.
                             Examples:
                                 click('a51')
                                 click('b22', button='right')
                                 click('48', button='middle', modifiers=['Shift'])
 
-                        `command` = dblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
+                        `content` = dblclick(bid: str, button: Literal['left', 'middle', 'right'] = 'left', modifiers: list[typing.Literal['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']] = [])
                             Description: Double click an element.
                             Examples:
                                 dblclick('12')
                                 dblclick('ca42', button='right')
                                 dblclick('178', button='middle', modifiers=['Shift'])
 
-                        `command` = hover(bid: str)
+                        `content` = hover(bid: str)
                             Description: Hover over an element.
                             Examples:
                                 hover('b8')
 
-                        `command` = press(bid: str, key_comb: str)
+                        `content` = press(bid: str, key_comb: str)
                             Description: Focus the matching element and press a combination of keys. It accepts the logical key names that are emitted in the keyboardEvent.key property of the keyboard events: Backquote, Minus, Equal, Backslash, Backspace, Tab, Delete, Escape, ArrowDown, End, Enter, Home, Insert, PageDown, PageUp, ArrowRight, ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc. You can alternatively specify a single character you'd like to produce such as "a" or "#". Following modification shortcuts are also supported: Shift, Control, Alt, Meta, ShiftLeft, ControlOrMeta. ControlOrMeta resolves to Control on Windows and Linux and to Meta on macOS.
                             Examples:
                                 press('88', 'Backspace')
                                 press('a26', 'ControlOrMeta+a')
                                 press('a61', 'Meta+Shift+t')
 
-                        `command` = focus(bid: str)
+                        `content` = focus(bid: str)
                             Description: Focus the matching element.
                             Examples:
                                 focus('b455')
 
-                        `command` = clear(bid: str)
+                        `content` = clear(bid: str)
                             Description: Clear the input field.
                             Examples:
                                 clear('996')
 
-                        `command` = drag_and_drop(from_bid: str, to_bid: str)
+                        `content` = drag_and_drop(from_bid: str, to_bid: str)
                             Description: Perform a drag & drop. Hover the element that will be dragged. Press left mouse button. Move mouse to the element that will receive the drop. Release left mouse button.
                             Examples:
                                 drag_and_drop('56', '498')
 
-                        `command`=  upload_file(bid: str, file: str | list[str])
+                        `content`=  upload_file(bid: str, file: str | list[str])
                             Description: Click an element and wait for a "filechooser" event, then select one or multiple input files for upload. Relative file paths are resolved relative to the current working directory. An empty list clears the selected files.
                             Examples:
                                 upload_file('572', '/home/user/my_receipt.pdf')
@@ -277,8 +277,8 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                 * `content` - the content to write to the file""",
             str(
                 ActionType.RUN
-            ): """`run` - runs a command on the command line in a Linux shell. Arguments:
-                * `command` - the command to run""",
+            ): """`run` - runs a content on the content line in a Linux shell. Arguments:
+                * `content` - the command to run""",
             str(
                 ActionType.LEAVE
             ): """`leave` - if your goals have been completed or abandoned, and you're absolutely certain that you've completed your task and have tested your work, use the leave action to stop working.""",
@@ -313,7 +313,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                     text = text.split("BrowserOutputObservation", 1)[1][:100]
                 self.message_history.append((self.name, "observation data", text))
                 return AgentAction(
-                    agent_name=self.name, action_type="none", argument="", path=""
+                    agent_name=self.name, action_type="none", argument="", path="", thinking=""
                 )
             case Tick():
                 self.count_ticks += 1
@@ -322,30 +322,31 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                         template = self.get_action_template(
                             [action for action in ActionType]
                         )
-
-                        agent_action = await agenerate(
-                            model_name=self.model_name,
+                        
+                        agent_action = await agenerate_agent_response(
                             template=template,
-                            input_values={
-                                "message_history": self._format_message_history(
-                                    self.message_history
-                                ),
-                                "goal": self.goal,
-                                "agent_name": self.name,
-                            },
+                            model_name=self.model_name,
+                            agent_name=self.name,
+                            history=self._format_message_history(self.message_history),
+                            goal=self.goal,
                             temperature=0.7,
-                            output_parser=StrOutputParser(),
                         )
+                        
                     except Exception as e:
                         print(f"Error during agenerate: {e}")
+                    
 
-                    agent_action = (
-                        agent_action.replace("```", "")
-                        .replace("json", "")
-                        .strip('"')
-                        .strip()
-                    )
-
+                    # Convert structured output to the expected format
+                    agent_action = json.dumps({
+                        "thinking": str(agent_action.thinking).strip(),
+                        "action": str(agent_action.action).strip(),
+                        "args": {
+                            "content": (agent_action.args.content or "").strip(),
+                            "path": (agent_action.args.path or "").strip(),
+                            "url": (agent_action.args.url or "").strip()
+                        }
+                    })     
+                                    
                     try:
                         data = json.loads(agent_action)
                         action = data["action"]
@@ -353,6 +354,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             content = data["args"]["content"]
                             self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type="thought",
                                 argument=content,
@@ -363,6 +365,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             content = data["args"]["content"]
                             self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
                                 argument=content,
@@ -373,6 +376,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             content = data["args"]["content"]
                             self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
                                 argument=content,
@@ -383,6 +387,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             url = data["args"]["url"]
                             self.message_history.append((self.name, action, url))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
                                 argument=url,
@@ -390,22 +395,24 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             )
 
                         elif action == "browse_action":
-                            command = data["args"]["command"]
-                            self.message_history.append((self.name, action, command))
+                            content = data["args"]["content"]
+                            self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
-                                argument=command,
+                                argument=content,
                                 path="",
                             )
 
                         elif action == "run":
-                            command = data["args"]["command"]
-                            self.message_history.append((self.name, action, command))
+                            content = data["args"]["content"]
+                            self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
-                                argument=command,
+                                argument=content,
                                 path="",
                             )
 
@@ -414,6 +421,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             content = data["args"]["content"]
                             self.message_history.append((self.name, action, content))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
                                 argument=content,
@@ -424,6 +432,7 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
                             path = data["args"]["path"]
                             self.message_history.append((self.name, action, path))
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type=action,
                                 argument="Nan",
@@ -432,25 +441,28 @@ class LLMAgent(BaseAgent[AgentAction | Tick | Text, AgentAction]): # type: ignor
 
                         elif action == "none":
                             return AgentAction(
+                                thinking=data["thinking"],
                                 agent_name=self.name,
                                 action_type="none",
                                 argument="",
                                 path="",
                             )
+                        elif action == "leave":
+                            print("Terminating the program as per the leave action.")
                         else:
                             print(f"Unknown action: {action}")
                     except json.JSONDecodeError as e:
                         print(f"Error decoding JSON: {e}")
                 else:
                     return AgentAction(
-                        agent_name=self.name, action_type="none", argument="", path=""
+                        agent_name=self.name, action_type="none", argument="", path="", thinking=""
                     )
             case AgentAction(
-                agent_name=agent_name, action_type=action_type, argument=text
+                agent_name=agent_name, action_type=action_type, argument=text, thinking=thinking
             ):
                 if action_type == "speak":
                     self.message_history.append((agent_name, str(action_type), text))
                 return AgentAction(
-                    agent_name=self.name, action_type="none", argument="", path=""
+                    agent_name=self.name, action_type="none", argument="", path="", thinking=""
                 )
         raise ValueError(f"Unexpected message type: {type(message)}")
