@@ -5,24 +5,25 @@ from multiprocessing import Pool
 from statistics import mean, stdev
 from datetime import datetime
 from tqdm import tqdm
+import random
 from functools import partial
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Import simulate_conversation directly from the module
+from simulate import simulate_conversation
 
-from codeconflict.codeagent.simulate import simulate_conversation
-
-import numpy as np
-
-def run_simulation_batch(max_attempts: int) -> Tuple[bool, int, float]:
-    """Run a single simulation with fixed turns=2 and specified max_attempts
+def run_simulation_batch(args: Tuple[int, int]) -> Tuple[bool, int, float]:
+    """Run a single simulation with fixed turns and specified max_attempts
     
     Args:
-        max_attempts: Maximum number of attempts allowed for conflict resolution
+        args: Tuple of (seed, max_attempts)
     
     Returns:
         Tuple of (success, turns_taken, reward_score)
     """
+    seed, max_attempts = args
     try:
+        # Set a unique random seed for each simulation
+        random.seed(seed)
         result = simulate_conversation(turns=2, max_attempts=max_attempts)
         return result['success'], result['turns_taken'], result.get('reward_score', 0.0)
     except Exception as e:
@@ -41,9 +42,13 @@ def run_parallel_simulations(num_runs: int, max_attempts: int, num_workers: int)
         List of simulation results
     """
     with Pool(processes=num_workers) as pool:
+        # Generate unique seeds for each run
+        seeds = [random.randint(0, 1000000) for _ in range(num_runs)]
+        args = list(zip(seeds, [max_attempts] * num_runs))
+        
         # Run simulations in parallel
         results = list(tqdm(
-            pool.imap(run_simulation_batch, [max_attempts] * num_runs),
+            pool.imap(run_simulation_batch, args),
             total=num_runs,
             desc=f"Runs (max_attempts={max_attempts})",
             position=1,
@@ -60,9 +65,12 @@ def evaluate_simulations() -> Dict[str, Any]:
     """
     results = {}
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    num_runs = 4  # Number of runs per configuration
+    num_runs = 10  # Increased number of runs for better statistical significance
     max_turns = 2  # Fixed number of turns
-    num_workers = 4  # Number of parallel workers
+    num_workers = 10  # Use all available CPU cores
+    
+    # Set a master seed for reproducibility
+    random.seed(42)
     
     try:
         # Main progress bar for different max_attempts configurations
@@ -104,12 +112,14 @@ def evaluate_simulations() -> Dict[str, Any]:
                     'rewards': rewards
                 }
                 
-                # Print results
+                # Print results with more detail
                 print(f"\n=== Results for max_attempts={max_attempts} ===")
                 print(f"Success Rate: {success_rate * 100:.1f}% ± {success_std * 100:.1f}%")
+                print(f"Number of successful runs: {sum(successes)} out of {len(successes)}")
                 if turns:
                     print(f"Average Turns to Success: {mean_turns:.1f} ± {turns_std:.1f}")
                     print(f"Average Reward Score: {mean_reward:.1f} ± {reward_std:.1f}")
+                    print(f"Success distribution: {turns}")
                 else:
                     print("No successful runs recorded")
                 print()
@@ -121,7 +131,6 @@ def evaluate_simulations() -> Dict[str, Any]:
             'timestamp': timestamp,
             'num_runs': num_runs,
             'max_turns': max_turns,
-            'max_retries': max_attempts,
             'num_workers': num_workers
         }
         

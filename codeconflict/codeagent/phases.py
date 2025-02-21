@@ -3,15 +3,15 @@ from .agent import CodeWeaverAgent
 from .models import AgentAction
 from .utils import extract_message_content
 
-def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: int = 2) -> Optional[str]:
+async def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: int = 2) -> Optional[str]:
     """Execute the planning phase of the conversation between two agents"""
-    # print("\n=== Planning Phase ===")
+    print("\n=== Planning Phase ===")
     current_message = "Let's discuss how we can structure our code to output both our messages when merged. What's your approach?"
     # print(f"\nInitial Question: {current_message}\n")
 
     for i in range(turns):
         # print(f"\n--- Planning Turn {i + 1} ---")
-        response1 = agent1.respond(current_message)
+        response1 = await agent1.respond(current_message)
         if not response1:
             # print("[Failed to generate response]")
             break
@@ -21,7 +21,7 @@ def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: 
         if "leaves" in current_message:  # Check if agent1 leaves
             break
 
-        response2 = agent2.respond(current_message)
+        response2 = await agent2.respond(current_message)
         if not response2:
             # print("[Failed to generate response]")
             break
@@ -33,16 +33,22 @@ def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: 
 
     return current_message
 
-def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[Optional[str], Optional[str]]:
+async def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[List[Any], List[Any]]:
     """Execute the coding phase of the conversation between two agents in parallel"""
-    # print("\n=== Coding Phase ===")
+    print("\n=== Coding Phase ===")
     # Create a shared prompt template for both agents
     coding_phase_prompt_template = (
-        "You are now in the coding phase. Based on the previous discussion, implement code "
-        "that outputs 'hello I am {agent_name}'. Your responses should be structured as actions:\n"
+        "You are now in the coding phase. Based on the previous discussion, implement ONLY your part of the code "
+        "that outputs 'hello I am {agent_name}'. Do NOT implement the other agent's part - this will cause merge conflicts!\n\n"
+        "Your responses should be structured as actions:\n"
         "- Use 'read' action with path when you need to read a file\n"
         "- Use 'write' action with path and content when you want to modify a file\n"
         "- Use 'execute' action with command when you need to run a shell command\n\n"
+        "Important:\n"
+        "1. Only implement your own feature\n"
+        "2. Do not include other agent's code\n"
+        "3. Assume the other agent will implement their part separately\n"
+        "4. Your code should work when merged with the other agent's code\n\n"
         "Set continue_action to True if you need to perform more actions, or False when you're done."
     )
 
@@ -58,7 +64,7 @@ def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[
     # print("\n--- Agent 1's Implementation ---")
     agent1_responses = []
     while True:
-        response = agent1.respond(current_message)
+        response = await agent1.respond(current_message)
         if not response:
             # print("[Failed to generate response]")
             break
@@ -76,7 +82,7 @@ def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[
     agent2_responses = []
     current_message = "Now, let's implement our code based on our discussion. Please share your implementation using structured actions."
     while True:
-        response = agent2.respond(current_message)
+        response = await agent2.respond(current_message)
         if not response:
             # print("[Failed to generate response]")
             break
@@ -92,7 +98,7 @@ def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[
 
     return agent1_responses, agent2_responses
 
-def run_review_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[Optional[str], Optional[str]]:
+async def run_review_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[Optional[str], Optional[str]]:
     """Execute the review phase of the conversation between two agents"""
     # Update agents with code review prompts
     agent1.system_prompt = (
@@ -109,7 +115,7 @@ def run_review_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> Tuple[
     review_message = "Let's review our implementations and ensure they will work together. Any suggestions for modifications?"
     
     # print("\n--- Final Review ---")
-    agent1_review = agent1.respond(review_message)
-    agent2_review = agent2.respond(agent1_review)
+    agent1_review = await agent1.respond(review_message)
+    agent2_review = await agent2.respond(agent1_review)
 
     return agent1_review, agent2_review
