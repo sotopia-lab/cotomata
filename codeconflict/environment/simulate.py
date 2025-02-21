@@ -4,9 +4,9 @@ import asyncio
 from typing import Dict, Tuple
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from codeconflict.codeagent.docker_env import DockerEnv
+from codeconflict.environment.docker_env import DockerEnv
 from codeconflict.codeagent.agent import CodeWeaverAgent
-from codeconflict.codeagent.phases import run_planning_phase, run_coding_phase
+from codeconflict.environment.phases import run_planning_phase, run_coding_phase
 
 async def run_merge_phase(docker_env: DockerEnv) -> Tuple[Dict, Dict]:
     """Execute merge operations and return conflict information"""

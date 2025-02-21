@@ -1,7 +1,7 @@
 from typing import List, Tuple, Optional, Dict, Any
-from .agent import CodeWeaverAgent
-from .models import AgentAction
-from .utils import extract_message_content
+from ..codeagent.agent import CodeWeaverAgent
+from ..codeagent.models import AgentAction
+from ..codeagent.utils import extract_message_content
 
 async def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: int = 2) -> Optional[str]:
     """Execute the planning phase of the conversation between two agents"""

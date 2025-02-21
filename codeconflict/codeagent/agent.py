@@ -12,7 +12,7 @@ from rich.text import Text
 from .models import AgentMessage, AgentAction
 from .utils import format_agent_response
 
-from .docker_env import DockerEnv
+from ..environment.docker_env import DockerEnv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
