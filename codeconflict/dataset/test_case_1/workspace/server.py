@@ -16,6 +16,8 @@ app.add_middleware(
 
 class WriteRequest(BaseModel):
     content: str
+    start_line: int | None = None
+    end_line: int | None = None
 
 class BashRequest(BaseModel):
     command: str
@@ -35,9 +37,32 @@ async def read_file(path: str):
 @app.post("/write/{path:path}")
 async def write_file(path: str, request: WriteRequest):
     try:
-        os.makedirs(os.path.dirname(f"/workspace/{path}"), exist_ok=True)
-        with open(f"/workspace/{path}", "w") as f:
-            f.write(request.content)
+        file_path = f"/workspace/{path}"
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        if request.start_line is not None and request.end_line is not None:
+            # Read existing content
+            lines = []
+            if os.path.exists(file_path):
+                with open(file_path, "r") as f:
+                    lines = f.readlines()
+
+            # Extend lines list if needed
+            while len(lines) < request.end_line + 1:
+                lines.append("\n")
+
+            # Replace specified lines
+            new_lines = request.content.splitlines(True)
+            lines[request.start_line:request.end_line + 1] = new_lines
+
+            # Write back all content
+            with open(file_path, "w") as f:
+                f.writelines(lines)
+        else:
+            # Original behavior: overwrite entire file
+            with open(file_path, "w") as f:
+                f.write(request.content)
+
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

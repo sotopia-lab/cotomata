@@ -9,15 +9,20 @@ import httpx
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from rich.syntax import Syntax
 from .models import AgentMessage, AgentAction
 from .utils import format_agent_response
 
 from ..environment.docker_env import DockerEnv
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# # Configure logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
+import weave
+weave.init('arpandeepk-stanford-university/code-weaver-agent')
+
+@weave.op
 class CodeWeaverAgent:
     def __init__(self, name: str, system_prompt: str, base_url: str = "http://localhost:8080", workspace_path: str = "/workspace", agent_workspace: str = "", response_format: Type[BaseModel] = AgentMessage, action_descriptions: str = """) -> None:
             Available actions:
@@ -61,29 +66,34 @@ class CodeWeaverAgent:
 
         try:
             response = self.client.beta.chat.completions.parse(
-                model="gpt-4o-mini",
+                model="o3-mini",
                 messages=messages,
                 response_format=self.response_format
             )
             
             # Get the parsed response
             parsed_response = response.choices[0].message.parsed
-            logger.info(f"Model response: {parsed_response}")
+            # logger.info(f"Model response: {parsed_response}")
             
             # Handle AgentAction responses
             if isinstance(parsed_response, AgentAction):
                 # Execute the action in Docker environment
                 observation = None
-                logger.info(f"Executing Docker action: {parsed_response.action}")
+                # logger.info(f"Executing Docker action: {parsed_response.action}")
                 if parsed_response.action == 'read':
                     observation = await self.docker_env.read_file(parsed_response.path)
-                    logger.info(f"Read file {parsed_response.path}: {observation}")
+                    # logger.info(f"Read file {parsed_response.path}: {observation}")
                 elif parsed_response.action == 'write':
-                    observation = await self.docker_env.write_file(parsed_response.path, parsed_response.content)
-                    logger.info(f"Wrote to file {parsed_response.path}: {observation}")
+                    observation = await self.docker_env.write_file(
+                        parsed_response.path,
+                        parsed_response.content,
+                        parsed_response.start_line,
+                        parsed_response.end_line
+                    )
+                    # logger.info(f"Wrote to file {parsed_response.path}: {observation}")
                 elif parsed_response.action == 'execute':
                     observation = await self.docker_env.execute_command(parsed_response.command)
-                    logger.info(f"Executed command: {parsed_response.command}\nResult: {observation}")
+                    # logger.info(f"Executed command: {parsed_response.command}\nResult: {observation}")
 
                 # Convert response to display string
                 action_content = format_agent_response(self.name, parsed_response)
@@ -93,9 +103,10 @@ class CodeWeaverAgent:
                 # Handle regular AgentMessage responses
                 display_content = format_agent_response(self.name, parsed_response)
             
-            # Create a styled panel for the response
-            styled_text = Text(display_content)
-            styled_text.stylize(f"bold {self._get_agent_color()}")
+            # # Handle regular text content
+            # styled_text = Text(display_content)
+            # styled_text.stylize(f"bold {self._get_agent_color()}")
+            # self.console.print(Panel(styled_text))
 
             # Store the string representation in conversation history
             self.conversation_history.append({

@@ -7,30 +7,31 @@ from datetime import datetime
 from tqdm import tqdm
 import random
 from functools import partial
+import wandb
 
 # Import simulate_conversation directly from the module
 from simulate import simulate_conversation
 
-def run_simulation_batch(args: Tuple[int, int]) -> Tuple[bool, int, float]:
+def run_simulation_batch(args: Tuple[int, int]) -> Tuple[bool, int, float, Dict]:
     """Run a single simulation with fixed turns and specified max_attempts
     
     Args:
         args: Tuple of (seed, max_attempts)
     
     Returns:
-        Tuple of (success, turns_taken, reward_score)
+        Tuple of (success, turns_taken, reward_score, rewards)
     """
     seed, max_attempts = args
     try:
         # Set a unique random seed for each simulation
         random.seed(seed)
         result = simulate_conversation(turns=2, max_attempts=max_attempts)
-        return result['success'], result['turns_taken'], result.get('reward_score', 0.0)
+        return result['success'], result['turns_taken'], result.get('reward_score', 0.0), result.get('rewards', {})
     except Exception as e:
         print(f"Error in simulation: {str(e)}")
-        return False, 0, 0.0
+        return False, 0, 0.0, {}
 
-def run_parallel_simulations(num_runs: int, max_attempts: int, num_workers: int) -> List[Tuple[bool, int, float]]:
+def run_parallel_simulations(num_runs: int, max_attempts: int, num_workers: int) -> List[Tuple[bool, int, float, Dict]]:
     """Run multiple simulations in parallel
     
     Args:
@@ -63,6 +64,9 @@ def evaluate_simulations() -> Dict[str, Any]:
     Returns:
         dict: Contains success statistics for each max_attempts configuration
     """
+    # Initialize wandb
+    wandb.init(project="arpandeepk-stanford-university/codeconflict-evaluation", name=f"eval_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    
     results = {}
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     num_runs = 10  # Increased number of runs for better statistical significance
@@ -85,12 +89,17 @@ def evaluate_simulations() -> Dict[str, Any]:
                 successes = []
                 turns = []
                 rewards = []
+                agent1_rewards = []
+                agent2_rewards = []
                 
-                for success, turns_taken, reward_score in simulation_results:
+                for success, turns_taken, reward_score, reward_details in simulation_results:
                     successes.append(1 if success else 0)
                     if success:
                         turns.append(turns_taken)
                         rewards.append(reward_score)
+                        if reward_details:
+                            agent1_rewards.append(reward_details['agent1'])
+                            agent2_rewards.append(reward_details['agent2'])
                 
                 # Calculate statistics
                 success_rate = mean(successes) if successes else 0
@@ -99,6 +108,30 @@ def evaluate_simulations() -> Dict[str, Any]:
                 turns_std = stdev(turns) if len(turns) > 1 else 0
                 mean_reward = mean(rewards) if rewards else 0
                 reward_std = stdev(rewards) if len(rewards) > 1 else 0
+                
+                # Log metrics to wandb
+                wandb.log({
+                    f"max_attempts_{max_attempts}/success_rate": success_rate,
+                    f"max_attempts_{max_attempts}/mean_turns": mean_turns,
+                    f"max_attempts_{max_attempts}/mean_reward": mean_reward,
+                    f"max_attempts_{max_attempts}/success_std": success_std,
+                    f"max_attempts_{max_attempts}/turns_std": turns_std,
+                    f"max_attempts_{max_attempts}/reward_std": reward_std,
+                })
+                
+                # Log detailed agent metrics if available
+                if agent1_rewards and agent2_rewards:
+                    for i, (a1_reward, a2_reward) in enumerate(zip(agent1_rewards, agent2_rewards)):
+                        wandb.log({
+                            f"max_attempts_{max_attempts}/agent1/run_{i}/output_evaluation": a1_reward['output_evaluation'],
+                            f"max_attempts_{max_attempts}/agent1/run_{i}/merge_success": a1_reward['merge_success'],
+                            f"max_attempts_{max_attempts}/agent1/run_{i}/combined_output": a1_reward['combined_output'],
+                            f"max_attempts_{max_attempts}/agent1/run_{i}/total": a1_reward['total'],
+                            f"max_attempts_{max_attempts}/agent2/run_{i}/output_evaluation": a2_reward['output_evaluation'],
+                            f"max_attempts_{max_attempts}/agent2/run_{i}/merge_success": a2_reward['merge_success'],
+                            f"max_attempts_{max_attempts}/agent2/run_{i}/combined_output": a2_reward['combined_output'],
+                            f"max_attempts_{max_attempts}/agent2/run_{i}/total": a2_reward['total'],
+                        })
                 
                 results[f'max_attempts_{max_attempts}'] = {
                     'success_rate': success_rate,
@@ -109,7 +142,9 @@ def evaluate_simulations() -> Dict[str, Any]:
                     'reward_std': reward_std,
                     'successes': successes,
                     'turns': turns,
-                    'rewards': rewards
+                    'rewards': rewards,
+                    'agent1_rewards': agent1_rewards,
+                    'agent2_rewards': agent2_rewards
                 }
                 
                 # Print results with more detail
@@ -134,10 +169,13 @@ def evaluate_simulations() -> Dict[str, Any]:
             'num_workers': num_workers
         }
         
+        # Finish wandb run
+        wandb.finish()
         return results
     
     except Exception as e:
         print(f"Error during evaluation: {str(e)}")
+        wandb.finish()
         return {'error': str(e), 'metadata': {'timestamp': timestamp}}
 
 def main():

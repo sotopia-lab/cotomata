@@ -6,8 +6,15 @@ from ..codeagent.utils import extract_message_content
 async def run_planning_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent, turns: int = 2) -> Optional[str]:
     """Execute the planning phase of the conversation between two agents"""
     print("\n=== Planning Phase ===")
-    current_message = "Let's discuss how we can structure our code to output both our messages when merged. What's your approach?"
-    # print(f"\nInitial Question: {current_message}\n")
+    current_message = (
+        "Let's discuss how to structure our code in main.py to output both our messages when merged.\n"
+        "Important requirements:\n"
+        "1. The code will be tested by running 'python3 main.py'\n"
+        "2. We should coordinate our implementations to avoid merge conflicts\n"
+        "3. Consider strategies like:\n"
+        "   - Agreeing on specific line numbers for each agent's code\n"
+        "What's your approach for implementing your part while ensuring smooth integration?"
+    )
 
     for i in range(turns):
         # print(f"\n--- Planning Turn {i + 1} ---")
@@ -39,16 +46,18 @@ async def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> 
     # Create a shared prompt template for both agents
     coding_phase_prompt_template = (
         "You are now in the coding phase. Based on the previous discussion, implement ONLY your part of the code "
-        "that outputs 'hello I am {agent_name}'. Do NOT implement the other agent's part - this will cause merge conflicts!\n\n"
+        "that outputs 'hello I am {agent_name}' in main.py.\n\n"
+        "Critical Requirements:\n"
+        "1. The code will be tested by running 'python3 main.py'\n"
+        "2. Follow the agreed-upon structure from the planning phase\n"\
+        "3.NO COMMENTS ANYWHERE\n\n"
         "Your responses should be structured as actions:\n"
         "- Use 'read' action with path when you need to read a file\n"
-        "- Use 'write' action with path and content when you want to modify a file\n"
+        "- Use 'write' action with path and content when you want to modify a file. You can optionally specify:\n"
+        "  * start_line and end_line (0-based) to modify specific lines in the file\n"
+        "  * if start_line and end_line are not provided, the entire file will be overwritten\n"
         "- Use 'execute' action with command when you need to run a shell command\n\n"
-        "Important:\n"
-        "1. Only implement your own feature\n"
-        "2. Do not include other agent's code\n"
-        "3. Assume the other agent will implement their part separately\n"
-        "4. Your code should work when merged with the other agent's code\n\n"
+
         "Set continue_action to True if you need to perform more actions, or False when you're done."
     )
 
