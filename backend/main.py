@@ -10,6 +10,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 
 # Data model for active sessions
 @dataclass
@@ -77,16 +78,20 @@ class WebSocketManager:
 
     async def broadcast_to_session(self, session_id: str, message: dict):
         if session_id in self.active_sessions:
+            dead_sockets = []
             for socket in self.active_sessions[session_id].connected_sockets:
                 try:
                     await socket.send_json(message)
                 except WebSocketDisconnect:
-                    self.active_sessions[session_id].connected_sockets.remove(socket)
+                    dead_sockets.append(socket)
+            
+            for dead_socket in dead_sockets:
+                self.active_sessions[session_id].connected_sockets.remove(dead_socket)
 
     async def handle_redis_messages(self):
         """Background task to handle Redis messages"""
         while True:
-            message = self.redis_subscriber.get_message()
+            message = self.redis_subscriber.get_message(ignore_subscribe_messages=True)
             if message and message['type'] == 'message':
                 channel = message['channel'].decode('utf-8')
                 data = message['data'].decode('utf-8')
@@ -101,10 +106,10 @@ class WebSocketManager:
             
             await asyncio.sleep(0.1)
 
-app = FastAPI()
+web_app = FastAPI()
 
 # Configure CORS
-app.add_middleware(
+web_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -116,11 +121,24 @@ app.add_middleware(
 ws_manager = WebSocketManager()
 
 # Background task to handle Redis messages
-@app.on_event("startup")
+@web_app.on_event("startup")
 async def startup_event():
     asyncio.create_task(ws_manager.handle_redis_messages())
 
-@app.websocket("/ws")
+@web_app.on_event("shutdown")
+async def shutdown_event():
+    print("Shutting down, cleaning up resources...")
+
+    # Unsubscribe all Redis channels for all active sessions
+    for session_id, session_info in list(ws_manager.active_sessions.items()):
+        for channel in session_info.channels:
+            ws_manager.redis_subscriber.unsubscribe(channel)
+    
+    # Close the Redis pubsub and client connections
+    ws_manager.redis_subscriber.close()
+    ws_manager.redis_client.close()
+
+@web_app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     
@@ -181,8 +199,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 )
 
             elif command == "terminal_command":
+                print("Received terminal command:", data)
                 session_id = data.get("session_id")
-                cmd = data.get("command")
+                cmd = data.get("input_command")
                 
                 message_envelope = {
                     "data": {
@@ -317,7 +336,6 @@ async def websocket_endpoint(websocket: WebSocket):
                     })
 
             elif command == "init_process":
-                print("init_process")
                 session_id = data.get("session_id")
                 init_params = {
                     "node_name": "openhands_node",
@@ -327,15 +345,24 @@ async def websocket_endpoint(websocket: WebSocket):
                 }
                 
                 async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        "http://localhost:5000/initialize",
-                        json=init_params
-                    )
-                    result = response.json()
-                    await websocket.send_json({
-                        "success": result.get("status") == "initialized",
-                        "session_id": session_id
-                    })
+                    try:
+                        response = await client.post(
+                            "http://localhost:5000/initialize",
+                            json=init_params,
+                            timeout=300.0
+                        )
+                        result = response.json()
+                        await websocket.send_json({
+                            "success": result.get("status") == "initialized",
+                            "session_id": session_id
+                        })
+                    except httpx.HTTPError as e:
+                        print(f"Error: {e}")
+                        await websocket.send_json({
+                            "success": False,
+                            "error": str(e)
+                        })
+                        continue
 
             elif command == "kill_session":
                 session_id = data.get("session_id")
@@ -365,6 +392,10 @@ async def websocket_endpoint(websocket: WebSocket):
             if not session_info.connected_sockets:
                 del ws_manager.active_sessions[session_id]
 
+def start_server(port: int):
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import sys
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+    start_server(port)

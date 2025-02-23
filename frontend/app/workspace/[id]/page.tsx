@@ -93,13 +93,19 @@ export default function App() {
 
   useEffect(() => {
     // Function to handle new messages received from the socket
-    const handleNewMessage = (data: any) => {
+    const handleNewMessage = (event: MessageEvent) => {
       try {
         // Parse the incoming message data
-        const messageData = JSON.parse(data.message);
+        const parsedData = JSON.parse(event.data);
+        console.log("Received data:", parsedData);
 
-        // Log the entire messageData for debugging
-        console.log('Received message data:', messageData);
+        if (!parsedData.message) {
+          console.error("Missing 'message' field in received data.");
+          return;
+        }
+    
+        // Parse the inner JSON string (since it's a nested JSON string)
+        const messageData = JSON.parse(parsedData.message);
 
         // Check if messageData.data is defined
         if (!messageData.data) {
@@ -108,7 +114,7 @@ export default function App() {
         }
 
         // Handle Scene context messages
-        if (data.channels && data.channels.startsWith('Scene:') && data.channels.endsWith(`:${sessionId}`)) {
+        if (parsedData.channel && parsedData.channel.startsWith('Scene:') && parsedData.channel.endsWith(`:${sessionId}`)) {
           if (messageData.data.data_type === "text") {
             setSceneMessages(prev => ({
               ...prev,
@@ -116,7 +122,7 @@ export default function App() {
                 ...(prev[sessionId!] || []),
                 { 
                   text: messageData.data.text, 
-                  agentName: data.channels.split(':')[1] 
+                  agentName: parsedData.channel.split(':')[1] 
                 }
               ]
             }));
@@ -127,6 +133,7 @@ export default function App() {
 
         // Check if it's an agent action
         if (messageData.data.data_type === "agent_action") {
+          console.log("here1");
           handleAgentAction(messageData, sessionId!);
         }
         // Check if it's a command output
@@ -154,6 +161,7 @@ export default function App() {
             messageData.data.text.includes("CmdOutputObservation") &&
             messageData.data.text.includes("**FILE_SYSTEM_REFRESH**")) {
           const parts = messageData.data.text.split("**CmdOutputObservation (source=None, exit code=0)**");
+          console.log('parts', parts);
           if (parts.length > 1) {
             const fileList = parts[1].trim().split('\n').filter(Boolean).slice(1);
             updateFileSystemFromList(fileList);
@@ -165,7 +173,6 @@ export default function App() {
           messageData.data.text.includes("**FILE_CONTENT**")) {
         // Split the response by new lines
         const lines = messageData.data.text.split('\n').slice(1);
-        console.log('lines', lines);
 
         // Check if the response has at least 3 parts
         if (lines.length >= 3) {
@@ -185,10 +192,10 @@ export default function App() {
     };
 
     // Listen for new messages from the socket
-    socket?.addEventListener('new_message', handleNewMessage);
+    socket?.addEventListener('message', handleNewMessage);
     return () => {
       // Clean up the listener on component unmount
-      socket?.removeEventListener('new_message', handleNewMessage);
+      socket?.removeEventListener('message', handleNewMessage);
     };
   }, [updateFileSystemFromList]);
 

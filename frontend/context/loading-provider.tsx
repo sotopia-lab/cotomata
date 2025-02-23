@@ -92,12 +92,14 @@ function webSocketReducer(state: WebSocketContextState, action: WebSocketAction)
 function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(webSocketReducer, initialState);
   const websocketRef = React.useRef<WebSocket | null>(null);
+  const sessionIdRef = React.useRef<string | null>(null);
 
   // Function to create WebSocket connection
   const connect = useCallback(() => {
     if (websocketRef.current?.readyState === WebSocket.OPEN) return;
 
     const ws = new WebSocket('ws://localhost:8000/ws');
+    // const ws = new WebSocket('wss://sotopia-lab--cotomata-modalapp-serve-dev.modal.run/ws');
 
     ws.onopen = () => {
       dispatch({ type: 'CONNECTED' });
@@ -141,7 +143,9 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       const handleMessage = (event: MessageEvent) => {
         const data = JSON.parse(event.data);
+        console.log("handle message", data);
         if (data.session_id) {
+          sessionIdRef.current = data.session_id;
           dispatch({
             type: 'SET_SESSION',
             payload: { sessionId: data.session_id, sessionType }
@@ -211,6 +215,8 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
   // Send a terminal command
   const sendTerminalCommand = useCallback((input_command: string) => {
+    const currentSessionId = sessionIdRef.current;
+    console.log("term", currentSessionId, websocketRef.current)
     if (!state.currentSessionId) return;
 
     websocketRef.current?.send(JSON.stringify({
@@ -248,14 +254,15 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
   // Initialize process
   const initProcess = useCallback(async (): Promise<boolean> => {
     return new Promise((resolve, reject) => {
-      if (!state.currentSessionId || !websocketRef.current) {
+      const currentSessionId = sessionIdRef.current;
+      if (!currentSessionId || !websocketRef.current) {
         reject(new Error('No active session or WebSocket not connected'));
         return;
       }
 
       websocketRef.current.send(JSON.stringify({
         command: 'init_process',
-        session_id: state.currentSessionId
+        session_id: currentSessionId
       }));
 
       const handleMessage = (event: MessageEvent) => {
@@ -268,7 +275,7 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
 
       websocketRef.current.addEventListener('message', handleMessage);
     });
-  }, [state.currentSessionId]);
+  }, []);
 
   // Kill a session
   const killSession = useCallback(async (sessionId: string): Promise<boolean> => {
@@ -337,149 +344,3 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
 }
 
 export { WebSocketContext, WebSocketProvider };
-
-
-
-// "use client"
-
-// import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-
-// interface LoadingContextType {
-//   isReady: boolean;
-//   error: string | null;
-//   ws: WebSocket | null;
-// }
-
-// const LoadingContext = createContext<LoadingContextType>({
-//   isReady: false,
-//   error: null,
-//   ws: null,
-// });
-
-// export const useLoading = () => useContext(LoadingContext);
-
-// export function LoadingProvider({ children }: { children: React.ReactNode }) {
-//   const [isReady, setIsReady] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const [ws, setWs] = useState<WebSocket | null>(null);
-//   const wsRef = useRef<WebSocket | null>(null);
-//   const [serverUrl, setServerUrl] = useState('http://localhost:8000');
-
-//   useEffect(() => {
-//     const connectWebSocket = () => {
-//       wsRef.current = new WebSocket(`${serverUrl.replace("http", "ws")}/ws`);
-    
-//       wsRef.current.onopen = () => {
-//         console.log("WebSocket connection established");
-//         setWs(wsRef.current);
-//         setIsReady(true);
-//         setError(null)
-//       };
-
-//       wsRef.current.onmessage = (event) => {}
-    
-//       wsRef.current.onerror = (event) => {
-//         console.error("WebSocket error:", event);
-//         setError("WebSocket connection error");
-//       };
-    
-//       wsRef.current.onclose = (event) => {
-//         console.log("WebSocket connection closed:", event);
-//         setWs(null);
-//         setIsReady(false);
-//       };
-//     }
-
-//     connectWebSocket();
-  
-//     return () => {
-//       console.log("Cleaning up WebSocket connection...");
-//       if (wsRef.current) {
-//         wsRef.current.close()
-//       }
-//     };
-//   }, [serverUrl]);
-  
-
-//   // useEffect(() => {
-//   //   const connectWebSocket = () => {
-//   //       // Connect to the FastAPI WebSocket endpoint
-//   //       wsRef.current = new WebSocket("ws://localhost:8000/ws");
-//   //       // wsRef.current = socket;
-//   //       console.log("WebSocket connection established", wsRef.current, wsRef.current);
-
-
-//   //       wsRef.current.onopen = () => {
-//   //         console.log("WebSocket connection established");
-//   //         setWs(wsRef.current);
-//   //         // Optionally, you can send an initial message here if needed:
-//   //         // socket.send(JSON.stringify({ command: "init", ... }));
-//   //       };
-
-//   //       wsRef.current.onmessage = (event) => {
-//   //       console.log("Received message:", event.data);
-//   //       try {
-//   //         const data = JSON.parse(event.data);
-
-//   //         // Example: handle an initialization response
-//   //         if (data.command === "init_process_result") {
-//   //           console.log("Received init_process_result:", data);
-//   //           if (data.success) {
-//   //             setIsReady(true);
-//   //             const storedSessionId = localStorage.getItem('cotomata-sessionId');
-//   //             if (storedSessionId && storedSessionId !== data.session_id) {
-//   //               setError('Session ID mismatch. Please try again.');
-//   //               if (wsRef.current) {
-//   //                 wsRef.current.close()
-//   //               }
-//   //               return;
-//   //             }
-//   //             localStorage.setItem('cotomata-sessionId', data.session_id);
-//   //           } else {
-//   //             setError(data.error || 'Failed to initialize OpenHands');
-//   //             if (wsRef.current) {
-//   //               wsRef.current.close()
-//   //             }
-//   //           }
-//   //         }
-
-//   //       } catch (err) {
-//   //         console.error("Error parsing message:", err);
-//   //       }
-//   //     };
-
-//   //     wsRef.current.onerror = (event) => {
-//   //       console.error("WebSocket error:", event);
-//   //       setError("WebSocket connection error");
-//   //     };
-
-//   //     wsRef.current.onclose = (event) => {
-//   //       console.log("WebSocket connection closed:", event);
-//   //       setWs(null);
-//   //     };
-//   //   };
-
-//   //   connectWebSocket();
-
-//   //   return () => {
-//   //     console.log("Cleaning up WebSocket connection...");
-//   //     if (wsRef.current) {
-//   //       wsRef.current.close()
-//   //     }
-//   //   };
-//   // }, []);
-
-//   // const sendMessage = (message: any) => {
-//   //   if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-//   //     wsRef.current.send(JSON.stringify(message));
-//   //   } else {
-//   //     console.error("WebSocket is not connected.");
-//   //   }
-//   // };
-
-//   return (
-//     <LoadingContext.Provider value={{ isReady, error, ws }}>
-//       {children}
-//     </LoadingContext.Provider>
-//   );
-// }

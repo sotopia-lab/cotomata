@@ -48,7 +48,7 @@ const getFileLanguage = (filename: string) => {
 };
 
 const getFileName = (path: string) => path.split('/').pop() || path;
-const { saveFile } = useWebSocket();
+
 
 export const CodeEditor = ({
   openFiles,
@@ -61,6 +61,7 @@ export const CodeEditor = ({
 }: CodeEditorProps) => {
   const [unsavedChanges, setUnsavedChanges] = useState<{ [key: string]: boolean }>({});
   const activeFileContent = openFiles.find(f => f.path === activeFile)?.content;
+  const { saveFile } = useWebSocket();
 
   const handleSave = async () => {
     try {

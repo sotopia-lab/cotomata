@@ -39,12 +39,14 @@ export default function LandingPage() {
     try {
       // Create new session and initialize process
       const sessionId = await createSession(sessionType);
+      console.log("sessionId", sessionId);
       if (sessionId) {
         const success = await initProcess();
+        console.log("success", success);
         if (success) {
           // Store session ID in localStorage for persistence
           localStorage.setItem("cotomata-sessionId", sessionId);
-          window.location.href = `/workspace/${sessionId}`;
+          router.push(`/workspace/${sessionId}`);
         }
       }
     } catch (err) {
@@ -65,7 +67,7 @@ export default function LandingPage() {
         const processInitialized = await initProcess();
         if (processInitialized) {
           localStorage.setItem("cotomata-sessionId", sessionIdInput);
-          window.location.href = `/workspace/${sessionIdInput}`;
+          router.push(`/workspace/${sessionIdInput}`);
         }
       }
     } catch (err) {
@@ -78,9 +80,28 @@ export default function LandingPage() {
   useEffect(() => {
     const existingSessionId = localStorage.getItem("cotomata-sessionId");
     if (existingSessionId && connected) {
-      window.location.href = `/workspace/${existingSessionId}`;
+      console.log("existingSessionId", existingSessionId);
+      joinSession(existingSessionId)
+        .then(success => {
+          if (success) {
+            return initProcess();
+          }
+          return false;
+        })
+        .then(success => {
+          if (success) {
+            router.push(`/workspace/${existingSessionId}`);
+          } else {
+            // Clear invalid session data
+            localStorage.removeItem("cotomata-sessionId");
+          }
+        })
+        .catch(err => {
+          console.error("Failed to recover session:", err);
+          localStorage.removeItem("cotomata-sessionId");
+        });
     }
-  }, [connected]);
+  }, [connected, router, joinSession, initProcess]);
 
   if (error) {
     return <Error error={error} reset={() => router.refresh()} />;
