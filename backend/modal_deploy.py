@@ -39,7 +39,6 @@ base_image = (
         "python3-venv",  # For poetry
         "git"  # For poetry dependencies
     )
-    .add_local_python_source("main")
 )
 
 class ServiceManager:
@@ -199,7 +198,6 @@ class ServiceManager:
             await self.init_redis()
             await self.init_openhands()
             await self.init_interview()
-            await self.init_nodejs()
             print("\n✓ All services initialized successfully")
             return {"status": "initialized", "services": self._services.copy()}
         except Exception as e:
@@ -224,8 +222,16 @@ class ServiceManager:
             "process_count": len(self._processes)
         }
 
-
-@app.cls(image=base_image, cpu=8, concurrency_limit=1, allow_concurrent_inputs=10)
+@app.cls(
+    image=base_image.add_local_dir(".", remote_path="/root")
+                    .add_local_dir("aact-openhands", remote_path="/root/aact-openhands")
+                    .add_local_python_source("main"),
+    network_file_systems={"/redis_data": redis_volume},
+    keep_warm=1,
+    cpu=8,
+    concurrency_limit=1,
+    allow_concurrent_inputs=10
+)
 class ModalApp:
     def __init__(self):
         self.app = web_app

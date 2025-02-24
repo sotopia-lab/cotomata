@@ -98,8 +98,8 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
   const connect = useCallback(() => {
     if (websocketRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket('ws://localhost:8000/ws');
-    // const ws = new WebSocket('wss://sotopia-lab--cotomata-modalapp-serve-dev.modal.run/ws');
+    // const ws = new WebSocket('ws://localhost:8000/ws');
+    const ws = new WebSocket('wss://sotopia-lab--cotomata-modalapp-serve-dev.modal.run/ws');
 
     ws.onopen = () => {
       dispatch({ type: 'CONNECTED' });
