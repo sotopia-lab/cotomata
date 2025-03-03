@@ -101,10 +101,9 @@ class DockerEnv:
         commands = [
             f"cd {working_dir} && git add .",
             f"cd {working_dir} && git commit -m 'Committing merge changes'",
-            f"cd {working_dir} && git checkout master",
-            f"cd {working_dir} && git merge {branch_name}",
-            f"cd {working_dir} && git add .",
-            f"cd {working_dir} && git commit -m 'Merged {branch_name} into master'"
+            f"cd /workspace/base && git merge {branch_name}",
+            # f"cd {working_dir} && git add .",
+            # f"cd {working_dir} && git commit -m 'Merged {branch_name} into master'"
         ]
         results = {}
         for cmd in commands:

@@ -1,0 +1,32 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11333",
+  "base_commit": "55b68de643b5c2d5f0a8ea7587ab3b2966021ccc",
+  "patch": "diff --git a/django/urls/base.py b/django/urls/base.py\n--- a/django/urls/base.py\n+++ b/django/urls/base.py\n@@ -7,7 +7,7 @@\n from django.utils.translation import override\n \n from .exceptions import NoReverseMatch, Resolver404\n-from .resolvers import get_ns_resolver, get_resolver\n+from .resolvers import _get_cached_resolver, get_ns_resolver, get_resolver\n from .utils import get_callable\n \n # SCRIPT_NAME prefixes for each thread are stored here. If there's no entry for\n@@ -92,7 +92,7 @@ def reverse(viewname, urlconf=None, args=None, kwargs=None, current_app=None):\n \n def clear_url_caches():\n     get_callable.cache_clear()\n-    get_resolver.cache_clear()\n+    _get_cached_resolver.cache_clear()\n     get_ns_resolver.cache_clear()\n \n \ndiff --git a/django/urls/resolvers.py b/django/urls/resolvers.py\n--- a/django/urls/resolvers.py\n+++ b/django/urls/resolvers.py\n@@ -63,10 +63,14 @@ def __repr__(self):\n         )\n \n \n-@functools.lru_cache(maxsize=None)\n def get_resolver(urlconf=None):\n     if urlconf is None:\n         urlconf = settings.ROOT_URLCONF\n+    return _get_cached_resolver(urlconf)\n+\n+\n+@functools.lru_cache(maxsize=None)\n+def _get_cached_resolver(urlconf=None):\n     return URLResolver(RegexPattern(r'^/'), urlconf)\n \n \n",
+  "test_patch": "diff --git a/tests/urlpatterns/test_resolvers.py b/tests/urlpatterns/test_resolvers.py\n--- a/tests/urlpatterns/test_resolvers.py\n+++ b/tests/urlpatterns/test_resolvers.py\n@@ -1,5 +1,6 @@\n from django.test import SimpleTestCase\n-from django.urls.resolvers import RegexPattern, RoutePattern\n+from django.test.utils import override_settings\n+from django.urls.resolvers import RegexPattern, RoutePattern, get_resolver\n from django.utils.translation import gettext_lazy as _\n \n \n@@ -13,3 +14,12 @@ class RoutePatternTests(SimpleTestCase):\n \n     def test_str(self):\n         self.assertEqual(str(RoutePattern(_('translated/'))), 'translated/')\n+\n+\n+class ResolverCacheTests(SimpleTestCase):\n+    @override_settings(ROOT_URLCONF='urlpatterns.path_urls')\n+    def test_resolver_cache_default__root_urlconf(self):\n+        # resolver for a default URLconf (passing no argument) and for the\n+        # settings.ROOT_URLCONF is the same cached object.\n+        self.assertIs(get_resolver(), get_resolver('urlpatterns.path_urls'))\n+        self.assertIsNot(get_resolver(), get_resolver('urlpatterns.path_dynamic_urls'))\n",
+  "feature1": {
+    "prompt": "Optimization: Multiple URLResolvers may be unintentionally be constructed by calls to `django.urls.resolvers.get_resolver`",
+    "hint_texts": "Changes in `django/urls/base.py` and `django/urls/resolvers.py` to optimize the URL resolver caching mechanism. This part focuses on the code changes that introduce a new function `_get_cached_resolver` and modify `get_resolver` to use this new function. The goal is to reduce redundant calls to `URLResolver._populate`.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "test_str (urlpatterns.test_resolvers.RegexPatternTests)",
+        "test_str (urlpatterns.test_resolvers.RoutePatternTests)"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Multiple URLResolvers may be constructed by django.urls.resolvers.get_resolver if django.urls.base.set_urlconf has not yet been called, resulting in multiple expensive calls to URLResolver._populate.",
+    "hint_texts": "Changes in the test file `tests/urlpatterns/test_resolvers.py` to add new test cases for the caching mechanism. This part focuses on verifying the changes made in Part 1 by adding tests that ensure the caching mechanism behaves correctly.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests)"
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests)\"]",
+    "PASS_TO_PASS": "[\"test_str (urlpatterns.test_resolvers.RegexPatternTests)\", \"test_str (urlpatterns.test_resolvers.RoutePatternTests)\"]"
+  }
+}

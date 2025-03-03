@@ -49,8 +49,9 @@ async def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> 
         "that outputs 'hello I am {agent_name}' in main.py.\n\n"
         "Critical Requirements:\n"
         "1. The code will be tested by running 'python3 main.py'\n"
-        "2. Follow the agreed-upon structure from the planning phase\n"\
-        "3.NO COMMENTS ANYWHERE\n\n"
+        "2. Follow the agreed-upon structure from the planning phase\n"
+        "3. Do not add any comments\n\n"
+        "4. Only implement your part of the code. Do NOT implement the other part\n"
         "Your responses should be structured as actions:\n"
         "- Use 'read' action with path when you need to read a file\n"
         "- Use 'write' action with path and content when you want to modify a file. You can optionally specify:\n"
@@ -68,7 +69,7 @@ async def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> 
     agent2.response_format = AgentAction
     agent2.system_prompt = coding_phase_prompt_template.format(agent_name="agent2")
     
-    current_message = "Now, let's implement our code based on our discussion. Please share your implementation using structured actions."
+    current_message = "Now, let's implement our code based on our discussion. Please share your implementation using structured actions. Explore the codebase first"
 
     # print("\n--- Agent 1's Implementation ---")
     agent1_responses = []
@@ -89,7 +90,7 @@ async def run_coding_phase(agent1: CodeWeaverAgent, agent2: CodeWeaverAgent) -> 
 
     # print("\n--- Agent 2's Implementation ---")
     agent2_responses = []
-    current_message = "Now, let's implement our code based on our discussion. Please share your implementation using structured actions."
+    current_message = "Now, let's implement our code based on our discussion. Please share your implementation using structured actions. Explore the codebase first"
     while True:
         response = await agent2.respond(current_message)
         if not response:

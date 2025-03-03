@@ -40,8 +40,27 @@ async def simulate_conversation(turns: int = 2, max_attempts: int = 1) -> dict:
 
     while attempt <= max_attempts:
         attempt += 1
+        
+        codebase_content = """
+        Contents of main.py:
+        
+        def agent1_message():
+            pass
+
+        def agent2_message():
+            pass
+
+        def main():
+            agent1_message()
+            agent2_message()
+            
+        if __name__ == '__main__':
+            main()
+        """
+                
         base_prompt = (
             "Goal: Write code in main.py to output 'hello I am {agent_name}' in a way that works with {other_name}'s code.\n\n"
+            f"Codebase\n\n{codebase_content}\n"
             "Critical Requirements:\n"
             "1. You MUST write your code ONLY in main.py - this is the ONLY file that will be tested\n"
             "2. The code will be tested by running 'python3 main.py'\n"

@@ -1,0 +1,1597 @@
+{
+  "total_analyzed": 500,
+  "total_splittable": 265,
+  "percentage_splittable": "53.0%",
+  "splittable_prs": [
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-14365",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-13398",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-13398",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-13579",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-13579",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-13033",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-13977",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-14182",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-14369",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-13453",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-13453",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-7166",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-7606",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-7606",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-7671",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-7671",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-8872",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-8872",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-8707",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-8707",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "astropy_astropy_astropy__astropy-7336",
+      "repo": "astropy/astropy",
+      "instance_id": "astropy__astropy-7336",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11095",
+      "repo": "django/django",
+      "instance_id": "django__django-11095",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11087",
+      "repo": "django/django",
+      "instance_id": "django__django-11087",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11138",
+      "repo": "django/django",
+      "instance_id": "django__django-11138",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11141",
+      "repo": "django/django",
+      "instance_id": "django__django-11141",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11149",
+      "repo": "django/django",
+      "instance_id": "django__django-11149",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11265",
+      "repo": "django/django",
+      "instance_id": "django__django-11265",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11211",
+      "repo": "django/django",
+      "instance_id": "django__django-11211",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11276",
+      "repo": "django/django",
+      "instance_id": "django__django-11276",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11299",
+      "repo": "django/django",
+      "instance_id": "django__django-11299",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11333",
+      "repo": "django/django",
+      "instance_id": "django__django-11333",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11292",
+      "repo": "django/django",
+      "instance_id": "django__django-11292",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11400",
+      "repo": "django/django",
+      "instance_id": "django__django-11400",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11551",
+      "repo": "django/django",
+      "instance_id": "django__django-11551",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11728",
+      "repo": "django/django",
+      "instance_id": "django__django-11728",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11603",
+      "repo": "django/django",
+      "instance_id": "django__django-11603",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11532",
+      "repo": "django/django",
+      "instance_id": "django__django-11532",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11477",
+      "repo": "django/django",
+      "instance_id": "django__django-11477",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11749",
+      "repo": "django/django",
+      "instance_id": "django__django-11749",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11740",
+      "repo": "django/django",
+      "instance_id": "django__django-11740",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11734",
+      "repo": "django/django",
+      "instance_id": "django__django-11734",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11820",
+      "repo": "django/django",
+      "instance_id": "django__django-11820",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-11885",
+      "repo": "django/django",
+      "instance_id": "django__django-11885",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12039",
+      "repo": "django/django",
+      "instance_id": "django__django-12039",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12125",
+      "repo": "django/django",
+      "instance_id": "django__django-12125",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12193",
+      "repo": "django/django",
+      "instance_id": "django__django-12193",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12155",
+      "repo": "django/django",
+      "instance_id": "django__django-12155",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12262",
+      "repo": "django/django",
+      "instance_id": "django__django-12262",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12663",
+      "repo": "django/django",
+      "instance_id": "django__django-12663",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12406",
+      "repo": "django/django",
+      "instance_id": "django__django-12406",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12325",
+      "repo": "django/django",
+      "instance_id": "django__django-12325",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12713",
+      "repo": "django/django",
+      "instance_id": "django__django-12713",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12708",
+      "repo": "django/django",
+      "instance_id": "django__django-12708",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-12965",
+      "repo": "django/django",
+      "instance_id": "django__django-12965",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13012",
+      "repo": "django/django",
+      "instance_id": "django__django-13012",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13158",
+      "repo": "django/django",
+      "instance_id": "django__django-13158",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13128",
+      "repo": "django/django",
+      "instance_id": "django__django-13128",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13195",
+      "repo": "django/django",
+      "instance_id": "django__django-13195",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13346",
+      "repo": "django/django",
+      "instance_id": "django__django-13346",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13121",
+      "repo": "django/django",
+      "instance_id": "django__django-13121",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13363",
+      "repo": "django/django",
+      "instance_id": "django__django-13363",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13401",
+      "repo": "django/django",
+      "instance_id": "django__django-13401",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13512",
+      "repo": "django/django",
+      "instance_id": "django__django-13512",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13513",
+      "repo": "django/django",
+      "instance_id": "django__django-13513",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13315",
+      "repo": "django/django",
+      "instance_id": "django__django-13315",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13449",
+      "repo": "django/django",
+      "instance_id": "django__django-13449",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13344",
+      "repo": "django/django",
+      "instance_id": "django__django-13344",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13406",
+      "repo": "django/django",
+      "instance_id": "django__django-13406",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13516",
+      "repo": "django/django",
+      "instance_id": "django__django-13516",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13569",
+      "repo": "django/django",
+      "instance_id": "django__django-13569",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13741",
+      "repo": "django/django",
+      "instance_id": "django__django-13741",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13568",
+      "repo": "django/django",
+      "instance_id": "django__django-13568",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13551",
+      "repo": "django/django",
+      "instance_id": "django__django-13551",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13786",
+      "repo": "django/django",
+      "instance_id": "django__django-13786",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13794",
+      "repo": "django/django",
+      "instance_id": "django__django-13794",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13807",
+      "repo": "django/django",
+      "instance_id": "django__django-13807",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13837",
+      "repo": "django/django",
+      "instance_id": "django__django-13837",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13809",
+      "repo": "django/django",
+      "instance_id": "django__django-13809",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14007",
+      "repo": "django/django",
+      "instance_id": "django__django-14007",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-13964",
+      "repo": "django/django",
+      "instance_id": "django__django-13964",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14011",
+      "repo": "django/django",
+      "instance_id": "django__django-14011",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14122",
+      "repo": "django/django",
+      "instance_id": "django__django-14122",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14034",
+      "repo": "django/django",
+      "instance_id": "django__django-14034",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14170",
+      "repo": "django/django",
+      "instance_id": "django__django-14170",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14311",
+      "repo": "django/django",
+      "instance_id": "django__django-14311",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14351",
+      "repo": "django/django",
+      "instance_id": "django__django-14351",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14349",
+      "repo": "django/django",
+      "instance_id": "django__django-14349",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14725",
+      "repo": "django/django",
+      "instance_id": "django__django-14725",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14792",
+      "repo": "django/django",
+      "instance_id": "django__django-14792",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14771",
+      "repo": "django/django",
+      "instance_id": "django__django-14771",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15037",
+      "repo": "django/django",
+      "instance_id": "django__django-15037",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14752",
+      "repo": "django/django",
+      "instance_id": "django__django-14752",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-14631",
+      "repo": "django/django",
+      "instance_id": "django__django-14631",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15128",
+      "repo": "django/django",
+      "instance_id": "django__django-15128",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15103",
+      "repo": "django/django",
+      "instance_id": "django__django-15103",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15161",
+      "repo": "django/django",
+      "instance_id": "django__django-15161",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15252",
+      "repo": "django/django",
+      "instance_id": "django__django-15252",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15278",
+      "repo": "django/django",
+      "instance_id": "django__django-15278",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15268",
+      "repo": "django/django",
+      "instance_id": "django__django-15268",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15499",
+      "repo": "django/django",
+      "instance_id": "django__django-15499",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15503",
+      "repo": "django/django",
+      "instance_id": "django__django-15503",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15127",
+      "repo": "django/django",
+      "instance_id": "django__django-15127",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15554",
+      "repo": "django/django",
+      "instance_id": "django__django-15554",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15732",
+      "repo": "django/django",
+      "instance_id": "django__django-15732",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15563",
+      "repo": "django/django",
+      "instance_id": "django__django-15563",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15629",
+      "repo": "django/django",
+      "instance_id": "django__django-15629",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15561",
+      "repo": "django/django",
+      "instance_id": "django__django-15561",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15957",
+      "repo": "django/django",
+      "instance_id": "django__django-15957",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16032",
+      "repo": "django/django",
+      "instance_id": "django__django-16032",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-15916",
+      "repo": "django/django",
+      "instance_id": "django__django-15916",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16263",
+      "repo": "django/django",
+      "instance_id": "django__django-16263",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16116",
+      "repo": "django/django",
+      "instance_id": "django__django-16116",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16256",
+      "repo": "django/django",
+      "instance_id": "django__django-16256",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16502",
+      "repo": "django/django",
+      "instance_id": "django__django-16502",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16493",
+      "repo": "django/django",
+      "instance_id": "django__django-16493",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16454",
+      "repo": "django/django",
+      "instance_id": "django__django-16454",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16315",
+      "repo": "django/django",
+      "instance_id": "django__django-16315",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16642",
+      "repo": "django/django",
+      "instance_id": "django__django-16642",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16631",
+      "repo": "django/django",
+      "instance_id": "django__django-16631",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16801",
+      "repo": "django/django",
+      "instance_id": "django__django-16801",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16662",
+      "repo": "django/django",
+      "instance_id": "django__django-16662",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16595",
+      "repo": "django/django",
+      "instance_id": "django__django-16595",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16819",
+      "repo": "django/django",
+      "instance_id": "django__django-16819",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16560",
+      "repo": "django/django",
+      "instance_id": "django__django-16560",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-17084",
+      "repo": "django/django",
+      "instance_id": "django__django-17084",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16950",
+      "repo": "django/django",
+      "instance_id": "django__django-16950",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16901",
+      "repo": "django/django",
+      "instance_id": "django__django-16901",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-20676",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-20676",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-14623",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-14623",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "django_django_django__django-16938",
+      "repo": "django/django",
+      "instance_id": "django__django-16938",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-22719",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-20859",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-20859",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-21568",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-23299",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-23299",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-24870",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25332",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25287",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25287",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25311",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25311",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25479",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25479",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-26466",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25775",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25775",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-26342",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-26342",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-26208",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-26208",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "mwaskom_seaborn_mwaskom__seaborn-3069",
+      "repo": "mwaskom/seaborn",
+      "instance_id": "mwaskom__seaborn-3069",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "mwaskom_seaborn_mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "instance_id": "mwaskom__seaborn-3187",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "matplotlib_matplotlib_matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "instance_id": "matplotlib__matplotlib-25960",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "psf_requests_psf__requests-2931",
+      "repo": "psf/requests",
+      "instance_id": "psf__requests-2931",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-3095",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-3095",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-3305",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-3305",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-3151",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-3151",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-4966",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-4966",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-4687",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-4687",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-3993",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-3993",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-6599",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-7229",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-7229",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-4551",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-7233",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-7233",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-6938",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-4604",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-4604",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-4970",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-4970",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-6992",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-6386",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-6386",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-4661",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-4661",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-6528",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-6528",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-10081",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-10081",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-7080",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-7080",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pylint-dev_pylint_pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "instance_id": "pylint-dev__pylint-8898",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pydata_xarray_pydata__xarray-6744",
+      "repo": "pydata/xarray",
+      "instance_id": "pydata__xarray-6744",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-10356",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-10356",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-10051",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-5631",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-5631",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7432",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7236",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7236",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7205",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7205",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-6197",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7571",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7571",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7324",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7324",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-5787",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-5787",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-10297",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-10297",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-5840",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-5840",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "pytest-dev_pytest_pytest-dev__pytest-7490",
+      "repo": "pytest-dev/pytest",
+      "instance_id": "pytest-dev__pytest-7490",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-10908",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-10908",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-11310",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-11310",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-13124",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-13124",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-12973",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-12973",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-13142",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-13142",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-12682",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-12682",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-14087",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-14629",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-14629",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-13496",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-13496",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-25102",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-25102",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-14496",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-14496",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-14710",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-14710",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-14983",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-14983",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-25973",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-25973",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-25931",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-25931",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-9288",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-9288",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-25747",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-25747",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-25232",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-25232",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-26323",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-26323",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-10323",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-10323",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "scikit-learn_scikit-learn_scikit-learn__scikit-learn-26194",
+      "repo": "scikit-learn/scikit-learn",
+      "instance_id": "scikit-learn__scikit-learn-26194",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-10614",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-11445",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-11445",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7454",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7440",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7440",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-10449",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-10449",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-10673",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-10673",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7748",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-11510",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-11510",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7985",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7985",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7757",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7757",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8056",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8056",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7590",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7590",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8265",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8265",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8120",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8120",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8459",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8459",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8269",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8269",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8593",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8593",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8548",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8548",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8638",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8638",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9229",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9229",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8721",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8721",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8551",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8551",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9320",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9602",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9602",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-8035",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-8035",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9658",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9658",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9461",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9461",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-12419",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9673",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9673",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-12481",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-12489",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-12489",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sphinx-doc_sphinx_sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "instance_id": "sphinx-doc__sphinx-9711",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13091",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13091",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13551",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13551",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13798",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13877",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13877",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13852",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13852",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-15345",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-15345",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13878",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13878",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-14531",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-14531",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-14248",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-14248",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-14976",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-14976",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-13974",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-15599",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-16450",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-16450",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-16792",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-16597",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-17630",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-17630",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-17318",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-17318",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-15976",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-15976",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-18211",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-18211",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-19346",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-19346",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-18199",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-18199",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-19495",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-19495",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-19954",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-19954",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-19783",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-19783",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-20438",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-20438",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-18698",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-18698",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-20916",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-20916",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-20154",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-20154",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-21379",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-21379",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-21596",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-21596",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-22914",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-22914",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-22456",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-22456",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-22080",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-22080",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-24443",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-24443",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-24562",
+      "can_be_split": true
+    },
+    {
+      "pr_id": "sympy_sympy_sympy__sympy-24661",
+      "repo": "sympy/sympy",
+      "instance_id": "sympy__sympy-24661",
+      "can_be_split": true
+    }
+  ]
+}

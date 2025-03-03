@@ -1,0 +1,50 @@
+{
+  "analysis": "### Analysis\n\n1. **Identify all modified components**:\n   - **Files Modified**:\n     - `django/db/models/sql/query.py`\n     - `tests/expressions/tests.py`\n   - **Functions/Methods/Code Blocks Changed**:\n     - In `query.py`, the `resolve_lookup_value` method is modified to handle named tuples correctly by expanding the iterator into the constructor.\n   - **New Functions/Methods/Classes/Parameters**:\n     - No new functions or classes are introduced, but the logic within `resolve_lookup_value` is enhanced to handle named tuples.\n\n2. **Evaluate logical separation**:\n   - The changes in `query.py` are focused on fixing a specific issue with named tuples in the `resolve_lookup_value` method. This is a single logical change aimed at correcting the behavior when named tuples are used.\n   - The test changes in `tests.py` are directly related to verifying this fix by adding a test case for named tuples.\n   - There is no natural division in the code changes as both the code modification and the test addition are tightly coupled to the same issue.\n\n3. **Consider testability**:\n   - The test case added (`test_range_lookup_namedtuple`) is specifically designed to test the fix in `resolve_lookup_value`. It cannot be tested independently of the code change because it directly verifies the new behavior.\n   - The existing tests that pass both before and after the fix are not related to the specific issue being addressed, indicating that the change is backward compatible but not separable.\n\n### Output\n\n1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**: \n   - The code change and the test addition are both focused on resolving a single issue: the handling of named tuples in the `resolve_lookup_value` method. \n   - The test case is directly dependent on the code change, as it verifies the new behavior introduced by the fix.\n   - There is no logical separation that would allow for independent development or testing of parts.\n\n3. **If NO**:\n   - The PR addresses a specific bug related to named tuples, making it a cohesive unit.\n   - The test case is essential to verify the fix and cannot be logically separated from the code change.\n   - Splitting the PR would be impractical as the test case is designed to validate the specific behavior introduced by the code modification.",
+  "can_be_split": false,
+  "raw_response": {
+    "id": "chatcmpl-B6LwGS35m6f9I2cxJ37jK9h0APMIY",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "### Analysis\n\n1. **Identify all modified components**:\n   - **Files Modified**:\n     - `django/db/models/sql/query.py`\n     - `tests/expressions/tests.py`\n   - **Functions/Methods/Code Blocks Changed**:\n     - In `query.py`, the `resolve_lookup_value` method is modified to handle named tuples correctly by expanding the iterator into the constructor.\n   - **New Functions/Methods/Classes/Parameters**:\n     - No new functions or classes are introduced, but the logic within `resolve_lookup_value` is enhanced to handle named tuples.\n\n2. **Evaluate logical separation**:\n   - The changes in `query.py` are focused on fixing a specific issue with named tuples in the `resolve_lookup_value` method. This is a single logical change aimed at correcting the behavior when named tuples are used.\n   - The test changes in `tests.py` are directly related to verifying this fix by adding a test case for named tuples.\n   - There is no natural division in the code changes as both the code modification and the test addition are tightly coupled to the same issue.\n\n3. **Consider testability**:\n   - The test case added (`test_range_lookup_namedtuple`) is specifically designed to test the fix in `resolve_lookup_value`. It cannot be tested independently of the code change because it directly verifies the new behavior.\n   - The existing tests that pass both before and after the fix are not related to the specific issue being addressed, indicating that the change is backward compatible but not separable.\n\n### Output\n\n1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**: \n   - The code change and the test addition are both focused on resolving a single issue: the handling of named tuples in the `resolve_lookup_value` method. \n   - The test case is directly dependent on the code change, as it verifies the new behavior introduced by the fix.\n   - There is no logical separation that would allow for independent development or testing of parts.\n\n3. **If NO**:\n   - The PR addresses a specific bug related to named tuples, making it a cohesive unit.\n   - The test case is essential to verify the fix and cannot be logically separated from the code change.\n   - Splitting the PR would be impractical as the test case is designed to validate the specific behavior introduced by the code modification.",
+          "refusal": null,
+          "role": "assistant",
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1740854000,
+    "model": "gpt-4o-2024-08-06",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_eb9dce56a8",
+    "usage": {
+      "completion_tokens": 492,
+      "prompt_tokens": 3514,
+      "total_tokens": 4006,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      }
+    }
+  },
+  "metadata": {
+    "repo": "django/django",
+    "instance_id": "django__django-13590",
+    "base_commit": "755dbf39fcdc491fe9b588358303e259c7750be4",
+    "version": "3.2",
+    "difficulty": "15 min - 1 hour",
+    "timestamp": "2025-03-01 10:33:35"
+  }
+}

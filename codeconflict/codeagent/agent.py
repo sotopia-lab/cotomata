@@ -66,7 +66,7 @@ class CodeWeaverAgent:
 
         try:
             response = self.client.beta.chat.completions.parse(
-                model="o3-mini",
+                model="gpt-4o-mini",
                 messages=messages,
                 response_format=self.response_format
             )

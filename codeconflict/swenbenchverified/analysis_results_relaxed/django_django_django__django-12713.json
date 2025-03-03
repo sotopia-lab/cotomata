@@ -1,0 +1,50 @@
+{
+  "analysis": "### Summary Assessment\n\nNo, the PR cannot be split into two logical parts.\n\n### Reasoning\n\nThe changes in the PR are focused on a single cohesive goal: allowing the `formfield_for_manytomany` function to accept a custom widget parameter, similar to the existing behavior of `formfield_for_foreignkey`. The modifications in the code and the corresponding test are tightly coupled to this single enhancement. Here's a detailed breakdown:\n\n1. **Modified Components**:\n   - **File**: `django/contrib/admin/options.py`\n     - **Function**: `formfield_for_manytomany`\n       - The logic is updated to check if a 'widget' is provided in `kwargs` and only apply default widgets if not.\n   - **File**: `tests/admin_widgets/tests.py`\n     - **Test Function**: `test_formfield_overrides_m2m_filter_widget`\n       - A new test is added to verify that the widget can be overridden for `ManyToManyField`.\n\n2. **Logical Separation**:\n   - The changes in `options.py` are all related to the enhancement of allowing widget overrides in `formfield_for_manytomany`. This is a single logical change.\n   - The test added in `tests.py` directly corresponds to this change, ensuring that the new functionality works as intended.\n\n3. **Testability**:\n   - The new test case is specifically designed to test the new functionality of widget overriding. It cannot be separated from the code change because it directly tests the new behavior introduced by the PR.\n   - There is no other independent functionality being introduced or modified that could be tested separately.\n\n### Conclusion\n\nThe PR is a cohesive unit focused on a single enhancement. The code changes and the test are interdependent, and splitting them would not make sense as they both serve the same purpose. The enhancement and its verification are tightly coupled, making it impractical to divide them into independently testable parts.",
+  "can_be_split": false,
+  "raw_response": {
+    "id": "chatcmpl-B6M6mfZ3EwviIRiASmkZGLFJ4wmI7",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "### Summary Assessment\n\nNo, the PR cannot be split into two logical parts.\n\n### Reasoning\n\nThe changes in the PR are focused on a single cohesive goal: allowing the `formfield_for_manytomany` function to accept a custom widget parameter, similar to the existing behavior of `formfield_for_foreignkey`. The modifications in the code and the corresponding test are tightly coupled to this single enhancement. Here's a detailed breakdown:\n\n1. **Modified Components**:\n   - **File**: `django/contrib/admin/options.py`\n     - **Function**: `formfield_for_manytomany`\n       - The logic is updated to check if a 'widget' is provided in `kwargs` and only apply default widgets if not.\n   - **File**: `tests/admin_widgets/tests.py`\n     - **Test Function**: `test_formfield_overrides_m2m_filter_widget`\n       - A new test is added to verify that the widget can be overridden for `ManyToManyField`.\n\n2. **Logical Separation**:\n   - The changes in `options.py` are all related to the enhancement of allowing widget overrides in `formfield_for_manytomany`. This is a single logical change.\n   - The test added in `tests.py` directly corresponds to this change, ensuring that the new functionality works as intended.\n\n3. **Testability**:\n   - The new test case is specifically designed to test the new functionality of widget overriding. It cannot be separated from the code change because it directly tests the new behavior introduced by the PR.\n   - There is no other independent functionality being introduced or modified that could be tested separately.\n\n### Conclusion\n\nThe PR is a cohesive unit focused on a single enhancement. The code changes and the test are interdependent, and splitting them would not make sense as they both serve the same purpose. The enhancement and its verification are tightly coupled, making it impractical to divide them into independently testable parts.",
+          "refusal": null,
+          "role": "assistant",
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1740854652,
+    "model": "gpt-4o-2024-08-06",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_eb9dce56a8",
+    "usage": {
+      "completion_tokens": 396,
+      "prompt_tokens": 2430,
+      "total_tokens": 2826,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      }
+    }
+  },
+  "metadata": {
+    "repo": "django/django",
+    "instance_id": "django__django-12713",
+    "base_commit": "5b884d45ac5b76234eca614d90c83b347294c332",
+    "version": "3.1",
+    "difficulty": "15 min - 1 hour",
+    "timestamp": "2025-03-01 10:44:25"
+  }
+}

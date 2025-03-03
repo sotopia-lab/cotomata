@@ -1,12 +1,12 @@
-
-
+def agent1_message():
+    pass
 
 def agent2_message():
-    print("hello I am agent2")
+    pass
 
 def main():
-    
+    agent1_message()
     agent2_message()
     
-if __name__ == '__main__':
+if __name__ == __main__:
     main()
