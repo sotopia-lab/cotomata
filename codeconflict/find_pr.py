@@ -4,6 +4,73 @@ import json
 from datetime import datetime
 import os
 from collections import defaultdict
+from datasets import load_dataset
+
+def test_github_token(token=None):
+    """Test a GitHub token to verify it's working correctly"""
+    
+    # Get token from environment if not provided
+    if not token:
+        token = os.environ.get("GITHUB_TOKEN")
+        if not token:
+            print("No token provided and no GITHUB_TOKEN environment variable found.")
+            return False
+    
+    # Set up the headers with the token
+    headers = {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "GitHub-Token-Tester"
+    }
+    
+    # Test the token by checking rate limits (works for any valid token)
+    url = "https://api.github.com/rate_limit"
+    
+    print(f"\nTesting token: {token[:4]}...{token[-4:]} (length: {len(token)})")
+    
+    try:
+        response = requests.get(url, headers=headers)
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Extract rate limit information
+            core_limit = data["resources"]["core"]["limit"]
+            core_remaining = data["resources"]["core"]["remaining"]
+            
+            print(f"Token is valid!")
+            print(f"Rate limit: {core_limit} requests per hour")
+            print(f"Remaining: {core_remaining} requests ✅")
+            
+            # Check for scopes (permissions)
+            # if "X-OAuth-Scopes" in response.headers:
+            #     scopes = response.headers["X-OAuth-Scopes"]
+            #     print(f"Token scopes: {scopes or 'None'}")
+                
+            #     # Check if repo access is present
+            #     if "repo" in scopes or "public_repo" in scopes:
+            #         print("✅ Token has repository access")
+            #     else:
+            #         print("⚠️ Warning: Token may not have sufficient repository access")
+            # else:
+            #     print("Could not determine token scopes")
+                
+            return True
+            
+        elif response.status_code == 401:
+            print("❌ Token is invalid or expired")
+            print(response.json().get("message", "No error message"))
+            return False
+            
+        else:
+            print(f"❌ Unexpected status code: {response.status_code}")
+            print(response.text)
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error testing token: {str(e)}")
+        return False
 
 class GitHubPRAnalyzer:
     def __init__(self, repo_owner, repo_name, token=None):
@@ -198,7 +265,7 @@ class GitHubPRAnalyzer:
         return all_files
 
     
-    def find_prs(self):
+    def find_prs(self, max_pages=1):
         """
         Find PRs in a specific repository.
             
@@ -207,7 +274,7 @@ class GitHubPRAnalyzer:
         """
         # Get all PRs first
         print("Fetching pull requests...")
-        prs = self.get_pull_requests(state="closed", max_pages=1)
+        prs = self.get_pull_requests(state="closed", max_pages=max_pages)
         
         # Sort PRs by merged_at date (most recent first)
         merged_prs = [pr for pr in prs if pr.get("merged_at")]
@@ -240,11 +307,17 @@ class GitHubPRAnalyzer:
             pr_information[name]["pr"] = pr
             pr_information[name]["files"] = files
         
-        with open(f"pr_information_{self.repo_owner}__{self.repo_name}.json", "w") as f:
+        with open(f"pr_information/pr_information_{self.repo_owner}__{self.repo_name}.json", "w") as f:
             f.write(json.dumps(pr_information, indent=4))
 
 
 def main():
+    ds = load_dataset("princeton-nlp/SWE-bench_Verified")
+
+    repos = set()
+    for dp in ds['test']:
+        repos.add(dp['repo'])
+
     # GitHub personal access token (if available)
     token = os.environ.get("GITHUB_TOKEN")
     
@@ -256,9 +329,14 @@ def main():
             token = input("Enter your GitHub token: ").strip()
     
     # Initialize analyzer for astropy/astropy
-    analyzer = GitHubPRAnalyzer("astropy", "astropy", token)
-    
-    analyzer.find_prs()
+    for repo in list(repos):
+        repo_owner, repo_name = repo.split('/')
+        if repo_name in ['astropy', 'seaborn', 'flask', 'sphinx']:
+            continue
+        print(f"Analyzing {repo_owner}/{repo_name}")
+        test_github_token(token)
+        analyzer = GitHubPRAnalyzer(repo_owner, repo_name, token)
+        analyzer.find_prs(max_pages=3)
     
 
 if __name__ == "__main__":
