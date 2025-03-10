@@ -76,3 +76,5 @@ yarn.lock
 bun.lockb
 uv.lock
 .codegpt
+
+legacy/
