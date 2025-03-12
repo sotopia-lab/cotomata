@@ -1,0 +1,33 @@
+{
+  "repo": "astropy/astropy",
+  "test_id": "astropy/astropy_astropy__astropy-8707",
+  "base_commit": "a85a0747c54bac75e9c3b2fe436b105ea029d6cf",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The Card.fromstring method must be updated to properly handle Python 3 bytes. In the current implementation, Card.fromstring assumes input is of string type, which worked in Python 2 but not in Python 3 when dealing with raw binary data. To maintain consistency with how FITS headers are processed, Card.fromstring should be modified so that when it receives bytes as input, it decodes them using latin-1 before further processing. This change will allow card strings extracted from FITS headers to be handled correctly regardless of whether they are provided as bytes or unicode.",
+    "hint_texts": "Focus on modifying the implementation of Card.fromstring in the astropy/io/fits/card.py file. Check if the input is an instance of bytes and, if so, decode it using the latin-1 encoding. Ensure that the existing functionality for unicode input remains unaffected. Review the code block responsible for padding the card string so that it works correctly after the decoding step.",
+    "entrypoint": "File: astropy/io/fits/card.py; Function: Card.fromstring; Start modifications around the conditional check for bytes input (near line 554 based on the patch) where the input is decoded and padded.",
+    "tests": {
+      "FAIL_TO_PASS": "astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_card_from_bytes",
+      "PASS_TO_PASS": "[astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_card_constructor_default_args, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_string_value_card, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_boolean_value_card, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_long_integer_value_card, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_floating_point_value_card, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_complex_value_card]"
+    }
+  },
+  "feature2": {
+    "prompt": "Header.fromstring does not accept Python 3 bytes and must be improved to allow both unicode and bytes input. Currently, Header.fromstring assumes that header data is provided as a unicode string, which can lead to issues when raw binary data is encountered. The method should be updated so that if the input is a byte string, it is first decoded using latin-1 before processing the header content. This enhancement will ensure that entire FITS headers provided as bytes are correctly interpreted and transformed into valid header objects.",
+    "hint_texts": "Concentrate on updating the Header.fromstring method in the astropy/io/fits/header.py file. Modify the method to perform an explicit check on the type of the input; if the input is bytes, decode it using latin-1. Update the function documentation and examples to reflect this new behavior. Also, carefully adjust how header cards are split and joined after the decoding to preserve the expected format.",
+    "entrypoint": "File: astropy/io/fits/header.py; Function: Header.fromstring; Begin modifications around the section where the data type is checked (starting near line 334) and proceed to update the splitting and processing of header cards accordingly.",
+    "tests": {
+      "FAIL_TO_PASS": "astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_header_fromstring_bytes",
+      "PASS_TO_PASS": "[astropy/io/fits/tests/test_header.py::test_shallow_copy, astropy/io/fits/tests/test_header.py::test_init_with_header, astropy/io/fits/tests/test_header.py::test_init_with_dict, astropy/io/fits/tests/test_header.py::test_init_with_ordereddict, astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_rename_keyword]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the FITS header handling components in astropy/io/fits, particularly involving the decoding of bytes using latin-1. The Card and Header classes share aspects of how FITS data is interpreted and stored, making the consistent treatment of input types essential.",
+    "integration_strategy": "Feature1 must expose and guarantee that Card.fromstring correctly processes both bytes and unicode inputs so that its output is a valid card string. Feature2, in turn, may rely on similar decoding practices when processing the entire header string. The two features must be integrated by ensuring that both methods use compatible decoding logic and helper routines, if any, to maintain consistency across the FITS module.",
+    "communication_needs": "Developers working on each feature should coordinate on the exact decoding strategy (using latin-1) and verify that any shared warnings or error handling mechanisms are consistent between Card.fromstring and Header.fromstring. Regular communication is recommended to resolve any discrepancies in parsing logic and to ensure that the integration of the two features does not introduce regressions in FITS data processing."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_card_from_bytes\"]",
+    "PASS_TO_PASS": "[\"astropy/io/fits/tests/test_header.py::test_shallow_copy\", \"astropy/io/fits/tests/test_header.py::test_init_with_header\", \"astropy/io/fits/tests/test_header.py::test_init_with_dict\", \"astropy/io/fits/tests/test_header.py::test_init_with_ordereddict\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_rename_keyword\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_card_constructor_default_args\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_string_value_card\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_boolean_value_card\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_long_integer_value_card\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_floating_point_value_card\", \"astropy/io/fits/tests/test_header.py::TestHeaderFunctions::test_complex_value_card\"]"
+  }
+}

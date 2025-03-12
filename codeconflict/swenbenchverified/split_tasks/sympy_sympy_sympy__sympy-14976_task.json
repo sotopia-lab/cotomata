@@ -1,0 +1,33 @@
+{
+  "repo": "sympy/sympy",
+  "test_id": "sympy/sympy_sympy__sympy-14976",
+  "base_commit": "9cbea134220b0b951587e11b63e2c832c7246cbc",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The issue arises because when using lambdify with modules='mpmath', rational numbers are not wrapped in the appropriate mpmath format, which leads to reduced precision in numerical evaluations such as those performed by nsolve. The goal is to enhance the MpmathPrinter so that it converts Rational numbers into a format that uses mpmath.mpf for both the numerator and denominator. For example, an expression like 232/3 should be represented as mpmath.mpf(232)/mpmath.mpf(3) to ensure full precision arithmetic. This change is targeted at addressing the precision loss reported when handling rational inputs in numerical routines.",
+    "hint_texts": "Focus on implementing the _print_Rational method within the MpmathPrinter. The implementation should use string formatting to wrap the numerator and denominator with mpmath.mpf, following the pattern: '{0}({1})/{0}({2})'. Make sure the new method integrates well with the existing printing framework so that it is called whenever a Rational is encountered. This modification is isolated to the file sympy/printing/pycode.py.",
+    "entrypoint": "File: sympy/printing/pycode.py; Function to modify: _print_Rational in the MpmathPrinter class (starting near line 332).",
+    "tests": {
+      "FAIL_TO_PASS": "No automated tests are provided for this part; manual verification of the printed output is expected.",
+      "PASS_TO_PASS": "Existing printer tests (for PythonCodePrinter, NumPyPrinter, SciPyPrinter, etc.) remain unaffected and continue to pass."
+    }
+  },
+  "feature2": {
+    "prompt": "The problem with reduced precision in numerical computations using nsolve originates from the improper handling of rational numbers. The objective is to verify that numerical routines now work with high precision by ensuring that rational numbers are correctly converted into the mpmath.mpf format. This feature focuses on confirming the improved behavior during evaluations, ensuring that operations involving rationals yield accurate high precision results. Validating this change will provide confidence that the numerical solvers perform correctly with rational inputs.",
+    "hint_texts": "Concentrate on adding test cases that validate the correct conversion of Rational numbers to the mpmath.mpf format and the subsequent high precision performance of nsolve. This involves modifying test files to add new tests that check if the printed representation of rationals conforms to the expected format, and that numerical evaluations using nsolve yield results with full precision. The tests should target both the output of the MpmathPrinter and the numerical evaluation of equations involving rational numbers.",
+    "entrypoint": "Files to modify: sympy/printing/tests/test_pycode.py and sympy/solvers/tests/test_numeric.py. Add new test functions to check the MpmathPrinter\u2019s handling of Rational numbers and to ensure that nsolve evaluates rational expressions with high precision.",
+    "tests": {
+      "FAIL_TO_PASS": "Tests added to verify the rational conversion (such as the specific test for the MpmathPrinter) and numerical evaluation (such as the test checking nsolve with rational input) initially fail before the fix.",
+      "PASS_TO_PASS": "Other tests that were passing before (including tests for PythonCodePrinter, NumPyPrinter, SciPyPrinter, reserved words, and various nsolve tests) should continue to pass after these modifications."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the sympy/printing/pycode.py file, specifically the printing infrastructure of rational numbers. The changes in _print_Rational will be exercised by the new tests added in the test files.",
+    "integration_strategy": "Feature1\u2019s implementation of the _print_Rational method must be completed and verified manually before Feature2\u2019s automated tests are integrated. Feature2 will build tests that depend on the output formatting created in Feature1, so synchronizing the output format is crucial for smooth integration.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate on the expected string format for the mpmath.mpf output. Regular communication is essential to ensure that test expectations are in line with the implementation details and that integration testing does not reveal discrepancies between the intended functionality and test validations."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_MpmathPrinter\"]",
+    "PASS_TO_PASS": "[\"test_PythonCodePrinter\", \"test_NumPyPrinter\", \"test_SciPyPrinter\", \"test_pycode_reserved_words\", \"test_printmethod\", \"test_codegen_ast_nodes\", \"test_nsolve_denominator\", \"test_nsolve\", \"test_issue_6408\", \"test_increased_dps\", \"test_nsolve_precision\", \"test_nsolve_complex\", \"test_nsolve_dict_kwarg\"]"
+  }
+}

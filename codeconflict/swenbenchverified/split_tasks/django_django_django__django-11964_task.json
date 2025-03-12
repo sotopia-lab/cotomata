@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11964",
+  "base_commit": "fc2b1cc926e34041953738e58fa6ad3053059b22",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "This feature addresses the issue where the string representation of an enum value in a Django model does not return its intended underlying value. Currently, when a model instance is created with a field that uses TextChoices or IntegerChoices, converting the enum value to a string yields a representation like 'MyChoice.FIRST_CHOICE' instead of the expected plain value such as 'first'. This behavior creates inconsistencies, particularly when model data is used to communicate with external APIs that demand precise values. The fix requires modifying the core Choices class so that its string conversion returns the actual value property of the enum member.",
+    "hint_texts": "Modify the Choices class in django/db/models/enums.py by adding an implementation for the __str__ method. The new method should return str(self.value) to ensure that when an enum instance is cast to a string, it outputs its underlying value. Check the provided code diff to identify that the new method replaces the existing 'pass' statement. This update should maintain the integrity of existing functionality while resolving the string representation issue.",
+    "entrypoint": "File: django/db/models/enums.py; locate the Choices class and replace the 'pass' statement with the new __str__ method as specified in the patch diff. This change should be made immediately after the class definition where the previous placeholder was located.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"test_integerchoices (model_enums.tests.ChoicesTests)\", \"test_integerchoices_auto_label (model_enums.tests.ChoicesTests)\", \"test_integerchoices_containment (model_enums.tests.ChoicesTests)\", \"test_integerchoices_empty_label (model_enums.tests.ChoicesTests)\", \"test_integerchoices_functional_api (model_enums.tests.ChoicesTests)\", \"test_invalid_definition (model_enums.tests.ChoicesTests)\", \"test_textchoices_auto_label (model_enums.tests.ChoicesTests)\", \"test_textchoices_blank_value (model_enums.tests.ChoicesTests)\", \"test_textchoices_containment (model_enums.tests.ChoicesTests)\", \"test_textchoices_empty_label (model_enums.tests.ChoicesTests)\", \"test_textchoices_functional_api (model_enums.tests.ChoicesTests)\", \"test_bool_unsupported (model_enums.tests.CustomChoicesTests)\", \"test_labels_valid (model_enums.tests.CustomChoicesTests)\", \"test_timezone_unsupported (model_enums.tests.CustomChoicesTests)\", \"test_uuid_unsupported (model_enums.tests.CustomChoicesTests)\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "This feature focuses on verifying that the string conversion of enum values in Django models is producing the correct underlying values. The goal is to ensure that, after the fix, converting an enum value to a string will yield its defined value rather than the enum member identifier. This verification is crucial for maintaining consistency when these values are processed or communicated externally. The enhancement requires comprehensive tests that exercise the behavior across multiple enum classes to catch any discrepancies in the implementation.",
+    "hint_texts": "Add new test cases that specifically confirm the __str__ method returns the correct value for enum members. The tests should iterate over several enum classes and use subTest to verify that for each member, str(member) is equal to member.value. Refer to the test patch diff for guidance on structuring the new test method, ensuring that the implementation covers a range of enum scenarios and clearly indicates when the expected output does not match.",
+    "entrypoint": "File: tests/model_enums/tests.py; within the ChoicesTests class, add a new method (e.g., test_str) that iterates over various enum classes and validates the string conversion of each member. This new test method should be placed after existing tests as per the structure indicated in the patch diff.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_str (model_enums.tests.ChoicesTests)\", \"test_textchoices (model_enums.tests.ChoicesTests)\"]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features work with the Choices class within django/db/models/enums.py and affect how enum values are represented in Django models.",
+    "integration_strategy": "The implementation in Feature1 (the __str__ method) provides the functionality that Feature2\u2019s tests validate. It is important that the changes in Feature1 adhere to the expected interface so that Feature2\u2019s tests accurately verify the intended behavior.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate to ensure that the new __str__ method fully meets the requirements expected by the test cases. They should discuss any assumptions regarding the expected string output, and schedule regular check-ins to resolve potential merge conflicts or integration issues."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_str (model_enums.tests.ChoicesTests)\", \"test_textchoices (model_enums.tests.ChoicesTests)\"]",
+    "PASS_TO_PASS": "[\"test_integerchoices (model_enums.tests.ChoicesTests)\", \"test_integerchoices_auto_label (model_enums.tests.ChoicesTests)\", \"test_integerchoices_containment (model_enums.tests.ChoicesTests)\", \"test_integerchoices_empty_label (model_enums.tests.ChoicesTests)\", \"test_integerchoices_functional_api (model_enums.tests.ChoicesTests)\", \"test_invalid_definition (model_enums.tests.ChoicesTests)\", \"test_textchoices_auto_label (model_enums.tests.ChoicesTests)\", \"test_textchoices_blank_value (model_enums.tests.ChoicesTests)\", \"test_textchoices_containment (model_enums.tests.ChoicesTests)\", \"test_textchoices_empty_label (model_enums.tests.ChoicesTests)\", \"test_textchoices_functional_api (model_enums.tests.ChoicesTests)\", \"test_bool_unsupported (model_enums.tests.CustomChoicesTests)\", \"test_labels_valid (model_enums.tests.CustomChoicesTests)\", \"test_timezone_unsupported (model_enums.tests.CustomChoicesTests)\", \"test_uuid_unsupported (model_enums.tests.CustomChoicesTests)\"]"
+  }
+}

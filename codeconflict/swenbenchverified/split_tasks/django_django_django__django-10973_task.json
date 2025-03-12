@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-10973",
+  "base_commit": "ddb293685235fd09e932805771ae97f72e817181",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Use subprocess.run and PGPASSWORD for client in postgres backend\nDescription:\nsubprocess.run was added in python 3.5 (which is the minimum version since Django 2.1). This function allows you to pass a custom environment for the subprocess.\nUsing this in django.db.backends.postgres.client to set PGPASSWORD simplifies the code and makes it more reliable.",
+    "hint_texts": "Part 1 includes refactoring the DatabaseClient.runshell_db method in the PostgreSQL backend. This involves removing the mechanism that creates a temporary .pgpass file and instead setting the PGPASSWORD environment variable in a copied environment. The new implementation must use subprocess.run (with check=True) to execute the command while preserving the correct signal handling. Ensure that the code conforms to the original behavior regarding error handling and cleanup.",
+    "entrypoint": "File: django/db/backends/postgresql/client.py; Function: DatabaseClient.runshell_db. Begin by removing the temporary file creation logic and modifying the subprocess call from subprocess.check_call to subprocess.run while setting up the environment with PGPASSWORD.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_accent (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_basic (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_column (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_nopass (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"SIGINT is ignored in Python and passed to psql to abort quries.\"]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "feature2": {
+    "prompt": "Use subprocess.run and PGPASSWORD for client in postgres backend\nDescription:\nsubprocess.run was added in python 3.5 (which is the minimum version since Django 2.1). This function allows you to pass a custom environment for the subprocess.\nUsing this in django.db.backends.postgres.client to set PGPASSWORD simplifies the code and makes it more reliable.",
+    "hint_texts": "Part 2 focuses on updating the test cases related to the changes made in the client. The updates include modifying the tests in tests/dbshell/test_postgresql.py to mock subprocess.run instead of subprocess.call. The tests should verify that the PGPASSWORD environment variable is correctly set and that the subprocess is invoked with the updated command and environment. Adjust the mocks and assertions accordingly to reflect the new implementation.",
+    "entrypoint": "File: tests/dbshell/test_postgresql.py; Target functions and methods include _run_it, test_basic, test_accent, test_sigint_handler and others that directly interact with DatabaseClient.runshell_db. Start by replacing mocks for subprocess.call with mocks for subprocess.run and updating the expected outputs.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_accent (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_basic (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_column (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_nopass (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"SIGINT is ignored in Python and passed to psql to abort quries.\"]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the DatabaseClient.runshell_db method in the PostgreSQL backend. They must agree on the handling of signals, subprocess environment variables, and the overall execution flow of psql.",
+    "integration_strategy": "Feature1 implements the core changes in the client logic (refactoring how the subprocess is run and how the password is passed), while Feature2 updates the corresponding tests to validate these changes. Integration testing should focus on ensuring that the new implementation passes all tests, with both parts coordinated to maintain consistent behavior.",
+    "communication_needs": "Developers on Feature1 and Feature2 should discuss the changes to signal handling and environment setup, confirm that the removal of the temporary file mechanism is appropriately reflected in the tests, and coordinate on the mocking strategy in test cases to ensure seamless integration."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_accent (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_basic (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_column (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_nopass (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"SIGINT is ignored in Python and passed to psql to abort quries.\"]",
+    "PASS_TO_PASS": "[]"
+  }
+}

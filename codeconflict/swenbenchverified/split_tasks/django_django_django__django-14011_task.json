@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-14011",
+  "base_commit": "e4430f22c8e3d29ce5d9d0263fba57121938d06d",
+  "difficulty": "1-4 hours",
+  "feature1": {
+    "prompt": "LiveServerTestCase's ThreadedWSGIServer does not close database connections after each thread. In Django 2.2.17, this issue causes errors such as 'OperationalError: database \"test_myapp\" is being accessed by other users' when destroy_test_db() is called. The problem appears to be linked to how threading was introduced for LiveServerTestCase (as seen with the changes in LiveServerThread) and suggests that the threaded server is not properly managing or closing its database connections after serving each request. The solution needs to update the connection management so that, upon the completion of each thread\u2019s request, any overridden database connections are correctly closed to avoid race conditions.",
+    "hint_texts": "This feature involves modifying the internal logic of the threaded server so that it manages connection overrides properly. Developers should update the __init__, process_request_thread, _close_connections, and close_request methods in the server to ensure that if a connections_override is provided, it is applied and then all connections are closed after processing a request. Additionally, adjustments in the LiveServerTestCase setup (such as in setUpClass) are needed to pass the connection override and manage thread sharing correctly.",
+    "entrypoint": "Files to modify include django/core/servers/basehttp.py (specifically the ThreadedWSGIServer class and its methods __init__, process_request_thread, _close_connections, and close_request) and django/test/testcases.py (in methods like _create_server and setUpClass for propagating connections_override and handling thread shareability changes).",
+    "tests": {
+      "FAIL_TO_PASS": "test_live_server_url_is_class_property (servers.tests.LiveServerAddress), Data written to the database by a view can be read., Fixtures are properly loaded and visible to the live server thread., test_check_model_instance_from_subview (servers.tests.LiveServerThreadedTests), test_view_calls_subview (servers.tests.LiveServerThreadedTests), test_closes_connection_without_content_length",
+      "PASS_TO_PASS": "test_set_up_class (servers.tests.LiveServerTestCaseSetupTest)"
+    }
+  },
+  "feature2": {
+    "prompt": "LiveServerTestCase currently leads to database connections remaining open after each threaded request, which in turn causes OperationalError during test teardown. This issue is observed when using threaded servers and emphasizes the need to ensure that all active connections are closed once a request has been processed. The fix must address the live server\u2019s behavior so that, under multi-threaded conditions, no lingering connections are left that would cause database access conflicts. The overall goal is to guarantee that the connection cleanup mechanism is robust and functions correctly in the context of LiveServerTestCase.",
+    "hint_texts": "This feature focuses on validating that the connection management changes are effective in a live server scenario. Developers should implement integration tests that simulate real client requests to the LiveServerTestCase and confirm that the newly added connection closure behavior works as expected. Key attention should be given to coordinating the test logic with the connection override mechanism, ensuring that the live server thread closes connections properly after handling requests.",
+    "entrypoint": "Files to modify include tests/servers/tests.py (by adding or updating the LiveServerTestCloseConnectionTest that verifies connections are closed after a request) and django/db/backends/sqlite3/features.py (to update the skip conditions to account for the new test behavior).",
+    "tests": {
+      "FAIL_TO_PASS": "LiveServerTestCloseConnectionTest.test_closes_connections",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the core database connection mechanism in django/core/servers/basehttp.py and the connections_override setup in django/test/testcases.py, which are integral to the LiveServerTestCase framework.",
+    "integration_strategy": "Feature1 implements the improved connection management logic in the threaded server and test case setup, while Feature2 ensures that this logic behaves correctly under real-world scenarios by adding integration tests. The success of the complete solution depends on correctly propagating the connections_override from Feature1 to the live server tests in Feature2.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should regularly sync to confirm that the API changes and connection management alterations in the core server are compatible with the test validations. They need to discuss the expected behavior of connection closure, the coordination of test setups, and any edge cases related to thread termination and race conditions."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_live_server_url_is_class_property (servers.tests.LiveServerAddress)\", \"Data written to the database by a view can be read.\", \"Fixtures are properly loaded and visible to the live server thread.\", \"test_check_model_instance_from_subview (servers.tests.LiveServerThreadedTests)\", \"test_view_calls_subview (servers.tests.LiveServerThreadedTests)\", \"test_404 (servers.tests.LiveServerViews)\", \"A HTTP 1.1 server is supposed to support keep-alive. Since our\", \"test_environ (servers.tests.LiveServerViews)\", \"test_keep_alive_connection_clears_previous_request_data (servers.tests.LiveServerViews)\", \"See `test_closes_connection_without_content_length` for details. This\", \"test_media_files (servers.tests.LiveServerViews)\", \"LiveServerTestCase reports a 404 status code when HTTP client\", \"Launched server serves with HTTP 1.1.\", \"test_static_files (servers.tests.LiveServerViews)\", \"test_view (servers.tests.LiveServerViews)\", \"Each LiveServerTestCase binds to a unique port or fails to start a\", \"LiveServerTestCase.port customizes the server's port.\"]",
+    "PASS_TO_PASS": "[\"test_set_up_class (servers.tests.LiveServerTestCaseSetupTest)\", \"Contrast to\"]"
+  }
+}

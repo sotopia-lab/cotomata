@@ -1,0 +1,33 @@
+{
+  "repo": "astropy/astropy",
+  "test_id": "astropy/astropy_astropy__astropy-14182",
+  "base_commit": "a5917978be39d13cd90b517e1de4e7a539ffaa48",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Enhance the RST class to support header rows in RestructuredText output. The goal is to allow users to specify a 'header_rows' parameter when writing tables so that the output can include additional header metadata such as column names and units. When header rows are provided, the RST class should correctly integrate them into the output without raising errors, for example avoiding the TypeError that occurs when 'header_rows' is unexpectedly passed. This feature focuses on modifying the internal API of the RST class so that the functionality matches the intended usage as described in the problem statement.",
+    "hint_texts": "Modify the __init__, write, and read methods in the RST class to accept and handle the new 'header_rows' parameter. Ensure that the __init__ method forwards the header_rows parameter, that write properly injects the additional header rows into the output based on the header configuration, and that read adjusts the starting point for data reading according to the number of header rows. The implementation should carefully update index handling so that existing features remain unbroken while adding support for the new parameter.",
+    "entrypoint": "File: astropy/io/ascii/rst.py. Focus on modifying the RST class by updating the __init__ method (to accept header_rows), the write method (to use header_rows for calculating where to slice the header), and the read method (to set the start_line based on the number of header_rows). Look at the modified code sections around the initialization and the header handling logic for guidance.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_rst.py::test_rst_with_header_rows\"]",
+      "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_rst.py::test_read_normal\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_names\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_names_include\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_exclude\", \"astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column\", \"astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column_header\", \"astropy/io/ascii/tests/test_rst.py::test_read_right_indented_table\", \"astropy/io/ascii/tests/test_rst.py::test_trailing_spaces_in_row_definition\", \"astropy/io/ascii/tests/test_rst.py::test_write_normal\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Update the example and documentation for the RST class to demonstrate support for header rows in RestructuredText output. The documentation should include code examples that show how to use the 'header_rows' parameter to add extra header information, such as column names and units, to the table output. The updated examples must illustrate both the default behavior and the enhanced behavior when header_rows are provided, ensuring users understand how the new parameter works. This documentation update provides clear usage examples that reflect the intended behavior of the improved feature.",
+    "hint_texts": "Revise the docstring and embedded examples in the RST class to incorporate examples with header_rows. Update the demonstration code to show cases of writing tables both with and without the header_rows parameter. The examples should be clear and descriptive, aligning with the functionality changes and providing users with practical illustrations of the new feature.",
+    "entrypoint": "File: astropy/io/ascii/rst.py, specifically within the docstring of the RST class. Update the example code blocks to include samples that pass the header_rows parameter (e.g., header_rows=['name', 'unit']) and show the expected formatted output. Ensure that the documentation changes are self-contained and accurately reflect the modifications made in the class implementation.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the astropy/io/ascii/rst.py file and interact with the RST class implementation. The test suite in astropy/io/ascii/tests/test_rst.py is used to verify the behavior of the changes across both features.",
+    "integration_strategy": "Feature1\u2019s implementation of header_rows support must be fully functional before Feature2\u2019s documentation update is finalized. The updated examples in the documentation (Feature2) depend on the backend changes made in Feature1, so integration testing using the shared test suite is essential to ensure consistency.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate to ensure that the API changes and the documentation remain in sync. Discussions should focus on the handling of the 'header_rows' parameter in the __init__, write, and read methods, and on verifying that the updated examples accurately reflect the new functionality without breaking existing usage."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_rst.py::test_rst_with_header_rows\"]",
+    "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_rst.py::test_read_normal\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_names\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_names_include\", \"astropy/io/ascii/tests/test_rst.py::test_read_normal_exclude\", \"astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column\", \"astropy/io/ascii/tests/test_rst.py::test_read_unbounded_right_column_header\", \"astropy/io/ascii/tests/test_rst.py::test_read_right_indented_table\", \"astropy/io/ascii/tests/test_rst.py::test_trailing_spaces_in_row_definition\", \"astropy/io/ascii/tests/test_rst.py::test_write_normal\"]"
+  }
+}

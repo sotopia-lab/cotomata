@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-15103",
+  "base_commit": "dd528cb2cefc0db8b91a7ff0a2bc87305b976597",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Make the element_id argument of json_script optional. I recently had a use-case where I wanted to use json_script without needing an id because it was included inside a <template> tag. There is no compelling security or functional reason to require an id, and making it optional improves flexibility in template rendering. The update should allow the json_script filter to operate correctly even when no id is provided.",
+    "hint_texts": "This part focuses on modifying the Django template filter to support an optional element_id. Developers need to update the file django/template/defaultfilters.py by changing the function signature of json_script to set element_id=None by default and adjust the docstring to indicate that the id is now optional. The implementation must ensure that the <script> tag renders correctly in templates when no id is supplied and that backward compatibility is maintained.",
+    "entrypoint": "File: django/template/defaultfilters.py; Function: json_script. Modify the definition from 'def json_script(value, element_id):' to 'def json_script(value, element_id=None):' and update the documentation accordingly.",
+    "tests": {
+      "FAIL_TO_PASS": "test_without_id (template_tests.filter_tests.test_json_script.JsonScriptTests)",
+      "PASS_TO_PASS": "test_basic (template_tests.filter_tests.test_json_script.JsonScriptTests)"
+    }
+  },
+  "feature2": {
+    "prompt": "Make the element_id argument of json_script optional. This update should ensure that the utility function for generating HTML output can operate without requiring an element id. With this change, json_script will conditionally include the id attribute in the <script> tag only when one is provided, thus supporting scenarios where the id is unnecessary. The behavior should be consistent and flexible for different use cases involving HTML rendering.",
+    "hint_texts": "This part focuses on updating the Django utility function for HTML output. Developers must modify the file django/utils/html.py to update the json_script function by setting element_id=None by default. Additionally, the implementation should be adjusted to conditionally format the script tag so that the id attribute is only included if an element_id is provided. Consistency with the template filter's behavior is crucial.",
+    "entrypoint": "File: django/utils/html.py; Function: json_script. Update the function signature from 'def json_script(value, element_id):' to 'def json_script(value, element_id=None):' and modify the logic to conditionally include the id attribute in the output.",
+    "tests": {
+      "FAIL_TO_PASS": "test_json_script_without_id (utils_tests.test_html.TestUtilsHtml)",
+      "PASS_TO_PASS": "test_json_script, test_conditional_escape, test_escape, test_escapejs, test_format_html, test_html_safe, test_html_safe_defines_html_error, test_html_safe_doesnt_define_str, test_html_safe_subclass, test_linebreaks, test_smart_urlquote, test_strip_spaces_between_tags, test_strip_tags, test_strip_tags_files, test_urlize, test_urlize_unchanged_inputs (all in utils_tests.test_html.TestUtilsHtml)"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the json_script function. They share the underlying logic and data structures that determine how the optional element_id is processed and rendered in a <script> tag.",
+    "integration_strategy": "Each feature should implement the change in its respective module while ensuring that the behavior of json_script remains consistent. Developers need to verify that both the template filter and the utility function generate equivalent HTML output when element_id is provided and when it is omitted.",
+    "communication_needs": "Developers working on feature1 and feature2 must coordinate their changes, especially regarding the API for json_script. Discussions should focus on aligning the function signature, handling of conditional id rendering, and ensuring that integration tests validate consistent behavior across both modules."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_without_id (template_tests.filter_tests.test_json_script.JsonScriptTests)\", \"test_json_script_without_id (utils_tests.test_html.TestUtilsHtml)\"]",
+    "PASS_TO_PASS": "[\"test_basic (template_tests.filter_tests.test_json_script.JsonScriptTests)\", \"test_conditional_escape (utils_tests.test_html.TestUtilsHtml)\", \"test_escape (utils_tests.test_html.TestUtilsHtml)\", \"test_escapejs (utils_tests.test_html.TestUtilsHtml)\", \"test_format_html (utils_tests.test_html.TestUtilsHtml)\", \"test_html_safe (utils_tests.test_html.TestUtilsHtml)\", \"test_html_safe_defines_html_error (utils_tests.test_html.TestUtilsHtml)\", \"test_html_safe_doesnt_define_str (utils_tests.test_html.TestUtilsHtml)\", \"test_html_safe_subclass (utils_tests.test_html.TestUtilsHtml)\", \"test_json_script (utils_tests.test_html.TestUtilsHtml)\", \"test_linebreaks (utils_tests.test_html.TestUtilsHtml)\", \"test_smart_urlquote (utils_tests.test_html.TestUtilsHtml)\", \"test_strip_spaces_between_tags (utils_tests.test_html.TestUtilsHtml)\", \"test_strip_tags (utils_tests.test_html.TestUtilsHtml)\", \"test_strip_tags_files (utils_tests.test_html.TestUtilsHtml)\", \"test_urlize (utils_tests.test_html.TestUtilsHtml)\", \"test_urlize_unchanged_inputs (utils_tests.test_html.TestUtilsHtml)\"]"
+  }
+}

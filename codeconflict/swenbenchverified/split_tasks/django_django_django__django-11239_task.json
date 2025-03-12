@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11239",
+  "base_commit": "d87bd29c4f8dfcdf3f4a4eb8340e6770a2416fe3",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Add support for postgresql client certificates and key to dbshell. Many databases require mutual TLS for secure connections by specifying a server certificate, client certificate, and client key. Django supports this configuration through its database OPTIONS, but the dbshell command currently lacks support for these parameters. Update the dbshell command to properly accept and handle sslmode, sslrootcert, sslcert, and sslkey options so that the secure connection settings from the DATABASES configuration are applied.",
+    "hint_texts": "This feature involves modifying the PostgreSQL client implementation for dbshell. Specifically, update the file django/db/backends/postgresql/client.py in the runshell_db function to extract sslmode, sslrootcert, sslcert, and sslkey from the connection parameters and set the corresponding environment variables (PGSSLMODE, PGSSLROOTCERT, PGSSLCERT, PGSSLKEY) before invoking psql. Ensure that if these parameters are absent, the default behavior remains unchanged.",
+    "entrypoint": "File: django/db/backends/postgresql/client.py; Function: runshell_db. Focus on the code block that processes connection parameters and sets up the environment before calling subprocess.run. Insert the new lines to retrieve and set sslmode, sslrootcert, sslcert, and sslkey as environment variables.",
+    "tests": {
+      "FAIL_TO_PASS": "Manual verification: When SSL parameters are provided, without these changes the corresponding PG* environment variables (PGSSLMODE, PGSSLROOTCERT, PGSSLCERT, PGSSLKEY) are not set, leading to failure in establishing a secure connection.",
+      "PASS_TO_PASS": "Existing connection tests (such as basic connection checks) should still pass when SSL parameters are not used, and once the fix is applied, the new SSL support should be active."
+    }
+  },
+  "feature2": {
+    "prompt": "Add support for postgresql client certificates and key to dbshell. The current implementation does not support specifying SSL parameters required for mutual TLS connections. Since Django already allows configuration of sslmode, sslrootcert, sslcert, and sslkey in the database settings, update the dbshell command so that these options are recognized and applied. This change is necessary to align dbshell with the security procedures for using client certificates and keys.",
+    "hint_texts": "This feature focuses on updating the test suite to validate the new SSL parameter support within dbshell. Modify the test file in tests/dbshell/test_postgresql.py to include additional test cases that check whether the environment variables for sslmode, sslrootcert, sslcert, and sslkey are correctly set when provided. Also, ensure that tests verifying the existing functionality (such as basic connection tests and signal handling) continue to pass.",
+    "entrypoint": "File: tests/dbshell/test_postgresql.py; Test Class: PostgreSqlDbshellCommandTestCase. Add new test methods (for example, a test method for SSL certificate support) and adjust existing tests to account for the change in how environment variables are managed (now returning a dictionary of PG* variables).",
+    "tests": {
+      "FAIL_TO_PASS": "A new test case (e.g., one checking for proper SSL environment variable setup) will fail before the fix because the SSL parameters are not handled, but should pass after the changes.",
+      "PASS_TO_PASS": "Existing tests (such as those verifying basic connection parameters, accent handling, column output, no-password scenarios, and SIGINT handling) should remain passing both before and after the fix."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the dbshell command infrastructure, particularly the management of database connection parameters and environment variables. The mapping of SSL parameters (sslmode, sslrootcert, sslcert, sslkey) to PG* environment variables is a shared component.",
+    "integration_strategy": "Feature1 focuses on implementing the core support for SSL parameters in the PostgreSQL client code, while Feature2 ensures that the modifications are thoroughly tested. Developers working on the two features must agree on the naming and behavior of the new environment variables so that the test cases in Feature2 correctly validate the implementation in Feature1.",
+    "communication_needs": "Developers should coordinate on the exact mapping between connection parameter names and the PG* environment variables. They need to discuss the integration points in the runshell_db function, confirm the expected behavior regarding SSL support, and verify that the test updates in Feature2 accurately reflect the changes made in Feature1."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_ssl_certificate (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\"]",
+    "PASS_TO_PASS": "[\"test_accent (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_basic (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_column (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"test_nopass (dbshell.test_postgresql.PostgreSqlDbshellCommandTestCase)\", \"SIGINT is ignored in Python and passed to psql to abort quries.\"]"
+  }
+}

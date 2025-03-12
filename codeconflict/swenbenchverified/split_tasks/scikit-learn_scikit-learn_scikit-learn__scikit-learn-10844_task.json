@@ -1,0 +1,33 @@
+{
+  "repo": "scikit-learn/scikit-learn",
+  "test_id": "scikit-learn/scikit-learn_scikit-learn__scikit-learn-10844",
+  "base_commit": "97523985b39ecde369d83352d7c3baf403b60a22",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The fowlkes_mallows_score function currently returns a RuntimeWarning when variables get too big, leading to a 'nan' result instead of a valid float. This happens because the intermediate integer calculations exceed the int32 limit during the computation. The fix requires ensuring that all intermediate results are computed using a data type capable of handling large numbers. After implementing this change, the function should correctly process large datasets and return a proper floating point value without triggering overflow warnings.",
+    "hint_texts": "Update the data type handling in the fowlkes_mallows_score function by modifying the contingency matrix computation. Cast the output of the contingency_matrix call to np.int64 so that the intermediate calculations can safely handle larger numbers. Focus the changes on the part of the code that computes and stores the contingency matrix, ensuring that subsequent operations are not affected by integer overflow.",
+    "entrypoint": "File: sklearn/metrics/cluster/supervised.py; Function: fowlkes_mallows_score; Locate the contingency_matrix call and modify it by adding .astype(np.int64) to its return value.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix_sparse\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "The fowlkes_mallows_score function uses a calculation method that leads to overflow when the intermediate product (pk * qk) becomes too large, causing a RuntimeWarning and returning 'nan'. The current implementation divides tk by np.sqrt(pk * qk), a method prone to overflow with large inputs. The goal is to change this computation to a more numerically stable formula by replacing it with np.sqrt(tk / pk) * np.sqrt(tk / qk). With this change, the function should reliably return a valid float output even when handling very large numbers.",
+    "hint_texts": "Revise the return statement in the fowlkes_mallows_score function to implement the new numerical approach. Replace the expression 'tk / np.sqrt(pk * qk)' with 'np.sqrt(tk / pk) * np.sqrt(tk / qk)', being careful to preserve the conditional check for when tk is zero. This adjustment will avoid the large intermediate multiplication that currently causes integer overflow.",
+    "entrypoint": "File: sklearn/metrics/cluster/supervised.py; Function: fowlkes_mallows_score; Locate the return statement after computing tk, pk, and qk, and update it to use the new formula as described.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"sklearn/metrics/cluster/tests/test_supervised.py::test_int_overflow_mutual_info_fowlkes_mallows_score\"]",
+      "PASS_TO_PASS": "[\"sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the file sklearn/metrics/cluster/supervised.py and, in particular, the fowlkes_mallows_score function. They share the use of the contingency matrix (and its associated intermediate variables tk, pk, and qk) that are central to the calculation.",
+    "integration_strategy": "Feature1 focuses on ensuring that the contingency matrix is computed with an appropriate data type (np.int64) to avoid overflow, while Feature2 adjusts the numerical formula for improved stability. When merging the two, care must be taken that the modified contingency matrix correctly feeds into the updated calculation method so that the final output is both accurate and free of overflow warnings.",
+    "communication_needs": "Developers responsible for each feature should discuss how the changes to the contingency matrix output (Feature1) will interact with the revised computation in Feature2. It is important to align on testing strategies, shared code patterns, and integration timings to prevent any conflicts in the fowlkes_mallows_score implementation."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"sklearn/metrics/cluster/tests/test_supervised.py::test_int_overflow_mutual_info_fowlkes_mallows_score\"]",
+    "PASS_TO_PASS": "[\"sklearn/metrics/cluster/tests/test_supervised.py::test_error_messages_on_wrong_input\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_perfect_matches\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_homogeneous_but_not_complete_labeling\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_complete_but_not_homogeneous_labeling\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_not_complete_and_not_homogeneous_labeling\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_non_consicutive_labels\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_adjustment_for_chance\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_adjusted_mutual_info_score\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_expected_mutual_info_overflow\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_entropy\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_contingency_matrix_sparse\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_exactly_zero_info_score\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_v_measure_and_mutual_information\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score\", \"sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties\"]"
+  }
+}

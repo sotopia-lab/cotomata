@@ -1,0 +1,60 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11141",
+  "base_commit": "5d9cf79baf07fc4aed7ad1b06990532a65378155",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Allow migrations directories without __init__.py files. In Python 3 a package with no __init__.py is implicitly a namespace package and therefore does not have a __file__ attribute. The migrate command currently checks for the presence of __file__ on the migrations package, which prevents the proper discovery and loading of migrations in namespace packages. The goal is to modify the migration loading logic so that when migration modules are discovered through pkgutil.iter_modules(), the absence of __init__.py does not cause the migration to be ignored.",
+    "hint_texts": "This part involves refactoring the core migration loader by removing the unnecessary __file__ attribute check in django/db/migrations/loader.py and updating the logic to decide whether an app is migrated or unmigrated based on the presence of discovered migration names. Developers should ensure that if migration names are found (or if the ignore_no_migrations flag is set), the app is correctly marked as migrated. The changes must maintain compatibility with existing functionality so that tests which rely on explicit __init__.py files continue to pass.",
+    "entrypoint": "File: django/db/migrations/loader.py; Function: load_disk. Focus on the code block between lines 84 and 96 where the __file__ attribute check is removed and the logic is updated to add the app label to migrated_apps when migration names are found or to unmigrated_apps otherwise.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "test_apply (migrations.test_loader.RecorderTests)",
+        "test_invalid (migrations.test_loader.PycLoaderTests)",
+        "test_valid (migrations.test_loader.PycLoaderTests)",
+        "test_check_consistent_history (migrations.test_loader.LoaderTests)",
+        "test_check_consistent_history_squashed (migrations.test_loader.LoaderTests)",
+        "test_explicit_missing_module (migrations.test_loader.LoaderTests)",
+        "test_first (migrations.test_loader.LoaderTests)",
+        "Files prefixed with underscore, tilde, or dot aren't loaded.",
+        "test_load (migrations.test_loader.LoaderTests)",
+        "test_load_empty_dir (migrations.test_loader.LoaderTests)",
+        "test_load_import_error (migrations.test_loader.LoaderTests)",
+        "test_load_module_file (migrations.test_loader.LoaderTests)",
+        "test_load_unmigrated_dependency (migrations.test_loader.LoaderTests)",
+        "Tests loading a squashed migration",
+        "Tests loading a complex set of squashed migrations",
+        "test_loading_squashed_complex_multi_apps (migrations.test_loader.LoaderTests)",
+        "test_loading_squashed_complex_multi_apps_partially_applied (migrations.test_loader.LoaderTests)",
+        "Tests loading a complex but erroneous set of squashed migrations",
+        "Tests loading a squashed migration with a new migration referencing it",
+        "test_marked_as_migrated (migrations.test_loader.LoaderTests)",
+        "test_marked_as_unmigrated (migrations.test_loader.LoaderTests)",
+        "Tests prefix name matching",
+        "test_plan_handles_repeated_migrations (migrations.test_loader.LoaderTests)",
+        "test_run_before (migrations.test_loader.LoaderTests)"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Allow migrations directories without __init__.py files by ensuring that the migration system correctly recognizes and processes namespace packages. Namespace packages, which do not require an __init__.py file, should be loaded using the package's __path__ and pkgutil.iter_modules(). This feature emphasizes verifying that the migration loader properly identifies available migration modules in directories lacking __init__.py. The expected behavior is that migrations within such directories are discovered and integrated into the migration plan without errors.",
+    "hint_texts": "This part focuses on enhancing the test suite so that the new migration loading behavior is fully validated. Developers need to add or modify tests that simulate a namespace package environment without an __init__.py file and verify that migrations are correctly loaded. The updates include adding a new test function to tests/migrations/test_loader.py and creating a corresponding migration file to serve as a test case in tests/migrations/test_migrations_namespace_package/0001_initial.py. These tests should capture the scenario where migrations are previously not recognized but pass after the fix.",
+    "entrypoint": "Files to update: tests/migrations/test_loader.py (for adding the new test function, e.g. test_loading_namespace_package) and tests/migrations/test_migrations_namespace_package/0001_initial.py (for the new migration file). The new test should use override_settings to simulate the migration modules configuration and then check the migration loader graph to ensure that the migration '0001_initial' is correctly loaded.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "Migration directories without an __init__.py file are loaded."
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the migration loading mechanism in django/db/migrations/loader.py and depend on discovering migration modules via pkgutil.iter_modules. They also share configuration settings for migration modules and the overall migration graph.",
+    "integration_strategy": "Feature1 implements the core changes to properly handle namespace packages in the migration loader, while Feature2 ensures these changes are validated through new tests. Coordination is needed so that any modifications in the migration loader logic are appropriately reflected in the test cases. After implementation, both existing and new tests should be run to validate the complete system behavior.",
+    "communication_needs": "Developers working on the migration loader (Feature1) need to communicate any refactoring details or changes to logic that might affect test expectations. Similarly, developers writing tests (Feature2) should provide feedback on edge cases or scenarios that might require adjustments in the core logic. Regular integration check-ins are recommended to ensure both features merge seamlessly into a consistent solution."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"Migration directories without an __init__.py file are loaded.\"]",
+    "PASS_TO_PASS": "[\"test_apply (migrations.test_loader.RecorderTests)\", \"test_invalid (migrations.test_loader.PycLoaderTests)\", \"test_valid (migrations.test_loader.PycLoaderTests)\", \"test_check_consistent_history (migrations.test_loader.LoaderTests)\", \"test_check_consistent_history_squashed (migrations.test_loader.LoaderTests)\", \"test_explicit_missing_module (migrations.test_loader.LoaderTests)\", \"test_first (migrations.test_loader.LoaderTests)\", \"Files prefixed with underscore, tilde, or dot aren't loaded.\", \"test_load (migrations.test_loader.LoaderTests)\", \"test_load_empty_dir (migrations.test_loader.LoaderTests)\", \"test_load_import_error (migrations.test_loader.LoaderTests)\", \"test_load_module_file (migrations.test_loader.LoaderTests)\", \"test_load_unmigrated_dependency (migrations.test_loader.LoaderTests)\", \"Tests loading a squashed migration\", \"Tests loading a complex set of squashed migrations\", \"test_loading_squashed_complex_multi_apps (migrations.test_loader.LoaderTests)\", \"test_loading_squashed_complex_multi_apps_partially_applied (migrations.test_loader.LoaderTests)\", \"Tests loading a complex but erroneous set of squashed migrations\", \"Tests loading a squashed migration with a new migration referencing it\", \"test_marked_as_migrated (migrations.test_loader.LoaderTests)\", \"test_marked_as_unmigrated (migrations.test_loader.LoaderTests)\", \"Tests prefix name matching\", \"test_plan_handles_repeated_migrations (migrations.test_loader.LoaderTests)\", \"test_run_before (migrations.test_loader.LoaderTests)\"]"
+  }
+}

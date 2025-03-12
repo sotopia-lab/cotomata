@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8265",
+  "base_commit": "b428cd2404675475a5c3dc2a2b0790ba57676202",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The HTML documentation for Python class methods is not rendering default tuple arguments correctly. For example, a method defined as \"def add_lines(self, lines, color=(1, 1, 1), width=5, label=None, name=None):\" is being displayed as \"add_lines(lines, color=1, 1, 1, width=5, label=None, name=None)\" without the proper tuple grouping. This misrepresentation confuses the intended default value by removing the enclosing parentheses. The fix should ensure that when a default argument is specified as a tuple, its structure remains intact in the rendered documentation.",
+    "hint_texts": "Implement modifications in the subscript processing logic so that simple tuple nodes are correctly identified and formatted. Introduce a helper function (is_simple_tuple) to detect when a subscript value is a tuple that should preserve its parentheses, and update the joining of its elements accordingly. This change will address the improper rendering of default tuple arguments within method signatures.",
+    "entrypoint": "File: sphinx/pycode/ast.py. Focus on the 'visit_Subscript' function (around its definition near line 160) and add the new is_simple_tuple helper function to conditionally format tuple subscripts.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_pycode_ast.py::test_unparse[(1,",
+      "PASS_TO_PASS": "tests/test_pycode_ast.py::test_unparse[a], tests/test_pycode_ast.py::test_unparse[os.path-os.path], tests/test_pycode_ast.py::test_unparse[1], tests/test_pycode_ast.py::test_unparse[b'bytes'-b'bytes'], tests/test_pycode_ast.py::test_unparse[object()-object()], tests/test_pycode_ast.py::test_unparse[1234-1234_0], tests/test_pycode_ast.py::test_unparse[{'key1':], tests/test_pycode_ast.py::test_unparse[...-...], tests/test_pycode_ast.py::test_unparse[~], tests/test_pycode_ast.py::test_unparse[lambda], tests/test_pycode_ast.py::test_unparse[[1,], tests/test_pycode_ast.py::test_unparse[sys-sys], tests/test_pycode_ast.py::test_unparse[1234-1234_1], tests/test_pycode_ast.py::test_unparse[not], tests/test_pycode_ast.py::test_unparse[{1,], tests/test_pycode_ast.py::test_unparse['str'-'str'], tests/test_pycode_ast.py::test_unparse[+], tests/test_pycode_ast.py::test_unparse[-], tests/test_pycode_ast.py::test_unparse[()-()], tests/test_pycode_ast.py::test_unparse_None, tests/test_pycode_ast.py::test_unparse_py38"
+    }
+  },
+  "feature2": {
+    "prompt": "The tuple values in the HTML documentation are not being properly enclosed in parentheses, causing ambiguity in the representation of default arguments. For instance, a default tuple such as (1, 1, 1) loses its delimiters and is rendered without the necessary parentheses. This error undermines the clarity of method signatures in the documentation. The intended behavior is that any tuple value should be clearly marked with opening and closing parentheses, accurately reflecting its structure.",
+    "hint_texts": "Adjust the tuple formatting logic to always wrap non-empty tuples with parentheses. Focus on modifying the 'visit_Tuple' function so that when the tuple elements are joined, they are enclosed within '(' and ')'. Ensure that this change does not affect the formatting of empty tuples, which should remain as \"()\".",
+    "entrypoint": "File: sphinx/pycode/ast.py. Locate the 'visit_Tuple' function and update its return statement for non-empty tuples to include the appropriate parentheses around the joined elements.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "tests/test_pycode_ast.py::test_unparse[Tuple[int,"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the AST parsing and rendering logic in the file sphinx/pycode/ast.py.",
+    "integration_strategy": "Coordinate the integration of changes so that the modifications in 'visit_Subscript' and 'visit_Tuple' work together seamlessly. Make sure that any new helper function or shared formatting logic is reviewed jointly to avoid conflicts.",
+    "communication_needs": "Developers responsible for Feature1 and Feature2 should discuss overlapping changes in the AST processing code, especially around helper function usage and formatting conventions. Regular communication is advised to manage merge conflicts and to ensure that the complete solution meets the expected documentation output."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_pycode_ast.py::test_unparse[(1,\"]",
+    "PASS_TO_PASS": "[\"tests/test_pycode_ast.py::test_unparse[a\", \"tests/test_pycode_ast.py::test_unparse[os.path-os.path]\", \"tests/test_pycode_ast.py::test_unparse[1\", \"tests/test_pycode_ast.py::test_unparse[b'bytes'-b'bytes']\", \"tests/test_pycode_ast.py::test_unparse[object()-object()]\", \"tests/test_pycode_ast.py::test_unparse[1234-1234_0]\", \"tests/test_pycode_ast.py::test_unparse[{'key1':\", \"tests/test_pycode_ast.py::test_unparse[...-...]\", \"tests/test_pycode_ast.py::test_unparse[Tuple[int,\", \"tests/test_pycode_ast.py::test_unparse[~\", \"tests/test_pycode_ast.py::test_unparse[lambda\", \"tests/test_pycode_ast.py::test_unparse[[1,\", \"tests/test_pycode_ast.py::test_unparse[sys-sys]\", \"tests/test_pycode_ast.py::test_unparse[1234-1234_1]\", \"tests/test_pycode_ast.py::test_unparse[not\", \"tests/test_pycode_ast.py::test_unparse[{1,\", \"tests/test_pycode_ast.py::test_unparse['str'-'str']\", \"tests/test_pycode_ast.py::test_unparse[+\", \"tests/test_pycode_ast.py::test_unparse[-\", \"tests/test_pycode_ast.py::test_unparse[()-()]\", \"tests/test_pycode_ast.py::test_unparse_None\", \"tests/test_pycode_ast.py::test_unparse_py38\"]"
+  }
+}

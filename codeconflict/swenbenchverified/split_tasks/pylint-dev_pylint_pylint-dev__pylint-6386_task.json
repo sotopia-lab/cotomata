@@ -1,0 +1,33 @@
+{
+  "repo": "pylint-dev/pylint",
+  "test_id": "pylint-dev/pylint_pylint-dev__pylint-6386",
+  "base_commit": "754b487f4d892e3d4872b6fc7468a71db4e31c13",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Argument expected for short verbose option. The short option of the 'verbose' option expects an argument. Also, the help message for the 'verbose' option suggests a value 'VERBOSE' should be provided.",
+    "hint_texts": "Enhance the argument configuration by introducing a 'metavar' attribute to improve help message displays. Update the initialization of argument objects in 'pylint/config/argument.py' to accept and store a 'metavar' value. Ensure that the parser option addition in 'pylint/config/arguments_manager.py' and the option conversion in 'pylint/config/utils.py' correctly propagate this attribute. Finally, adjust the option definitions in 'pylint/lint/base_options.py' to include 'metavar' for consistency.",
+    "entrypoint": "Modify the __init__ method in 'pylint/config/argument.py' to add a 'metavar' parameter and property. Update the _add_parser_option function in 'pylint/config/arguments_manager.py' to pass 'metavar' when adding options. Adjust the _convert_option_to_argument function in 'pylint/config/utils.py' to retrieve 'metavar' from option dictionaries. Finally, update the _make_run_options method in 'pylint/lint/base_options.py' to set the 'metavar' for appropriate options.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "tests/config/test_config.py::test_can_read_toml_env_variable, tests/config/test_config.py::test_unknown_message_id, tests/config/test_config.py::test_unknown_option_name, tests/config/test_config.py::test_unknown_short_option_name, tests/config/test_config.py::test_unknown_confidence, tests/config/test_config.py::test_unknown_yes_no, tests/config/test_config.py::test_unknown_py_version"
+    }
+  },
+  "feature2": {
+    "prompt": "The long option works ok & doesn't expect an argument: 'pylint mytest.py --verbose'. When using 'pylint mytest.py -v', an error occurs: argument --verbose/-v: expected one argument. The expected behavior is similar to the long option. The command used, 'pylint mytest.py -v', clearly demonstrates this inconsistency.",
+    "hint_texts": "Ensure that the short verbose flag (-v) behaves like the long verbose option (--verbose) by not expecting an argument. Refactor the option parsing logic in 'pylint/config/utils.py' to properly handle '-v'. Update the internal options mapping so that '-v' is treated identically to '--verbose'. Verify that after the changes, running the command with '-v' does not produce an argument error.",
+    "entrypoint": "Focus on the modifications in 'pylint/config/utils.py', particularly in the _preprocess_options function and the options mapping for the verbose flag. Ensure that the function _set_verbose_mode is correctly associated with both '--verbose' and '-v'. Review the argument processing code to maintain consistency between the short and long options.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/config/test_config.py::test_short_verbose",
+      "PASS_TO_PASS": "tests/config/test_config.py::test_can_read_toml_env_variable, tests/config/test_config.py::test_unknown_message_id, tests/config/test_config.py::test_unknown_option_name, tests/config/test_config.py::test_unknown_short_option_name, tests/config/test_config.py::test_unknown_confidence, tests/config/test_config.py::test_unknown_yes_no, tests/config/test_config.py::test_unknown_py_version"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Shared files such as 'pylint/config/utils.py', 'pylint/config/argument.py', and 'pylint/config/arguments_manager.py' where common argument configuration and parsing logic are implemented.",
+    "integration_strategy": "Ensure that changes for the new 'metavar' attribute (Feature1) and the refined handling of the '-v' flag (Feature2) are integrated into the shared command-line argument processing code. Both features will touch the same functions in 'pylint/config/utils.py', so coordinate modifications to avoid conflicts.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should discuss the shared modifications in argument parsing and option configuration. Regular sync-ups and code reviews are essential to ensure that the new 'metavar' support and the '-v' flag bug fix work seamlessly together."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/config/test_config.py::test_short_verbose\"]",
+    "PASS_TO_PASS": "[\"tests/config/test_config.py::test_can_read_toml_env_variable\", \"tests/config/test_config.py::test_unknown_message_id\", \"tests/config/test_config.py::test_unknown_option_name\", \"tests/config/test_config.py::test_unknown_short_option_name\", \"tests/config/test_config.py::test_unknown_confidence\", \"tests/config/test_config.py::test_unknown_yes_no\", \"tests/config/test_config.py::test_unknown_py_version\"]"
+  }
+}

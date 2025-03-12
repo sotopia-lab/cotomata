@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-9320",
+  "base_commit": "e05cef574b8f23ab1b57f57e7da6dee509a4e230",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Improve sphinx-quickstart's behavior when a conf.py file already exists in the directory. Currently, when a user runs sphinx-quickstart in a folder containing an existing conf.py, they are prompted to enter a new root path (or just press Enter to exit). However, pressing Enter results in an error message \"Please enter a valid path name\" instead of exiting. The expected behavior is for the application to exit gracefully upon receiving an empty input.",
+    "hint_texts": "This part focuses on modifying the behavior of the ask_user function. Implement a new utility function 'is_path_or_empty' that returns the input as is if it is empty, and otherwise delegates to the existing 'is_path' function. Integrate 'is_path_or_empty' into the ask_user function in sphinx/cmd/quickstart.py so that when the user provides an empty input, the program exits as intended. This change will resolve the bug related to improper handling of empty input.",
+    "entrypoint": "File: sphinx/cmd/quickstart.py; Modification Points: Add the new function 'is_path_or_empty' (after the existing 'is_path' function) and update the ask_user function (around the prompt for a new root path) to use 'is_path_or_empty'.",
+    "tests": {
+      "FAIL_TO_PASS": "N/A",
+      "PASS_TO_PASS": "tests/test_quickstart.py::test_do_prompt, tests/test_quickstart.py::test_do_prompt_inputstrip, tests/test_quickstart.py::test_do_prompt_with_nonascii, tests/test_quickstart.py::test_quickstart_defaults, tests/test_quickstart.py::test_quickstart_all_answers, tests/test_quickstart.py::test_generated_files_eol, tests/test_quickstart.py::test_quickstart_and_build, tests/test_quickstart.py::test_default_filename, tests/test_quickstart.py::test_extensions"
+    }
+  },
+  "feature2": {
+    "prompt": "Improve sphinx-quickstart's behavior when a conf.py file already exists in the directory. The current issue is that when the user presses Enter at the prompt to exit, the program displays an error message \"Please enter a valid path name\" instead of terminating. The expected behavior is for the application to exit immediately upon receiving an empty input. This feature is aimed at ensuring that the exit process functions correctly under these circumstances.",
+    "hint_texts": "This part focuses on validating the fixed behavior with an automated test. Develop a new test case that simulates the scenario where an existing conf.py is present and the user provides an empty input at the prompt. Use appropriate techniques (such as monkeypatching) to mock the file system check and user input, and verify that the program exits correctly (i.e., raises a SystemExit). This test confirms that the input-handling changes implemented in Feature1 achieve the desired behavior.",
+    "entrypoint": "File: tests/test_quickstart.py; Add a new test case (for example, 'test_exits_when_existing_confpy') that simulates an environment with an existing conf.py file and checks that the ask_user function exits when provided an empty input.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_quickstart.py::test_exits_when_existing_confpy",
+      "PASS_TO_PASS": "N/A"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/cmd/quickstart.py (for the ask_user function and new is_path_or_empty utility) and tests/test_quickstart.py (for the added test case).",
+    "integration_strategy": "Feature1 must first implement the improved input handling by adding the new utility function and modifying ask_user. Feature2 depends on this change to add a test that verifies the proper exit behavior. The integration point is the correct handling of an empty input in ask_user, which both features must agree upon.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate on the expected behavior of ask_user and the role of is_path_or_empty. They should also discuss the best approach for simulating the file system and user input in tests to ensure that the new test case reliably validates the fix."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_quickstart.py::test_exits_when_existing_confpy\"]",
+    "PASS_TO_PASS": "[\"tests/test_quickstart.py::test_do_prompt\", \"tests/test_quickstart.py::test_do_prompt_inputstrip\", \"tests/test_quickstart.py::test_do_prompt_with_nonascii\", \"tests/test_quickstart.py::test_quickstart_defaults\", \"tests/test_quickstart.py::test_quickstart_all_answers\", \"tests/test_quickstart.py::test_generated_files_eol\", \"tests/test_quickstart.py::test_quickstart_and_build\", \"tests/test_quickstart.py::test_default_filename\", \"tests/test_quickstart.py::test_extensions\"]"
+  }
+}

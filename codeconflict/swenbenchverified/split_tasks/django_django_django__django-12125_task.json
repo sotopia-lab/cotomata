@@ -1,0 +1,82 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-12125",
+  "base_commit": "89d41cba392b759732ba9f1db4ff29ed47da6a56",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "In the Django migrations framework, there is an issue where makemigrations produces an incorrect path for inner classes. When a subclass of django.db.models.Field is defined as an inner class and used in a Django model, the generated migration file incorrectly treats the inner class as if it were a top-level class in the module. For example, instead of referring to 'test1.models.Outer.Inner', the migration incorrectly references 'test1.models.Inner'. The fix requires updating the serialization logic to ensure that the full qualified path\u2014including the outer class\u2014is used in the migration file.",
+    "hint_texts": "This feature involves modifying the core serialization logic to correctly capture the qualified name of inner classes. Specifically, update the file django/db/migrations/serializer.py to use the __qualname__ attribute instead of __name__. Ensure that the change does not break existing behaviors unrelated to inner class serialization, so check that all other serialization functions remain intact.",
+    "entrypoint": "File: django/db/migrations/serializer.py. Locate the serialize method where the module and class name are combined, and modify the return statement to use self.value.__qualname__ in place of self.value.__name__. This is the key point where the fully qualified class name should be generated.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "test_args_kwargs_signature (migrations.test_writer.OperationWriterTests)",
+        "test_args_signature (migrations.test_writer.OperationWriterTests)",
+        "test_empty_signature (migrations.test_writer.OperationWriterTests)",
+        "test_expand_args_signature (migrations.test_writer.OperationWriterTests)",
+        "test_kwargs_signature (migrations.test_writer.OperationWriterTests)",
+        "test_multiline_args_signature (migrations.test_writer.OperationWriterTests)",
+        "test_nested_args_signature (migrations.test_writer.OperationWriterTests)",
+        "test_nested_operation_expand_args_signature (migrations.test_writer.OperationWriterTests)",
+        "test_custom_operation (migrations.test_writer.WriterTests)",
+        "test_deconstruct_class_arguments (migrations.test_writer.WriterTests)",
+        "test_migration_file_header_comments (migrations.test_writer.WriterTests)",
+        "test_migration_path (migrations.test_writer.WriterTests)",
+        "test_models_import_omitted (migrations.test_writer.WriterTests)",
+        "test_register_non_serializer (migrations.test_writer.WriterTests)",
+        "test_register_serializer (migrations.test_writer.WriterTests)",
+        "test_serialize_builtin_types (migrations.test_writer.WriterTests)",
+        "test_serialize_builtins (migrations.test_writer.WriterTests)",
+        "test_serialize_choices (migrations.test_writer.WriterTests)",
+        "test_serialize_class_based_validators (migrations.test_writer.WriterTests)",
+        "test_serialize_collections (migrations.test_writer.WriterTests)",
+        "test_serialize_compiled_regex (migrations.test_writer.WriterTests)",
+        "test_serialize_constants (migrations.test_writer.WriterTests)",
+        "test_serialize_datetime (migrations.test_writer.WriterTests)",
+        "test_serialize_empty_nonempty_tuple (migrations.test_writer.WriterTests)",
+        "test_serialize_enums (migrations.test_writer.WriterTests)",
+        "test_serialize_fields (migrations.test_writer.WriterTests)",
+        "test_serialize_frozensets (migrations.test_writer.WriterTests)",
+        "test_serialize_functions (migrations.test_writer.WriterTests)",
+        "test_serialize_functools_partial (migrations.test_writer.WriterTests)",
+        "test_serialize_functools_partialmethod (migrations.test_writer.WriterTests)",
+        "test_serialize_iterators (migrations.test_writer.WriterTests)",
+        "test_serialize_lazy_objects (migrations.test_writer.WriterTests)",
+        "A reference in a local scope can't be serialized.",
+        "test_serialize_managers (migrations.test_writer.WriterTests)",
+        "test_serialize_multiline_strings (migrations.test_writer.WriterTests)",
+        "test_serialize_range (migrations.test_writer.WriterTests)",
+        "test_serialize_set (migrations.test_writer.WriterTests)",
+        "test_serialize_settings (migrations.test_writer.WriterTests)",
+        "test_serialize_strings (migrations.test_writer.WriterTests)",
+        "test_serialize_timedelta (migrations.test_writer.WriterTests)",
+        "test_serialize_type_none (migrations.test_writer.WriterTests)",
+        "An unbound method used within a class body can be serialized.",
+        "test_serialize_uuid (migrations.test_writer.WriterTests)",
+        "test_simple_migration (migrations.test_writer.WriterTests)",
+        "test_sorted_imports (migrations.test_writer.WriterTests)"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Django's migrations system currently has a flaw when handling inner classes in models. In cases where an inner class (such as one used for field definitions or enum values) is defined within another class, the generated migration file does not include the enclosing class in its path. This results in an incomplete reference, for example, 'test1.models.State' is used instead of the correct 'test1.models.Thing.State'. The desired behavior is that the migration file must include the fully qualified class name, ensuring that the inner class is properly namespaced within its outer class.",
+    "hint_texts": "This feature focuses on verifying that the serialization of inner classes yields a fully qualified name in the migrations file. Implement new tests that simulate models using inner classes and inner enums, and assert that the migration output includes the correct nested path. The tests should capture scenarios both similar to the basic inner class case and the more complex real-world usage like the EnumField example provided in the problem statement.",
+    "entrypoint": "File: tests/migrations/test_writer.py. Add or update test methods (for example, test_serialize_nested_class and test_serialize_numbers) to cover the case where inner classes are used within models. These tests should call the serialization routines and compare the resulting migration string against the expected fully qualified format that includes the outer class names.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "test_serialize_nested_class (migrations.test_writer.WriterTests)",
+        "test_serialize_numbers (migrations.test_writer.WriterTests)"
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features will interact with the migration serialization logic. The file django/db/migrations/serializer.py is central, and tests in tests/migrations/test_writer.py will be used to verify proper behavior.",
+    "integration_strategy": "Feature1 implements the core fix in the serialization logic using __qualname__, while Feature2 adds tests to verify that the generated migration files include the correct qualified names. Integration requires that both the internal fix and the tests are coordinated to ensure that changes in the serializer are adequately validated by the tests.",
+    "communication_needs": "Developers working on Feature1 and Feature2 must collaborate to ensure that the fix in the serializer (Feature1) is correctly reflected in the test expectations (Feature2). Regular review and coordination meetings should be held to align on test outcomes and integration points, preventing any regression or mismatch between the implementation and its verification."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_serialize_nested_class (migrations.test_writer.WriterTests)\", \"test_serialize_numbers (migrations.test_writer.WriterTests)\"]",
+    "PASS_TO_PASS": "[\"test_args_kwargs_signature (migrations.test_writer.OperationWriterTests)\", \"test_args_signature (migrations.test_writer.OperationWriterTests)\", \"test_empty_signature (migrations.test_writer.OperationWriterTests)\", \"test_expand_args_signature (migrations.test_writer.OperationWriterTests)\", \"test_kwargs_signature (migrations.test_writer.OperationWriterTests)\", \"test_multiline_args_signature (migrations.test_writer.OperationWriterTests)\", \"test_nested_args_signature (migrations.test_writer.OperationWriterTests)\", \"test_nested_operation_expand_args_signature (migrations.test_writer.OperationWriterTests)\", \"test_custom_operation (migrations.test_writer.WriterTests)\", \"test_deconstruct_class_arguments (migrations.test_writer.WriterTests)\", \"test_migration_file_header_comments (migrations.test_writer.WriterTests)\", \"test_migration_path (migrations.test_writer.WriterTests)\", \"test_models_import_omitted (migrations.test_writer.WriterTests)\", \"test_register_non_serializer (migrations.test_writer.WriterTests)\", \"test_register_serializer (migrations.test_writer.WriterTests)\", \"test_serialize_builtin_types (migrations.test_writer.WriterTests)\", \"test_serialize_builtins (migrations.test_writer.WriterTests)\", \"test_serialize_choices (migrations.test_writer.WriterTests)\", \"test_serialize_class_based_validators (migrations.test_writer.WriterTests)\", \"test_serialize_collections (migrations.test_writer.WriterTests)\", \"test_serialize_compiled_regex (migrations.test_writer.WriterTests)\", \"test_serialize_constants (migrations.test_writer.WriterTests)\", \"test_serialize_datetime (migrations.test_writer.WriterTests)\", \"test_serialize_empty_nonempty_tuple (migrations.test_writer.WriterTests)\", \"test_serialize_enums (migrations.test_writer.WriterTests)\", \"test_serialize_fields (migrations.test_writer.WriterTests)\", \"test_serialize_frozensets (migrations.test_writer.WriterTests)\", \"test_serialize_functions (migrations.test_writer.WriterTests)\", \"test_serialize_functools_partial (migrations.test_writer.WriterTests)\", \"test_serialize_functools_partialmethod (migrations.test_writer.WriterTests)\", \"test_serialize_iterators (migrations.test_writer.WriterTests)\", \"test_serialize_lazy_objects (migrations.test_writer.WriterTests)\", \"A reference in a local scope can't be serialized.\", \"test_serialize_managers (migrations.test_writer.WriterTests)\", \"test_serialize_multiline_strings (migrations.test_writer.WriterTests)\", \"test_serialize_range (migrations.test_writer.WriterTests)\", \"test_serialize_set (migrations.test_writer.WriterTests)\", \"test_serialize_settings (migrations.test_writer.WriterTests)\", \"test_serialize_strings (migrations.test_writer.WriterTests)\", \"test_serialize_timedelta (migrations.test_writer.WriterTests)\", \"test_serialize_type_none (migrations.test_writer.WriterTests)\", \"An unbound method used within a class body can be serialized.\", \"test_serialize_uuid (migrations.test_writer.WriterTests)\", \"test_simple_migration (migrations.test_writer.WriterTests)\", \"test_sorted_imports (migrations.test_writer.WriterTests)\"]"
+  }
+}

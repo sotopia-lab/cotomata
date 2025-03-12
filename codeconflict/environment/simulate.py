@@ -79,8 +79,8 @@ async def simulate_conversation(turns: int = 2, max_attempts: int = 1) -> dict:
         agent1 = CodeWeaverAgent("SWE1", agent1_prompt.format(agent_name="agent1", other_name="agent2"))
         agent2 = CodeWeaverAgent("SWE2", agent2_prompt.format(agent_name="agent2", other_name="agent1"))
 
-        await run_planning_phase(agent1, agent2, turns)
-        await run_coding_phase(agent1, agent2)
+        await run_planning_phase(agent1, agent2, turns) # Conversations
+        await run_coding_phase(agent1, agent2) # Implementations
         
         # Evaluate individual agent outputs before merge
         await reward_system.evaluate_agent_outputs()

@@ -2,25 +2,41 @@
   "repo": "astropy/astropy",
   "test_id": "astropy/astropy_astropy__astropy-13453",
   "base_commit": "19cc80471739bcb67b7e8099246b391c355023ee",
-  "patch": "diff --git a/astropy/io/ascii/html.py b/astropy/io/ascii/html.py\n--- a/astropy/io/ascii/html.py\n+++ b/astropy/io/ascii/html.py\n@@ -349,11 +349,13 @@ def write(self, table):\n         cols = list(table.columns.values())\n \n         self.data.header.cols = cols\n+        self.data.cols = cols\n \n         if isinstance(self.data.fill_values, tuple):\n             self.data.fill_values = [self.data.fill_values]\n \n         self.data._set_fill_values(cols)\n+        self.data._set_col_formats()\n \n         lines = []\n \n",
-  "test_patch": "diff --git a/astropy/io/ascii/tests/test_html.py b/astropy/io/ascii/tests/test_html.py\n--- a/astropy/io/ascii/tests/test_html.py\n+++ b/astropy/io/ascii/tests/test_html.py\n@@ -717,6 +717,49 @@ def test_multi_column_write_table_html_fill_values_masked():\n     assert buffer_output.getvalue() == buffer_expected.getvalue()\n \n \n+def test_write_table_formatted_columns():\n+    \"\"\"\n+    Test to make sure that the HTML writer writes out using the\n+    supplied formatting.\n+    \"\"\"\n+\n+    col1 = [1, 2]\n+    col2 = [1.234567e-11, -9.876543e11]\n+    formats = {\"C1\": \"04d\", \"C2\": \".2e\"}\n+    table = Table([col1, col2], names=formats.keys())\n+\n+    expected = \"\"\"\\\n+<html>\n+ <head>\n+  <meta charset=\"utf-8\"/>\n+  <meta content=\"text/html;charset=UTF-8\" http-equiv=\"Content-type\"/>\n+ </head>\n+ <body>\n+  <table>\n+   <thead>\n+    <tr>\n+     <th>C1</th>\n+     <th>C2</th>\n+    </tr>\n+   </thead>\n+   <tr>\n+    <td>0001</td>\n+    <td>1.23e-11</td>\n+   </tr>\n+   <tr>\n+    <td>0002</td>\n+    <td>-9.88e+11</td>\n+   </tr>\n+  </table>\n+ </body>\n+</html>\n+    \"\"\"\n+    with StringIO() as sp:\n+        table.write(sp, format=\"html\", formats=formats)\n+        out = sp.getvalue().strip()\n+    assert out == expected.strip()\n+\n+\n @pytest.mark.skipif('not HAS_BS4')\n def test_read_html_unicode():\n     \"\"\"\n",
+  "difficulty": "15 min - 1 hour",
   "feature1": {
-    "prompt": "When writing an astropy table to HTML format, the current implementation does not correctly initialize the data columns used in formatting. This issue is related to missing configuration of the internal data structure, where self.data.cols is not being set appropriately. As a result, although output to CSV or rst respects the formatting settings, the HTML output fails to leverage the formatting because the column structure is incorrect. Reproduction steps and examples demonstrate that while the CSV and rst outputs display the formatting as expected, the HTML output shows numbers with full precision due to the underlying column setup issue.",
-    "hint_texts": "Feature 1 focuses on ensuring that the data columns are correctly set up by assigning self.data.cols. Update the code in the write method so that the column information is properly stored in self.data.cols before applying any formatting. Investigate the initialization in astropy/io/ascii/html.py and verify that any operations dependent on the column data structure function correctly.",
-    "entrypoint": "File: astropy/io/ascii/html.py; Method: write; Code block: the location where self.data.cols is assigned. Developers should start at the section of the write method where the table columns are configured and ensure that the assignment self.data.cols = cols is executed properly.",
+    "prompt": "ASCII table output to HTML does not support supplied \"formats\". When writing out an astropy table to HTML format, the `formats` option to the write() method seems to be ignored. It does work when writing out to other formats, e.g., rst, CSV, MRT, etc. I expect the HTML table output to respect the formatting given by the `formats` argument.",
+    "hint_texts": "Feature1 involves modifying the internal handling of the table data to ensure that the columns are correctly initialized. The implementation should assign the list of table columns to the internal data structure immediately after the header columns are set. This ensures that later operations receive the correct column list and the data structure is properly prepared. Developers should confirm that operations depending on the column information work as expected.",
+    "entrypoint": "File: astropy/io/ascii/html.py; Function: write; Locate the block after setting 'self.data.header.cols' and add the assignment 'self.data.cols = cols' to properly initialize the column data.",
     "tests": {
-      "FAIL_TO_PASS": "",
-      "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_html.py::test_listwriter\", \"astropy/io/ascii/tests/test_html.py::test_htmlinputter_no_bs4\", \"astropy/io/ascii/tests/test_html.py::test_multicolumn_write\", \"astropy/io/ascii/tests/test_html.py::test_write_no_multicols\", \"astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values\", \"astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values_optional_columns\", \"astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values_masked\", \"astropy/io/ascii/tests/test_html.py::test_multicolumn_table_html_fill_values\", \"astropy/io/ascii/tests/test_html.py::test_multi_column_write_table_html_fill_values_masked\"]"
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "astropy/io/ascii/tests/test_html.py::test_listwriter",
+        "astropy/io/ascii/tests/test_html.py::test_htmlinputter_no_bs4",
+        "astropy/io/ascii/tests/test_html.py::test_multicolumn_write",
+        "astropy/io/ascii/tests/test_html.py::test_write_no_multicols",
+        "astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values",
+        "astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values_optional_columns",
+        "astropy/io/ascii/tests/test_html.py::test_write_table_html_fill_values_masked",
+        "astropy/io/ascii/tests/test_html.py::test_multicolumn_table_html_fill_values",
+        "astropy/io/ascii/tests/test_html.py::test_multi_column_write_table_html_fill_values_masked"
+      ]
     }
   },
   "feature2": {
-    "prompt": "This feature addresses the failure in applying the formatting to the output columns in the HTML table. The issue is that the formats option provided to the write() method is ignored, resulting in HTML output that displays the full precision of numbers instead of the desired formatted output. Detailed reproduction steps include copying a table and writing it to HTML with a lambda function for formatting the 'a' column, contrasting with CSV and rst outputs that correctly utilize the formatting. The goal is to ensure that self.data._set_col_formats() is properly invoked so that the HTML table output adheres to the specified formats.",
-    "hint_texts": "Feature 2 is focused on applying the correct column formatting by calling self.data._set_col_formats(). Developers should review the logic in the write method of astropy/io/ascii/html.py to ensure that after setting up the columns, the formatting function is called to process the formats argument. It is critical to integrate this function call after the column initialization in Feature 1 so that the provided lambda function (or other formatting definitions) is executed, leading to the expected HTML output.",
-    "entrypoint": "File: astropy/io/ascii/html.py; Method: write; Code block: the segment where self.data._set_col_formats() should be invoked. This call should occur after self.data.cols is assigned, ensuring that column formats are updated before rendering the final HTML output.",
+    "prompt": "ASCII table output to HTML does not support supplied \"formats\". The current behavior shows that when writing out an astropy table to HTML format the provided formatting option is ignored, resulting in numbers printed to full precision. In contrast, when outputting to formats such as CSV or rst, the formatted output appears as expected. The expected behavior is for the HTML output to apply the specified formatting, ensuring consistency across all output formats.",
+    "hint_texts": "Feature2 targets the application of the column formats during HTML table generation. The solution should invoke the appropriate method to set the column formats so that the formatting specified in the formats argument is correctly applied. This change must occur after the data columns have been initialized. Developers need to verify that after this modification the HTML output mirrors the expected formatted output seen in other formats.",
+    "entrypoint": "File: astropy/io/ascii/html.py; Function: write; Immediately following the column assignment step, add a call to apply the column formats (i.e. calling the function that sets the formatting on the data structure) to ensure that the HTML output reflects the specified formats.",
     "tests": {
-      "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_html.py::test_write_table_formatted_columns\"]",
-      "PASS_TO_PASS": ""
+      "FAIL_TO_PASS": [
+        "astropy/io/ascii/tests/test_html.py::test_write_table_formatted_columns"
+      ],
+      "PASS_TO_PASS": []
     }
+  },
+  "collaboration_points": {
+    "shared_resources": "The primary shared resource is the file astropy/io/ascii/html.py, particularly the write() function and the shared data structure (self.data) which holds column information and formatting settings.",
+    "integration_strategy": "Developers working on Feature1 and Feature2 must integrate their changes sequentially. Feature1 must ensure that the data structure is correctly populated with column data so that Feature2 can subsequently apply the column formatting. Integration testing should confirm that the HTML writer now respects the formats argument as expected while not breaking functionality in the other output formats.",
+    "communication_needs": "The teams handling Feature1 and Feature2 should discuss the order of operations and the interface of self.data to confirm compatibility. Regular coordination is necessary to ensure that modifications made for column initialization in Feature1 do not adversely affect the formatting routine implemented in Feature2. Joint review of the updated tests and integration points is advised to ensure a smooth combined solution."
   },
   "overall_tests": {
     "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_html.py::test_write_table_formatted_columns\"]",

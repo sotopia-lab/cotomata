@@ -1,0 +1,33 @@
+{
+  "repo": "pylint-dev/pylint",
+  "test_id": "pylint-dev/pylint_pylint-dev__pylint-4970",
+  "base_commit": "40cc2ffd7887959157aaf469e09585ec2be7f528",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Feature 1: Currently, setting min-similarity-lines to 0 in the configuration does not disable the duplicate code check as intended. Instead, every line is treated as duplicate, resulting in numerous errors. The solution requires modifying the functionality so that when min-similarity-lines is set to 0, the duplicate check is bypassed entirely. This change should align pylint's behavior with that of other linters, such as flake8.",
+    "hint_texts": "Modify the run() method in the similar.py file to check if min_lines equals 0 and, if so, exit the function immediately. The implementation must ensure that no duplicate code processing occurs when min_lines is 0. This adjustment is focused solely on the core functionality within the duplicated code detection logic.",
+    "entrypoint": "File: pylint/checkers/similar.py; Function: run(). Focus on the code block around the duplicate code checking mechanism (around the added if statement).",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "tests/checkers/unittest_similar.py::test_ignore_comments, tests/checkers/unittest_similar.py::test_ignore_docstrings, tests/checkers/unittest_similar.py::test_ignore_imports, tests/checkers/unittest_similar.py::test_multiline_imports, tests/checkers/unittest_similar.py::test_ignore_multiline_imports, tests/checkers/unittest_similar.py::test_ignore_signatures_fail, tests/checkers/unittest_similar.py::test_ignore_signatures_pass, tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_fail, tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_pass, tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_fail, tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_pass, tests/checkers/unittest_similar.py::test_no_hide_code_with_imports, tests/checkers/unittest_similar.py::test_ignore_nothing, tests/checkers/unittest_similar.py::test_lines_without_meaningful_content_do_not_trigger_similarity, tests/checkers/unittest_similar.py::test_help, tests/checkers/unittest_similar.py::test_no_args, tests/checkers/unittest_similar.py::test_get_map_data"
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2: The duplicate code check must be completely disabled when min-similarity-lines is set to 0. The expected behavior is that no duplicate code checking occurs and no error messages are generated in this configuration. This update ensures that the tool behaves consistently with other linters that disable checks when a zero value is provided. The solution must guarantee that the bypass occurs reliably, providing a seamless user experience.",
+    "hint_texts": "Introduce a new test case in the unittest suite to verify the disabled behavior when min-similarity-lines is set to 0. The test should simulate running pylint with this configuration and confirm that the process exits without performing any duplicate checks. This addition serves as a validation for the functional change made in Feature 1.",
+    "entrypoint": "File: tests/checkers/unittest_similar.py; add a new test function (e.g., test_set_duplicate_lines_to_zero) to verify that the run() method in similar.py exits early when min-similarity-lines is 0.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/checkers/unittest_similar.py::test_set_duplicate_lines_to_zero",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features rely on the behavior of the run() method in pylint/checkers/similar.py and use the test file tests/checkers/unittest_similar.py for validation.",
+    "integration_strategy": "Feature 1 delivers the core functionality change by modifying the run() method to exit early when min_sims is 0, while Feature 2 adds a new test case to confirm that change. The integration requires ensuring that the test added in Feature 2 accurately validates the modified behavior in Feature 1.",
+    "communication_needs": "Developers on both features should coordinate to define the exact behavior of the run() method when min-similarity-lines is 0. Regular discussions will ensure the test expectations in Feature 2 align with the functional change in Feature 1 and that no regressions occur."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/checkers/unittest_similar.py::test_set_duplicate_lines_to_zero\"]",
+    "PASS_TO_PASS": "[\"tests/checkers/unittest_similar.py::test_ignore_comments\", \"tests/checkers/unittest_similar.py::test_ignore_docstrings\", \"tests/checkers/unittest_similar.py::test_ignore_imports\", \"tests/checkers/unittest_similar.py::test_multiline_imports\", \"tests/checkers/unittest_similar.py::test_ignore_multiline_imports\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_fail\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_pass\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_fail\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_class_methods_pass\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_fail\", \"tests/checkers/unittest_similar.py::test_ignore_signatures_empty_functions_pass\", \"tests/checkers/unittest_similar.py::test_no_hide_code_with_imports\", \"tests/checkers/unittest_similar.py::test_ignore_nothing\", \"tests/checkers/unittest_similar.py::test_lines_without_meaningful_content_do_not_trigger_similarity\", \"tests/checkers/unittest_similar.py::test_help\", \"tests/checkers/unittest_similar.py::test_no_args\", \"tests/checkers/unittest_similar.py::test_get_map_data\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-7985",
+  "base_commit": "f30284ef926ebaf04b176f21b421e2dffc679792",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The linkcheck tool should be enhanced to also verify local (internal) links. Currently, linkcheck does not check if local files referenced in the documentation exist, which can lead to undetected issues. This feature requires that the tool analyze local link URIs and confirm their existence in the source directory. If a local file is found, it should be marked as working; if not, it should be indicated as broken, consistent with the error logs provided in the problem statement.",
+    "hint_texts": "Focus on the core functionality in sphinx/builders/linkcheck.py. Modify the check_uri function to remove the 'ftp:' check and introduce a new URI regex that distinguishes between supported and unsupported schemes. Implement a check using os.path.exists combined with os.path.join(self.srcdir, uri) to verify whether a local file exists. If the file is not found, ensure the code iterates through self.to_ignore to determine if the URI should be ignored, otherwise return a broken status.",
+    "entrypoint": "File: sphinx/builders/linkcheck.py; Function: check_uri (around line 210). Add the new regex variable 'uri_re' and update the conditional logic to handle local file paths appropriately.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "tests/test_build_linkcheck.py::test_defaults_json, tests/test_build_linkcheck.py::test_auth, tests/test_build_linkcheck.py::test_linkcheck_request_headers"
+    }
+  },
+  "feature2": {
+    "prompt": "The test suite should be updated to verify the new functionality that checks local (internal) links. It is important that the documentation build process now validates both valid and invalid local links. The tests must confirm that when local links reference existing files they are marked as working, and when they do not exist they are correctly marked as broken. This update ensures that the linkchecker provides accurate feedback regarding local links, as described in the problem statement.",
+    "hint_texts": "Update the test files to reflect the new behavior for local link checking. Modify tests/roots/test-linkcheck/links.txt to include examples of both valid and invalid local file references. Adjust tests/test_build_linkcheck.py by adding or updating assertions in functions such as test_defaults and test_anchors_ignored so that they validate the proper categorization of local links as working or broken.",
+    "entrypoint": "Files: tests/roots/test-linkcheck/links.txt and tests/test_build_linkcheck.py. Focus on updating the test cases in these files to incorporate conditions that check for the existence of a local file and verify that the linkchecker reports the correct status.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_build_linkcheck.py::test_defaults, tests/test_build_linkcheck.py::test_anchors_ignored",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/builders/linkcheck.py, tests/roots/test-linkcheck/links.txt, tests/test_build_linkcheck.py",
+    "integration_strategy": "Feature1 implements the new local link checking logic while Feature2 updates the test suite to verify that logic. Both features need to adhere to a consistent output format and error messaging so that the tests in Feature2 properly reflect the behavior introduced in Feature1. Integration will require coordinated testing to ensure no regression in existing functionality.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should discuss the expected behaviors, error messages, and output formats. They must ensure that the modifications in the core linkcheck logic are aligned with the test cases and that any changes to file paths or statuses are mutually agreed upon."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_build_linkcheck.py::test_defaults\", \"tests/test_build_linkcheck.py::test_anchors_ignored\"]",
+    "PASS_TO_PASS": "[\"tests/test_build_linkcheck.py::test_defaults_json\", \"tests/test_build_linkcheck.py::test_auth\", \"tests/test_build_linkcheck.py::test_linkcheck_request_headers\"]"
+  }
+}

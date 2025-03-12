@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8269",
+  "base_commit": "1e2ccd8f0eca0870cf6f8fce6934e2da8eba9b72",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Linkcheck should report HTTP errors instead of reporting that an anchor is not found. When linkcheck_anchors is set to True, the command currently misreports HTTP error responses (such as 404 or 500) by stating that the anchor could not be found, even though the real issue is an HTTP error from the server. The enhancement requires modifying the error handling within the linkcheck command so that it surfaces the actual HTTP error. After applying the fix, the output should display the HTTP error message (for example, '404 Client Error: Not Found for url: ...') rather than a misleading anchor missing message.",
+    "hint_texts": "Focus on updating the core functionality for error handling. The change should involve adding a mechanism to raise an error when the HTTP response indicates a failure (by calling raise_for_status() on the response). Ensure that the modification is limited to the function that checks the URI so that only HTTP errors are reported when they occur, not anchor absence.",
+    "entrypoint": "sphinx/builders/linkcheck.py: Modify the check_uri() function to call response.raise_for_status() immediately after obtaining the HTTP response.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "[\"tests/test_build_linkcheck.py::test_defaults\", \"tests/test_build_linkcheck.py::test_defaults_json\", \"tests/test_build_linkcheck.py::test_anchors_ignored\", \"tests/test_build_linkcheck.py::test_auth\", \"tests/test_build_linkcheck.py::test_linkcheck_request_headers\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Linkcheck should report HTTP errors instead of reporting that an anchor is not found. The current implementation mistakenly indicates a missing anchor when the server responds with an HTTP error code while linkcheck_anchors is enabled. The correction should ensure that the true HTTP error from the server is conveyed to the user, providing a more accurate diagnosis of the issue. This adjustment should result in error messages that reflect the actual HTTP status, such as '404 Client Error: Not Found', similar to the behavior when linkcheck_anchors is disabled.",
+    "hint_texts": "Develop tests to validate the correct error reporting behavior. The tests should simulate scenarios where the server returns error status codes, ensuring that the error message output reflects the actual HTTP status. Consider setting up a local testing server that deliberately returns errors to verify that the modified error handling works as expected.",
+    "entrypoint": "tests/test_build_linkcheck.py: Add a new test case (for example, test_raises_for_invalid_status) that simulates a server returning an HTTP error. Also, update the test server configuration in tests/roots/test-linkcheck-localserver (including conf.py and index.rst) to support the simulation of error responses.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"tests/test_build_linkcheck.py::test_raises_for_invalid_status\"]",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features work with the linkcheck functionality: Feature1 changes the core error handling in sphinx/builders/linkcheck.py, while Feature2 involves tests in tests/test_build_linkcheck.py and configuration files under tests/roots. Changes to the HTTP error handling in Feature1 must be reflected in how the tests in Feature2 simulate and verify error responses.",
+    "integration_strategy": "Feature1 must be implemented first so that the new error handling is in place. Then Feature2 can verify that the updated behavior produces the correct output. Continuous integration should run both sets of tests together to ensure that the modifications do not impact existing functionalities.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate on the intended behavior of the linkcheck command when facing HTTP errors. Regular discussions are necessary to ensure that the new error reporting logic and the corresponding test cases are aligned. Both parties should agree on the output format and handling of HTTP errors to ensure smooth integration."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_build_linkcheck.py::test_raises_for_invalid_status\"]",
+    "PASS_TO_PASS": "[\"tests/test_build_linkcheck.py::test_defaults\", \"tests/test_build_linkcheck.py::test_defaults_json\", \"tests/test_build_linkcheck.py::test_anchors_ignored\", \"tests/test_build_linkcheck.py::test_auth\", \"tests/test_build_linkcheck.py::test_linkcheck_request_headers\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-16631",
+  "base_commit": "9b224579875e30203d079cc2fee83b116d98eb78",
+  "difficulty": "1-4 hours",
+  "feature1": {
+    "prompt": "Currently, the session handling in Django does not utilize SECRET_KEY_FALLBACKS during session verification, leading to unexpected user logouts after a secret key rotation. The get_user function fails to validate the session hash against any fallback secrets when the primary session hash check does not pass. This issue means that even when a valid fallback key is available, the session is either cycled improperly or flushed entirely, disrupting user experience. The fix should ensure that if the primary secret does not verify the session, the system iterates over fallback secrets to revalidate and seamlessly update the session.",
+    "hint_texts": "Focus on modifying the get_user function in django/contrib/auth/__init__.py. Enhance the session hash verification logic so that if the initial check against the primary secret fails, the code calls user.get_session_auth_fallback_hash() to iterate over fallback secrets. If any fallback hash matches the session hash, cycle the session key and update the session accordingly; otherwise, flush the session to maintain security.",
+    "entrypoint": "File: django/contrib/auth/__init__.py \u2013 Function: get_user. Locate the code block where session_hash is compared to user.get_session_auth_hash() and modify it to include a loop over fallback hashes for session verification.",
+    "tests": {
+      "FAIL_TO_PASS": "test_get_user_fallback_secret (auth_tests.test_basic.TestGetUser.test_get_user_fallback_secret)",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "feature2": {
+    "prompt": "The Django AbstractBaseUser.get_session_auth_hash method does not support using a fallback secret, which causes issues when secret keys are rotated. The current implementation directly calls salted_hmac with the default SECRET_KEY, ignoring any values present in SECRET_KEY_FALLBACKS. The fix requires refactoring the hash generation by extracting the salted_hmac call into a helper method that accepts an optional secret parameter. In addition, a new method should be added to generate session authentication hashes for all fallback secrets, thereby allowing the system to validate sessions even when older secret keys are in use.",
+    "hint_texts": "Refactor the get_session_auth_hash method in django/contrib/auth/base_user.py to delegate the HMAC generation to a new helper method (_get_session_auth_hash) that accepts an optional secret parameter. Implement a new method called get_session_auth_fallback_hash which iterates over the secrets listed in SECRET_KEY_FALLBACKS and yields the corresponding hash for each. Ensure the refactored code integrates cleanly so that the session verification in get_user can consume these fallback hashes.",
+    "entrypoint": "File: django/contrib/auth/base_user.py \u2013 Modify the get_session_auth_hash method to call the new _get_session_auth_hash helper, add the new get_session_auth_fallback_hash method, and implement the _get_session_auth_hash method which accepts a secret argument. Review changes starting around line 135 as indicated in the analysis.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_get_user (auth_tests.test_basic.TestGetUser.test_get_user), test_get_user_anonymous (auth_tests.test_basic.TestGetUser.test_get_user_anonymous), The current user model can be retrieved, Check the creation and properties of a superuser, test_superuser_no_email_or_password (auth_tests.test_basic.BasicTestCase.test_superuser_no_email_or_password), The current user model can be swapped out for another, The alternate user setting must point to something in the format app.model, The current user model must point to an installed model, test_unicode_username (auth_tests.test_basic.BasicTestCase.test_unicode_username), Users can be created and can set their password, Users can be created without an email, Default User model verbose names are translatable (#19945)"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with Django's user authentication system, particularly modules handling session management and hash generation. They share common code paths in the django/contrib/auth directory and rely on the user model for session validation.",
+    "integration_strategy": "Feature1\u2019s modifications in get_user rely on the new fallback hash method introduced in Feature2. Coordination is required to ensure that when a fallback secret is valid, get_user correctly recognizes it and updates the session. The integration should be tested to guarantee that session verification works uniformly regardless of whether the primary or a fallback secret is used.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should collaborate closely to align on how the session hash is generated and verified. Discussions should focus on managing secret rotations, the specifics of cycling the session key when a fallback hash is recognized, and overall consistency between session generation and validation mechanisms."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_get_user_fallback_secret (auth_tests.test_basic.TestGetUser.test_get_user_fallback_secret)\"]",
+    "PASS_TO_PASS": "[\"test_get_user (auth_tests.test_basic.TestGetUser.test_get_user)\", \"test_get_user_anonymous (auth_tests.test_basic.TestGetUser.test_get_user_anonymous)\", \"The current user model can be retrieved\", \"Check the creation and properties of a superuser\", \"test_superuser_no_email_or_password (auth_tests.test_basic.BasicTestCase.test_superuser_no_email_or_password)\", \"The current user model can be swapped out for another\", \"The alternate user setting must point to something in the format app.model\", \"The current user model must point to an installed model\", \"test_unicode_username (auth_tests.test_basic.BasicTestCase.test_unicode_username)\", \"Users can be created and can set their password\", \"Users can be created without an email\", \"Default User model verbose names are translatable (#19945)\"]"
+  }
+}

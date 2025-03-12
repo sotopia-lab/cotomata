@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-16801",
+  "base_commit": "3b62d8c83e3e48d2ed61cfa32a61c56d9e030293",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "ImageField unnecessarily adds a post_init signal handler to the model. While debugging performance issues in a Django application, it was discovered that a significant amount of time is spent initializing models due to the unconditional connection of a post_init signal handler. The signal handler is effectively a no-op when width_field and height_field are not set, and its unconditional addition leads to needless processing. The goal of this feature is to modify the behavior so that the post_init signal is only connected when either width_field or height_field is provided, thereby improving initialization performance.",
+    "hint_texts": "Focus on the contribute_to_class method in django/db/models/fields/files.py. Update the condition that connects the post_init signal so that it only does so when the model is non-abstract and at least one of width_field or height_field is set. Ensure that the signal handler is not connected unnecessarily when the dimension fields are not in use.",
+    "entrypoint": "File: django/db/models/fields/files.py, Function: contribute_to_class. Look around the area where the post_init signal is connected (approximately line 441) and update the conditional to include a check for self.width_field or self.height_field.",
+    "tests": {
+      "FAIL_TO_PASS": "test_post_init_not_connected (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_post_init_not_connected)",
+      "PASS_TO_PASS": "N/A"
+    }
+  },
+  "feature2": {
+    "prompt": "ImageField unnecessarily adds a post_init signal handler to the model. The signal handler, which is a no-op when width_field and height_field are not set, reveals that parts of the internal image dimension update logic are redundant. Because these dimension fields are not actually used, the extra conditional checks in the update process contribute to unnecessary processing. This feature aims to simplify the internal update mechanism by removing the redundant check, ensuring that only relevant operations are performed during model initialization.",
+    "hint_texts": "Work in the update_dimension_fields method in django/db/models/fields/files.py. Remove the redundant check for the presence of dimension fields (width_field or height_field) and simplify the conditional logic so that the method only checks whether the field is deferred. This will clean up the code and contribute to overall performance improvements.",
+    "entrypoint": "File: django/db/models/fields/files.py, Function: update_dimension_fields. Identify and remove the code block that sets and checks a variable (e.g., has_dimension_fields) to determine the presence of width_field or height_field, retaining only the check for whether the field is deferred (i.e., if self.attname is present in instance.__dict__).",
+    "tests": {
+      "FAIL_TO_PASS": "N/A",
+      "PASS_TO_PASS": "Assigning ImageField to None clears dimensions.; Tests assigning an image field through the model's constructor.; Tests assigning an image in Manager.create().; The default value for an ImageField is an instance of; Dimensions are updated correctly in various situations.; Tests assignment using the field's save method and deletion using; Tests behavior when image is not passed in constructor.; test_assignment (model_fields.test_imagefield.TwoImageFieldTests.test_assignment); test_constructor (model_fields.test_imagefield.TwoImageFieldTests.test_constructor); test_create (model_fields.test_imagefield.TwoImageFieldTests.test_create); test_field_save_and_delete_methods (model_fields.test_imagefield.TwoImageFieldTests.test_field_save_and_delete_methods); test_defer (model_fields.test_imagefield.ImageFieldTests.test_defer); Bug #8175: correctly delete an object where the file no longer; Bug #9786: Ensure '==' and '!=' work correctly.; If the underlying file is unavailable, still create instantiate the; ImageField can be pickled, unpickled, and that the image of; Bug #8534: FileField.size should not leave the file open."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the ImageField implementation in the django/db/models/fields/files.py file, sharing the common logic for model initialization and image dimension updates.",
+    "integration_strategy": "Feature1 establishes the conditional connection of the post_init signal based on the presence of dimension fields, while Feature2 refactors the update mechanism to remove unnecessary conditionals. The integration point lies in ensuring that when the signal is conditionally connected, the subsequent update of dimensions behaves correctly without redundant checks.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate their changes to ensure consistency in how ImageField handles dimensions. They need to discuss the conditional logic for signal connection and the simplification of the update process to guarantee that the overall initialization performance is improved without unintended side effects."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_post_init_not_connected (model_fields.test_imagefield.ImageFieldNoDimensionsTests.test_post_init_not_connected)\"]",
+    "PASS_TO_PASS": "[\"Assigning ImageField to None clears dimensions.\", \"Tests assigning an image field through the model's constructor.\", \"Tests assigning an image in Manager.create().\", \"The default value for an ImageField is an instance of\", \"Dimensions are updated correctly in various situations.\", \"Tests assignment using the field's save method and deletion using\", \"Tests behavior when image is not passed in constructor.\", \"test_assignment (model_fields.test_imagefield.TwoImageFieldTests.test_assignment)\", \"test_constructor (model_fields.test_imagefield.TwoImageFieldTests.test_constructor)\", \"test_create (model_fields.test_imagefield.TwoImageFieldTests.test_create)\", \"test_field_save_and_delete_methods (model_fields.test_imagefield.TwoImageFieldTests.test_field_save_and_delete_methods)\", \"test_defer (model_fields.test_imagefield.ImageFieldTests.test_defer)\", \"Bug #8175: correctly delete an object where the file no longer\", \"Bug #9786: Ensure '==' and '!=' work correctly.\", \"If the underlying file is unavailable, still create instantiate the\", \"ImageField can be pickled, unpickled, and that the image of\", \"Bug #8534: FileField.size should not leave the file open.\"]"
+  }
+}

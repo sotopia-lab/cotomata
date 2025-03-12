@@ -1,0 +1,49 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-10673",
+  "base_commit": "f35d2a6cc726f97d0e859ca7a0e1729f7da8a6c8",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Implement changes in Sphinx's toctree processing to ensure that references to generated documents such as 'genindex', 'modindex', and 'search' are recognized and do not produce warnings. Users include these references in their toctree directives expecting valid links to generated pages. The fix should involve updating the core toctree handling logic so that these generated document names are properly processed, avoiding warnings during the build. This update ensures that valid generated document names are treated appropriately within the toctree.",
+    "hint_texts": "This feature includes modifications to the internal implementation of the toctree directive handling. Specifically, update the file sphinx/directives/other.py to incorporate generated document names by combining labels from the standard domain with the found documents, and skip them during glob processing. Also, modify sphinx/environment/adapters/toctree.py to use the generated_docnames mapping when resolving references, and update sphinx/environment/collectors/toctree.py to avoid processing generated document names during tree walking. Use explicit checks to exclude generated document names from operations that would otherwise trigger warnings.",
+    "entrypoint": "Files: sphinx/directives/other.py (in function parse_content), sphinx/environment/adapters/toctree.py (in functions resolve and _entries_from_toctree), sphinx/environment/collectors/toctree.py (in functions assign_figure_numbers and _walk_doc). Start by integrating the generated_docnames obtained from self.env.domains['std'].initial_data['labels'] into the respective logic.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "tests/test_environment_toctree.py::test_process_doc",
+        "tests/test_environment_toctree.py::test_glob",
+        "tests/test_environment_toctree.py::test_get_toc_for",
+        "tests/test_environment_toctree.py::test_get_toc_for_only",
+        "tests/test_environment_toctree.py::test_get_toc_for_tocdepth",
+        "tests/test_environment_toctree.py::test_get_toctree_for",
+        "tests/test_environment_toctree.py::test_get_toctree_for_collapse",
+        "tests/test_environment_toctree.py::test_get_toc_for_maxdepth",
+        "tests/test_environment_toctree.py::test_get_toc_for_includehidden"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Enhance Sphinx's toctree functionality to support references to generated documents including 'genindex', 'modindex', and 'search' without triggering errors. Many users include these references in their toctree directives with the expectation of valid links to generated indices and search pages. The solution should provide a seamless experience during documentation builds by correctly recognizing these generated document links, ensuring that no warnings are produced. The improvements will allow the intended behavior when these specific document names are used.",
+    "hint_texts": "This feature focuses on building a comprehensive test suite to verify that the updated toctree handling works as expected. Add new tests in tests/test_environment_toctree.py (for example, a test function such as test_toctree_index) and create a new test root under tests/roots/test-toctree-index. These tests should confirm that references to 'genindex', 'modindex', and 'search' no longer produce warnings and are processed correctly. Ensure that test cases cover both the new behavior and any potential regressions in existing functionality.",
+    "entrypoint": "Files: tests/test_environment_toctree.py (to add the new test function test_toctree_index) and tests/roots/test-toctree-index (to add new test files including conf.py, foo.rst, and index.rst). Use these new test artifacts to validate that the toctree directive now correctly handles generated document names.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "tests/test_environment_toctree.py::test_toctree_index"
+      ],
+      "PASS_TO_PASS": [
+        "tests/roots/test-toctree-index/conf.py",
+        "tests/roots/test-toctree-index/foo.rst",
+        "tests/roots/test-toctree-index/index.rst"
+      ]
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Sphinx's toctree processing logic and domain data structures, specifically the generated_docnames obtained from self.env.domains['std'].initial_data['labels']. Both features interact with the toctree directive implementation across directives, adapters, and collectors.",
+    "integration_strategy": "Feature1 establishes the core functionality by updating the internal toctree logic to handle generated document names. Feature2 builds upon this by adding comprehensive tests and new test roots to verify that the changes work as intended. The integration ensures that the internal changes are fully exercised by the test suite without regressions in existing behavior.",
+    "communication_needs": "Developers implementing the internal logic changes (Feature1) must coordinate with those developing the test enhancements (Feature2) to align on expected behavior and edge cases. Regular discussions should focus on integration points, test expectations, and ensuring that all scenarios for generated document names are adequately covered."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_environment_toctree.py::test_toctree_index\"]",
+    "PASS_TO_PASS": "[\"tests/test_environment_toctree.py::test_process_doc\", \"tests/test_environment_toctree.py::test_glob\", \"tests/test_environment_toctree.py::test_get_toc_for\", \"tests/test_environment_toctree.py::test_get_toc_for_only\", \"tests/test_environment_toctree.py::test_get_toc_for_tocdepth\", \"tests/test_environment_toctree.py::test_get_toctree_for\", \"tests/test_environment_toctree.py::test_get_toctree_for_collapse\", \"tests/test_environment_toctree.py::test_get_toctree_for_maxdepth\", \"tests/test_environment_toctree.py::test_get_toctree_for_includehidden\"]"
+  }
+}

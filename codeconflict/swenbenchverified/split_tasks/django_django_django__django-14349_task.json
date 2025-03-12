@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-14349",
+  "base_commit": "a708f39ce67af174df90c5b5e50ad1976cec7cb8",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Feature 1 problem statement - In certain Python versions that include the bpo-43882 fix, the URLValidator behaves unexpectedly because unsafe characters\u2014newline, carriage return, and tab\u2014are stripped from URLs before validation. This prevents the validator from detecting these forbidden characters and rejecting the URL. To fix this issue, modify the URLValidator (in django/core/validators.py) so that it explicitly checks for the presence of these unsafe characters and immediately raises a ValidationError if any are found. The desired behavior is that any URL containing newline (\\n), carriage return (\\r), or tab (\\t) characters is rejected with an appropriate error message.",
+    "hint_texts": "Within the URLValidator class, introduce a new attribute (for example, 'unsafe_chars') that is a frozenset containing '\\t', '\\r', and '\\n'. Then, in the __call__ method, insert a check that determines whether the incoming URL contains any characters from this set. If it does, raise a ValidationError using the existing error message. This adjustment ensures the validator no longer silently strips these characters but actively rejects the URL as soon as unsafe input is detected.",
+    "entrypoint": "File: django/core/validators.py. Locate the URLValidator class and add the declaration 'unsafe_chars = frozenset('\\t\\r\\n')' near the top of the class. Modify the __call__ method (around the area where URL scheme checking happens) to perform an intersection check on the input value using 'self.unsafe_chars' and raise ValidationError if the check is positive.",
+    "tests": {
+      "FAIL_TO_PASS": "test_validators (validators.tests.TestValidators) for URLs containing '\\n', '\\r', or '\\t' must now raise a ValidationError.",
+      "PASS_TO_PASS": "Tests in validators.tests.DeprecationTests and validators.tests.TestValidatorEquality (which verify valid URL formats and equality) should continue to pass."
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2 problem statement - The behavior of URL handling has been affected by the bpo-43882 fix, leading to an inconsistency in how unsafe characters are managed. This feature focuses on ensuring that URLs incorporating forbidden characters such as newline, carriage return, and tab are consistently rejected. The objective is to align the system\u2019s overall behavior with strict security standards by enforcing the early rejection of any URL that contains these unsafe characters.",
+    "hint_texts": "Revise the existing test cases in tests/validators/tests.py so that they explicitly include scenarios where URLs contain '\\n', '\\r', and '\\t'. Modify or add entries within the test_validators function (or corresponding test grouping) to verify that a ValidationError is raised when an unsafe URL is provided. Make sure that tests originally designed for valid URLs remain unaffected by the changes.",
+    "entrypoint": "File: tests/validators/tests.py. Update the test function (for example, test_validators) by adding or modifying test tuples to include URLs with unsafe characters (such as those ending with '\\n', '\\r', or containing '\\t') that are expected to trigger a ValidationError.",
+    "tests": {
+      "FAIL_TO_PASS": "test_validators (validators.tests.TestValidators) where URLs with unsafe characters (newline, carriage return, tab) were previously accepted should now correctly raise a ValidationError.",
+      "PASS_TO_PASS": "Tests including test_domain_whitelist, test_domain_whitelist_access_warning, test_domain_whitelist_set_warning, test_whitelist, test_whitelist_warning, test_basic_equality, test_decimal_equality, test_email_equality, test_file_extension_equality, test_prohibit_null_characters_validator_equality, test_regex_equality, test_regex_equality_blank, test_regex_equality_nocache, test_max_length_validator_message, test_message_dict, test_message_list, test_regex_validator_flags, and test_single_message should continue to pass."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the URLValidator class in django/core/validators.py and the test suite file tests/validators/tests.py.",
+    "integration_strategy": "Feature1 implements the core logic by adding a check for unsafe characters in URLValidator, while Feature2 updates the surrounding test cases to validate this new behavior. Integration must ensure that the set of forbidden characters and the corresponding ValidationError remain consistent between the validation logic and its tests.",
+    "communication_needs": "Developers working on Feature1 and Feature2 must coordinate to agree on the set of unsafe characters and the expected error message. They should discuss integration testing strategies to verify that any changes in the URLValidator are fully mirrored by updates in the test suite, covering all potential edge cases."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_validators (validators.tests.TestValidators)\"]",
+    "PASS_TO_PASS": "[\"test_domain_whitelist (validators.tests.DeprecationTests)\", \"test_domain_whitelist_access_warning (validators.tests.DeprecationTests)\", \"test_domain_whitelist_set_warning (validators.tests.DeprecationTests)\", \"test_whitelist (validators.tests.DeprecationTests)\", \"test_whitelist_warning (validators.tests.DeprecationTests)\", \"test_basic_equality (validators.tests.TestValidatorEquality)\", \"test_decimal_equality (validators.tests.TestValidatorEquality)\", \"test_email_equality (validators.tests.TestValidatorEquality)\", \"test_file_extension_equality (validators.tests.TestValidatorEquality)\", \"test_prohibit_null_characters_validator_equality (validators.tests.TestValidatorEquality)\", \"test_regex_equality (validators.tests.TestValidatorEquality)\", \"test_regex_equality_blank (validators.tests.TestValidatorEquality)\", \"test_regex_equality_nocache (validators.tests.TestValidatorEquality)\", \"test_max_length_validator_message (validators.tests.TestValidators)\", \"test_message_dict (validators.tests.TestValidators)\", \"test_message_list (validators.tests.TestValidators)\", \"test_regex_validator_flags (validators.tests.TestValidators)\", \"test_single_message (validators.tests.TestValidators)\"]"
+  }
+}

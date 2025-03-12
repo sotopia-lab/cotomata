@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8035",
+  "base_commit": "5e6da19f0e44a0ae83944fb6ce18f18f781e1a6e",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Currently, if I'm using autodoc, the `:private-members:` option does not allow specifying which private members to document. The current behavior is to document all private members, even when only a few are desired. This limitation impacts the ability to customize documentation outputs and forces users to accept unwanted details. A change is needed to improve how autodoc internally handles private members so that it can eventually support more selective control.",
+    "hint_texts": "This part involves deprecating the old merge_special_members_option function and introducing a new merge_members_option function to consolidate member option merging. Developers should refactor the code so that the new function is called consistently in place of the deprecated one. The focus is on internal code maintenance to prepare the codebase for more granular control of member options.",
+    "entrypoint": "sphinx/ext/autodoc/__init__.py: Replace merge_special_members_option (around lines 125-138) with merge_members_option and update its calls in ModuleDocumenter and ClassDocumenter (notably around lines 859 and 1287).",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "tests/test_ext_autodoc_private_members.py::test_private_field, tests/test_ext_autodoc_private_members.py::test_private_field_and_private_members"
+    }
+  },
+  "feature2": {
+    "prompt": "Support defining specific `:private-members:` for autodoc by allowing the `:private-members:` option to take arguments in a way similar to the `:members:` option. This enhancement will let users specify which private members should be documented rather than having all private members auto-documented. It provides a method to fine-tune documentation outputs to include only the desired private members. Adopting this solution will eliminate the need to manually work around the default behavior using alternatives like `:autoattribute:`.",
+    "hint_texts": "This part implements the enhancement that enables the :private-members: option to accept explicit member names. It requires modifying the conditional logic in the code (especially in is_filtered_inherited_member) so that when arguments are provided for private-members, only those members are documented. Developers should ensure that the updated behavior is isolated and testable via a dedicated test case demonstrating selective documentation.",
+    "entrypoint": "sphinx/ext/autodoc/__init__.py: Update the option mapping for 'private-members' to use members_option rather than bool_option, and modify the logic in is_filtered_inherited_member to verify explicit member names. Also, check that ClassDocumenter and ModuleDocumenter properly process the revised private-members option.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_ext_autodoc_private_members.py::test_private_members",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/ext/autodoc/__init__.py is the central file where the options dictionary and member merging logic are defined; both features modify how member options (especially private-members) are handled.",
+    "integration_strategy": "Feature1 provides the underlying refactored API by replacing the deprecated merge_special_members_option with merge_members_option. Feature2 builds on this by updating the logic for processing the :private-members: option using the new API. Both parts must work together to ensure that the autodoc extension handles member options consistently.",
+    "communication_needs": "Developers working on each feature need to coordinate on the design of merge_members_option and the modifications in is_filtered_inherited_member. They should discuss how the options dictionary is structured and ensure that deprecation warnings and new behaviors are aligned for full integration of the feature."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_members\"]",
+    "PASS_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_field\", \"tests/test_ext_autodoc_private_members.py::test_private_field_and_private_members\"]"
+  }
+}

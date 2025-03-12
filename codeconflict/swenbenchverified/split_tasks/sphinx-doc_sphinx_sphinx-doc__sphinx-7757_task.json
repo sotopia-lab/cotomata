@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-7757",
+  "base_commit": "212fd67b9f0b4fae6a7c3501fdf1a9a5b2801329",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Currently, when building documentation for functions with positional-only arguments using syntax such as '.. py:function:: foo(a, b=0, /, c=1)', the generated output does not correctly represent the characteristics of positional-only parameters. This indicates that the parsing of the function signature is not properly recognizing these arguments. The expected behavior is that all arguments are correctly classified so that parameters meant to be positional-only are identified (for example, the parameter 'b' should be marked as positional-only). Addressing the structural handling of positional-only arguments will help ensure that the overall signature is processed as intended.",
+    "hint_texts": "Handle the recognition and processing of positional-only arguments by checking for the existence of the 'posonlyargs' attribute. Adjust the logic that constructs the parameters list by correctly counting and categorizing positional-only versus positional-or-keyword arguments. Focus on isolating the code responsible for distinguishing these argument types so that the parameter kinds (e.g., POSITIONAL_ONLY) are set appropriately.",
+    "entrypoint": "sphinx/util/inspect.py: function signature_from_str. Developers should concentrate on the code section that examines 'args' for a 'posonlyargs' attribute and builds the 'params' list accordingly.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_util_inspect.py::test_signature_from_str_positionaly_only_args (structural aspects: checking parameter names and kinds)",
+      "PASS_TO_PASS": "tests/test_util_inspect.py::test_signature, tests/test_util_inspect.py::test_signature_partial, tests/test_util_inspect.py::test_signature_methods, tests/test_util_inspect.py::test_signature_partialmethod, tests/test_util_inspect.py::test_signature_from_str_basic, tests/test_util_inspect.py::test_signature_from_str_kwonly_args"
+    }
+  },
+  "feature2": {
+    "prompt": "The documentation for functions with positional-only arguments, for instance '.. py:function:: foo(a, b=0, /, c=1)', is missing the display of default values for these parameters. This suggests that the assignment and parsing of default values for positional-only arguments is not functioning as expected. The expected outcome is that default values, such as the default of '0' for the positional-only parameter, are properly preserved and shown in the output. Correcting the logic related to default value assignment will resolve the disappearing default value issue.",
+    "hint_texts": "Focus on the handling of default values for positional-only parameters. Update the logic where default values are inserted into the defaults list and ensure that the defaults for arguments obtained from 'posonlyargs' are correctly processed using the AST unparse mechanism. Pay close attention to the relationship between the count of positional-only arguments and the insertion of default values so that they are accurately aligned.",
+    "entrypoint": "sphinx/util/inspect.py: function signature_from_str. Developers should modify the section dealing with insertion and processing of default values, particularly in the context of positional-only arguments extracted via 'args.posonlyargs'.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_util_inspect.py::test_signature_from_str_positionaly_only_args (default value aspects: verifying that defaults are correctly assigned)",
+      "PASS_TO_PASS": "tests/test_util_inspect.py::test_signature_from_str_default_values"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/util/inspect.py (specifically the signature_from_str function) and its associated data structures for argument defaults and positional-only arguments.",
+    "integration_strategy": "Both features modify the same function and must integrate their changes: feature1 ensures proper classification of argument kinds while feature2 guarantees that default values are properly assigned and displayed. Integrated testing using the full suite is necessary to confirm that the signature is correctly processed overall.",
+    "communication_needs": "Developers working on each feature need to coordinate on the ordering and processing of arguments and defaults. Regular discussions are recommended to ensure that modifications in one area do not adversely affect the other and that the shared function logic remains consistent."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_util_inspect.py::test_signature_from_str_positionaly_only_args\"]",
+    "PASS_TO_PASS": "[\"tests/test_util_inspect.py::test_signature\", \"tests/test_util_inspect.py::test_signature_partial\", \"tests/test_util_inspect.py::test_signature_methods\", \"tests/test_util_inspect.py::test_signature_partialmethod\", \"tests/test_util_inspect.py::test_signature_annotations\", \"tests/test_util_inspect.py::test_signature_annotations_py38\", \"tests/test_util_inspect.py::test_signature_from_str_basic\", \"tests/test_util_inspect.py::test_signature_from_str_default_values\", \"tests/test_util_inspect.py::test_signature_from_str_annotations\", \"tests/test_util_inspect.py::test_signature_from_str_complex_annotations\", \"tests/test_util_inspect.py::test_signature_from_str_kwonly_args\", \"tests/test_util_inspect.py::test_signature_from_str_invalid\", \"tests/test_util_inspect.py::test_safe_getattr_with_default\", \"tests/test_util_inspect.py::test_safe_getattr_with_exception\", \"tests/test_util_inspect.py::test_safe_getattr_with_property_exception\", \"tests/test_util_inspect.py::test_safe_getattr_with___dict___override\", \"tests/test_util_inspect.py::test_dictionary_sorting\", \"tests/test_util_inspect.py::test_set_sorting\", \"tests/test_util_inspect.py::test_set_sorting_fallback\", \"tests/test_util_inspect.py::test_frozenset_sorting\", \"tests/test_util_inspect.py::test_frozenset_sorting_fallback\", \"tests/test_util_inspect.py::test_dict_customtype\", \"tests/test_util_inspect.py::test_isclassmethod\", \"tests/test_util_inspect.py::test_isstaticmethod\", \"tests/test_util_inspect.py::test_iscoroutinefunction\", \"tests/test_util_inspect.py::test_isfunction\", \"tests/test_util_inspect.py::test_isbuiltin\", \"tests/test_util_inspect.py::test_isdescriptor\", \"tests/test_util_inspect.py::test_isattributedescriptor\", \"tests/test_util_inspect.py::test_isproperty\", \"tests/test_util_inspect.py::test_unpartial\", \"tests/test_util_inspect.py::test_getdoc_inherited_decorated_method\", \"tests/test_util_inspect.py::test_is_builtin_class_method\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-11510",
+  "base_commit": "6cb783c0024a873722952a67ebb9f41771c8eb6d",
+  "difficulty": "1-4 hours",
+  "feature1": {
+    "prompt": "The source-read event does not modify include'd files source. In the Yocto documentation project a custom extension is used to perform search and replace within literal blocks; however, the modifications do not appear in include'd files. Although the source-read event is fired for include'd files, its modifications are not carried over to the final HTML output. The expected behavior is that when the source-read event processes include'd files, any substitutions (such as replacing '&REPLACE_ME;' with 'REPLACED') are fully applied so that the generated HTML reflects the change.",
+    "hint_texts": "This feature focuses on the core functionality change. You will need to modify the Include directive in sphinx/directives/other.py so that it properly emits the 'source-read' event. The implementation must patch the StateMachine.insert_input method by combining the include file\u2019s lines into a single text string, emitting the event with a reference to the current document, and then reassembling the lines (while preserving the two marker lines at the end). Only perform the patch when there are listeners for 'source-read'.",
+    "entrypoint": "File: sphinx/directives/other.py. Focus on the run() method of the Include class. Insert the custom _insert_input function that wraps the original StateMachine.insert_input method. Use the os_path helper to resolve the document name and ensure the event is emitted with the correct document and modifiable text.",
+    "tests": {
+      "FAIL_TO_PASS": "None - manual verification of emitted 'source-read' events for include'd files is required.",
+      "PASS_TO_PASS": "tests/test_directive_other.py::test_toctree, tests/test_directive_other.py::test_relative_toctree, tests/test_directive_other.py::test_toctree_urls_and_titles, tests/test_directive_other.py::test_toctree_glob, tests/test_directive_other.py::test_toctree_glob_and_url, tests/test_directive_other.py::test_reversed_toctree, tests/test_directive_other.py::test_toctree_twice"
+    }
+  },
+  "feature2": {
+    "prompt": "The source-read event does not modify include'd files source. In the Yocto documentation project, the issue arises from the custom extension\u2019s inability to affect the content of include'd files. The final HTML output does not reflect the necessary substitutions in these files even though the event is triggered. The solution should ensure that all include'd content\u2014including nested includes\u2014is processed so that expected modifications (for example, replacing '&REPLACE_ME;' with 'REPLACED') are visible in the final build output.",
+    "hint_texts": "This feature is dedicated to validating the new behavior via automated tests. It involves the addition of test cases that verify the modifications introduced in the Include directive. The tests should confirm that the 'source-read' event is correctly fired and that any text changes (such as search and replace operations) are applied to include'd files. Special attention is required for nested includes and ensuring that literal inclusions do not trigger unintended processing.",
+    "entrypoint": "Look into the test suite files: tests/test_directive_other.py and the accompanying test documents in tests/roots/test-directive-include/. New automated tests need to be added to validate that the modified Include directive emits and processes the 'source-read' event correctly for both single and nested include scenarios.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_directive_other.py::test_include_source_read_event, tests/test_directive_other.py::test_include_source_read_event_nested_includes",
+      "PASS_TO_PASS": "tests/test_directive_other.py::test_toctree, tests/test_directive_other.py::test_relative_toctree, tests/test_directive_other.py::test_toctree_urls_and_titles, tests/test_directive_other.py::test_toctree_glob, tests/test_directive_other.py::test_toctree_glob_and_url, tests/test_directive_other.py::test_reversed_toctree, tests/test_directive_other.py::test_toctree_twice"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features rely on the Sphinx environment, particularly the app's event system (env.app.events) and the docutils StateMachine. The Include directive in sphinx/directives/other.py is the shared component that must work with the custom event emission and test validations.",
+    "integration_strategy": "Feature1 must expose the correct behavior by patching and emitting the 'source-read' event. Feature2, containing new automated tests, will validate that the modifications work as expected. Both features need to agree on the mechanism of combining and re-splitting the include file content (preserving marker lines) and the event payload structure.",
+    "communication_needs": "Developers working on the core changes (Feature1) need to coordinate with those adding tests (Feature2) to ensure that any changes in the event handling logic are reflected in the tests. Regular updates and mutual code reviews are recommended to confirm that the interface for the 'source-read' event remains consistent and that the test cases accurately capture the intended behavior."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_directive_other.py::test_include_source_read_event\", \"tests/test_directive_other.py::test_include_source_read_event_nested_includes\"]",
+    "PASS_TO_PASS": "[\"tests/test_directive_other.py::test_toctree\", \"tests/test_directive_other.py::test_relative_toctree\", \"tests/test_directive_other.py::test_toctree_urls_and_titles\", \"tests/test_directive_other.py::test_toctree_glob\", \"tests/test_directive_other.py::test_toctree_glob_and_url\", \"tests/test_directive_other.py::test_reversed_toctree\", \"tests/test_directive_other.py::test_toctree_twice\"]"
+  }
+}

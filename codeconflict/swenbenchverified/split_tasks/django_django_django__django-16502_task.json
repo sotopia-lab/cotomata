@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-16502",
+  "base_commit": "246eb4836a6fb967880f838aa0d22ecfdca8b6f1",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "After #26052, the Django development server (runserver) incorrectly returns a response body for HTTP HEAD requests. For compliance with RFC 2616, response bodies must not be returned for HEAD requests. This problem causes issues such as broken pipe errors because user agents expect to close the connection after receiving headers only. The fix must update the server\u2019s logic so that when a HEAD request is received, only the headers are sent and any body content is suppressed.",
+    "hint_texts": "This feature involves modifying the core response handling logic in the server. Focus on the finish_response and cleanup_headers methods in django/core/servers/basehttp.py. The implementation should detect when the request method is HEAD and then prevent any response body from being processed (for example, by consuming the result iterator without transmitting its content). Also, adjust header management by removing the Content-Length header when necessary and ensuring that the connection details are set properly.",
+    "entrypoint": "File: django/core/servers/basehttp.py; Methods: finish_response and cleanup_headers. Start by reviewing the existing header cleanup logic and the response finishing code, then introduce conditional handling for HEAD requests.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_https (servers.test_basehttp.WSGIRequestHandlerTestCase.test_https), test_log_message (servers.test_basehttp.WSGIRequestHandlerTestCase.test_log_message), WSGIRequestHandler ignores headers containing underscores, WSGIServer handles broken pipe errors"
+    }
+  },
+  "feature2": {
+    "prompt": "The Django development server must be verified to ensure that it does not return a response body for HTTP HEAD requests. The current behavior \u2014 sending a body with HEAD responses \u2014 leads to non-compliance with RFC 2616 and can trigger errors such as broken pipe messages. Ensuring that only header information is returned for HEAD requests is essential for proper server function and standards compliance. This feature focuses on validating that HEAD requests yield no response body while still sending the required headers.",
+    "hint_texts": "This feature is about adding a new test case to validate the HEAD request behavior of the server. Implement a test that differentiates between GET and HEAD requests by asserting that GET requests return the full response while HEAD requests return only headers without a body. The test should simulate a HEAD request in a controlled environment and check for the absence of a response body along with proper header management in accordance with RFC 2616.",
+    "entrypoint": "File: tests/servers/test_basehttp.py; add a new test function that sends a HEAD request to the server and asserts that no body is returned while verifying the expected headers. This test will serve as a regression check for the changes implemented in the server code.",
+    "tests": {
+      "FAIL_TO_PASS": "test_no_body_returned_for_head_requests (servers.test_basehttp.WSGIRequestHandlerTestCase.test_no_body_returned_for_head_requests)",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with django/core/servers/basehttp.py and tests/servers/test_basehttp.py, sharing the WSGIRequestHandler and header management components.",
+    "integration_strategy": "Feature1 implements the logic changes needed to correctly handle HTTP HEAD requests, and Feature2 provides a test to verify these changes. The two components must work in tandem: the modifications for header cleanup and response finishing in Feature1 must be validated by the new test case in Feature2 to ensure no response body is sent during HEAD requests.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate to agree on the expected behavior of HEAD requests. They need to discuss how the handling of the Content-Length header and the suppression of the response body is implemented, and verify that the test in Feature2 accurately reflects real-world usage. Regular integration reviews or discussions will help reconcile any discrepancies between the server logic and its verification."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_no_body_returned_for_head_requests (servers.test_basehttp.WSGIRequestHandlerTestCase.test_no_body_returned_for_head_requests)\"]",
+    "PASS_TO_PASS": "[\"test_https (servers.test_basehttp.WSGIRequestHandlerTestCase.test_https)\", \"test_log_message (servers.test_basehttp.WSGIRequestHandlerTestCase.test_log_message)\", \"WSGIRequestHandler ignores headers containing underscores.\", \"WSGIServer handles broken pipe errors.\"]"
+  }
+}

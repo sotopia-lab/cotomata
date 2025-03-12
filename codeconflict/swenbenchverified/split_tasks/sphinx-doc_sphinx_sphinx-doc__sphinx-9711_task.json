@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-9711",
+  "base_commit": "81a4fd973d4cfcb25d01a7b0be62cdb28f82406d",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "needs_extensions checks versions using strings\n\nDescribe the bug:\n\nThe `needs_extensions` check is handy for verifying minimum extension versions, but it only checks versions in a 'string-like' manner. This means any version >9 is not allowed for any check of something >1. That is, treated as string '0.6' > '0.10', but treated as versions '0.6' < '0.10'. Since Sphinx does the former, some extension versions may not be allowed when they should be.\n\nHow to Reproduce:\n\n$ git clone https://github.com/anntzer/mplcursors\n$ cd mplcursors\n$ pip install -r .doc-requirements.txt\n$ pip install -e .\n$ make -C doc html\n\nAfter updating sphinx-gallery to 0.10, the build fails with the error:\n\nRunning Sphinx v4.1.2\n...\nSphinx version error:\nThis project needs the extension sphinx_gallery.gen_gallery at least in version 0.6.0 and therefore cannot be built with the loaded version (0.10.0).\n\nExpected behavior:\n\nsphinx-gallery 0.10.0 should be accepted if 0.6 is the minimum specified.\n\nEnvironment:\n- OS: Fedora\n- Python: 3.9.6\n- Sphinx: 4.1.2",
+    "hint_texts": "Implement the version comparison logic using the 'packaging.version' module. Update the verify_needs_extensions function so that it converts version strings to Version objects for a proper numerical comparison. Handle special cases like 'unknown version' and use a try-except block to catch InvalidVersion exceptions. Replace the previous string-based comparison with this new approach.",
+    "entrypoint": "File: sphinx/extension.py. Modify the verify_needs_extensions function by adding an import for 'packaging.version' and updating the code block that compares version strings (around line 51) to use the Version class for numerical comparison.",
+    "tests": {
+      "FAIL_TO_PASS": "Manual verification: test the version comparison logic by invoking verify_needs_extensions with various version strings (e.g., comparing '0.6' to '0.10') to ensure correct behavior.",
+      "PASS_TO_PASS": "No automated tests are provided for this part; manual tests should confirm that correct version comparisons occur."
+    }
+  },
+  "feature2": {
+    "prompt": "needs_extensions checks versions using strings\n\nDescribe the bug:\n\nThe `needs_extensions` check is handy for verifying minimum extension versions, but it only checks versions in a 'string-like' manner. This means any version >9 is not allowed for any check of something >1. That is, treated as string '0.6' > '0.10', but treated as versions '0.6' < '0.10'. Since Sphinx does the former, some extension versions may not be allowed when they should be.\n\nHow to Reproduce:\n\n$ git clone https://github.com/anntzer/mplcursors\n$ cd mplcursors\n$ pip install -r .doc-requirements.txt\n$ pip install -e .\n$ make -C doc html\n\nAfter updating sphinx-gallery to 0.10, the build fails with the error:\n\nRunning Sphinx v4.1.2\n...\nSphinx version error:\nThis project needs the extension sphinx_gallery.gen_gallery at least in version 0.6.0 and therefore cannot be built with the loaded version (0.10.0).\n\nExpected behavior:\n\nsphinx-gallery 0.10.0 should be accepted if 0.6 is the minimum specified.\n\nEnvironment:\n- OS: Fedora\n- Python: 3.9.6\n- Sphinx: 4.1.2",
+    "hint_texts": "Develop automated tests to verify the new version comparison logic. Create tests that simulate both scenarios where the version requirement is met and where it is not. Use pytest to write a test function (e.g., test_needs_extensions) in the tests/test_extension.py file that imports verify_needs_extensions and checks for proper exception raising when the requirement is not fulfilled.",
+    "entrypoint": "File: tests/test_extension.py. Create a new test file that includes at least one test function (such as test_needs_extensions) to cover multiple scenarios of version comparisons using the verify_needs_extensions function from sphinx/extension.py.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_extension.py::test_needs_extensions",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/extension.py (for the version comparison logic) and tests/test_extension.py (for automated testing).",
+    "integration_strategy": "Feature1 implements the core change by updating the verify_needs_extensions logic, while Feature2 provides automated tests to validate this functionality. Both features must ensure that the interface and error messaging are consistent so that the tests in Feature2 can effectively verify the changes made in Feature1.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate on the desired behavior for version comparisons, especially regarding edge cases like 'unknown version' and exceptions. Regular communication is required to align on expected outputs and to update tests if further modifications to the core logic are needed."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_extension.py::test_needs_extensions\"]",
+    "PASS_TO_PASS": "[]"
+  }
+}
