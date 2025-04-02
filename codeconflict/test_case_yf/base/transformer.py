@@ -1,5 +1,3 @@
-# Original Code Base - transformer_model.py
-
 import torch
 import torch.nn as nn
 import math
@@ -128,6 +126,8 @@ class TransformerModel(nn.Module):
         
     def train_model(self, dataloader, optimizer, criterion, epochs):
         self.train()
+        losses = []
+        
         for epoch in range(epochs):
             total_loss = 0
             for batch in dataloader:
@@ -142,9 +142,7 @@ class TransformerModel(nn.Module):
                 loss.backward()
                 optimizer.step()
                 
+                losses.append(loss.item())
                 total_loss += loss.item()
-                
-            avg_loss = total_loss / len(dataloader)
-            return avg_loss
-            
-            # print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
+        
+        return losses
