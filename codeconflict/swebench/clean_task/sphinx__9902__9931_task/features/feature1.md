@@ -1,0 +1,1 @@
+Allow cross-reference specifiers in type annotations by supporting special prefix syntax in type references, specifically allowing ".Type" for module-relative references and "~module.Type" to display only the class name while linking to the fully qualified path.

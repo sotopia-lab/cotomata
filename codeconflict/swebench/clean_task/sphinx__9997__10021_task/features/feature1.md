@@ -1,0 +1,1 @@
+Add support for creating cross-references for parametrized types from typing module (like List[str], Optional[int], etc.), ensuring they link correctly in documentation.

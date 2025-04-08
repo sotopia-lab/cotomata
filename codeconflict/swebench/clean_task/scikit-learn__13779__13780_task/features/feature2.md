@@ -1,0 +1,1 @@
+Allow 'drop' as an alternative to None when setting an estimator to be excluded from the VotingClassifier.

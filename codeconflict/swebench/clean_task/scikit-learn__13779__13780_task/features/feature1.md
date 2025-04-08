@@ -1,0 +1,1 @@
+Allow VotingClassifier to fit with sample weights even when one of the estimators is set to None.

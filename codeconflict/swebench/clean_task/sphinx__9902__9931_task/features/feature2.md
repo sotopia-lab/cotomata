@@ -1,0 +1,1 @@
+Add the ability to suppress module name prefixes in type annotations using a configuration option (unqualified_typehints), to show cleaner type signatures without fully qualified paths.
