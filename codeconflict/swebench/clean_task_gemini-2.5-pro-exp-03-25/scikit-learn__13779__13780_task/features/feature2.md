@@ -1,0 +1,1 @@
+Allow disabling processors using the string `'drop'` in addition to `None`.

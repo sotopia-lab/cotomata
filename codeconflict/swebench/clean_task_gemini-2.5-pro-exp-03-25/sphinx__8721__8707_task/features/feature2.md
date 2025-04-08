@@ -1,0 +1,1 @@
+Do not generate output for the 'singlehtml' builder, and refactor support checks.

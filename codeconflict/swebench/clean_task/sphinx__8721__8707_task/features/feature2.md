@@ -1,1 +1,0 @@
-Ensure source code links work correctly when building multiple documentation formats sequentially (like `make singlehtml html`) by using a dedicated anchor node that persists between builds.

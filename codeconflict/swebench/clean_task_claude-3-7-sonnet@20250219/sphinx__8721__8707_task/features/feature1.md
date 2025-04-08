@@ -1,0 +1,1 @@
+Feature 1: Make viewcode module pages generate for EPUB format only when explicitly enabled via configuration (viewcode_enable_epub=True).

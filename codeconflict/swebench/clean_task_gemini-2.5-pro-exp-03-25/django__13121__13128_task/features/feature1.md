@@ -1,0 +1,1 @@
+Add support for adding two `Duration` objects together using the `Calculator.add` method.

@@ -1,0 +1,1 @@
+Allow cross-reference specifier in type options by supporting prefixes (. and ~) in type targets to control reference behavior and display.

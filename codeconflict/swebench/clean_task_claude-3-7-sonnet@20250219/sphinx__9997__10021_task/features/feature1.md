@@ -1,0 +1,1 @@
+Feature 1: Create links for parametrized types from the typing module by treating them as object references instead of class references.

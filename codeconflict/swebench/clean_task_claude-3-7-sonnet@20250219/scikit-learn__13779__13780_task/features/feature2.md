@@ -1,0 +1,1 @@
+Add support for using 'drop' as an alternative to None to disable estimators in Voting ensembles, maintaining consistency in the API.

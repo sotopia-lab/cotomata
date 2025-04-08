@@ -1,1 +1,0 @@
-Add option to display type hints in unqualified short format (e.g., "List" instead of "typing.List") when autodoc_unqualified_typehints is enabled.

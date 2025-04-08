@@ -1,0 +1,1 @@
+Feature 2: Fix viewcode functionality when building multiple formats in sequence (e.g., singlehtml then html) by ensuring source links are properly handled regardless of builder order.

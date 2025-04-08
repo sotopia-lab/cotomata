@@ -1,0 +1,1 @@
+Wrap socket.error exceptions in a ConnectionError to provide consistent error handling for network failures in the Response.iter_content method.

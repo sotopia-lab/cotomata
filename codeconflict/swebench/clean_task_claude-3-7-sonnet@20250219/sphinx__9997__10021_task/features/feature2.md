@@ -1,0 +1,1 @@
+Feature 2: Support unqualified type hints in documentation descriptions when autodoc_unqualified_typehints option is enabled.

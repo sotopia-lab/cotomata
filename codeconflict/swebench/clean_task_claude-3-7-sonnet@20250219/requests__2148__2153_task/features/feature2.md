@@ -1,0 +1,1 @@
+Update exception handling in iter_content to align with urllib3 changes by catching ReadTimeoutError and ProtocolError from urllib3 instead of using lower-level socket exceptions.

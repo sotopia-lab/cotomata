@@ -1,0 +1,1 @@
+Display types from the `typing` module without the `typing.` prefix.

@@ -1,0 +1,2 @@
+ext
+# No external dependencies needed for this simplified example

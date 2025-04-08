@@ -1,1 +1,0 @@
-Generate module source pages for epub builds only when explicitly enabled via the `viewcode_enable_epub` configuration option.

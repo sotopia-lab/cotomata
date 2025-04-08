@@ -1,0 +1,1 @@
+Allow fitting with sample weights in Voting estimators even when one of the estimators is set to None, by skipping the sample weight validation for None estimators.
