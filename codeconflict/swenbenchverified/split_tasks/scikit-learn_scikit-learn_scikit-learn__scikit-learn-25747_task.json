@@ -1,0 +1,33 @@
+{
+  "repo": "scikit-learn/scikit-learn",
+  "test_id": "scikit-learn/scikit-learn_scikit-learn__scikit-learn-25747",
+  "base_commit": "2c867b8f822eb7a684f0d5c4359e4426e1c9cfe0",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "FeatureUnion is not working when aggregating data using the pandas transform output. In this scenario, a custom transformer is used within a FeatureUnion, and while using the default numpy output everything works fine, switching to pandas output causes an error. The bug occurs because the underlying method that wraps the output data into a pandas container incorrectly sets the index when the data is already a DataFrame. For example, when the function attempts to update the index of an already existing DataFrame, it throws a ValueError: 'Length mismatch: Expected axis has 4 elements, new values have 96 elements'. The expected behavior is that no error should be thrown and the original DataFrame index should be preserved.",
+    "hint_texts": "This feature requires modifying the function that wraps output data into a pandas container. Specifically, update the _wrap_in_pandas_container function so that if data_to_wrap is already a DataFrame, any provided index is ignored and the existing index remains unchanged. Ensure that the change prevents overwriting the DataFrame's index, which is the cause of the length mismatch error, and that the code works correctly in a FeatureUnion scenario with a custom transformer.",
+    "entrypoint": "File: sklearn/utils/_set_output.py; Function: _wrap_in_pandas_container. Modify the code block where the index is assigned (previously lines 55-60) so that when data_to_wrap is a DataFrame, the index is not altered.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense, sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense_update_columns_and_index, sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_error_validation, sklearn/utils/tests/test_set_output.py::test__safe_set_output, sklearn/utils/tests/test_set_output.py::test_set_output_mixin, sklearn/utils/tests/test_set_output.py::test__safe_set_output_error, sklearn/utils/tests/test_set_output.py::test_set_output_method, sklearn/utils/tests/test_set_output.py::test_set_output_method_error, sklearn/utils/tests/test_set_output.py::test__get_output_config, sklearn/utils/tests/test_set_output.py::test_get_output_auto_wrap_false, sklearn/utils/tests/test_set_output.py::test_auto_wrap_output_keys_errors_with_incorrect_input, sklearn/utils/tests/test_set_output.py::test_set_output_mixin_custom_mixin, sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_column_errors, sklearn/utils/tests/test_set_output.py::test_set_output_mro"
+    }
+  },
+  "feature2": {
+    "prompt": "FeatureUnion is not working when aggregating data using the pandas transform output. A custom transformer used in the FeatureUnion causes an error when the pandas configuration is selected, even though using the default numpy output does not result in any issues. The error originates from the incorrect handling of the DataFrame index during the transformation, which leads to a mismatch between the expected and actual index length. The intended behavior is that no error should occur and the original DataFrame index must be maintained in the output.",
+    "hint_texts": "This feature focuses on validating the new behavior by adding a dedicated test case. Create a test that verifies the index of the output DataFrame remains unchanged when transform_output is set to 'pandas'. The test should simulate a scenario using a custom transformer inside a FeatureUnion, where the transform method produces a DataFrame and its original index must be preserved. This test will ensure that the fix implemented in feature1 performs as expected.",
+    "entrypoint": "File: sklearn/utils/tests/test_set_output.py; Add a new test function named test_set_output_pandas_keep_index that verifies the DataFrame index is not overridden when using the pandas transform output configuration.",
+    "tests": {
+      "FAIL_TO_PASS": "sklearn/utils/tests/test_set_output.py::test_set_output_pandas_keep_index",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the file sklearn/utils/_set_output.py (for the index handling fix) and the test file sklearn/utils/tests/test_set_output.py (for test validation).",
+    "integration_strategy": "Feature1 updates the core functionality to ensure the DataFrame's index is preserved by ignoring any externally provided index when data is already a DataFrame. Feature2 adds a test that explicitly verifies this behavior. Integration requires that the changes in feature1 are fully validated by the test introduced in feature2, ensuring the bug is resolved in a coordinated manner.",
+    "communication_needs": "Developers working on feature1 and feature2 must coordinate on the expected behavior for index handling. Discussions should focus on confirming that the test case in feature2 accurately reflects the desired functionality and edge cases, and that the changes in feature1 do not adversely affect other parts of the system."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"sklearn/utils/tests/test_set_output.py::test_set_output_pandas_keep_index\"]",
+    "PASS_TO_PASS": "[\"sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense\", \"sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_dense_update_columns_and_index\", \"sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_error_validation\", \"sklearn/utils/tests/test_set_output.py::test__safe_set_output\", \"sklearn/utils/tests/test_set_output.py::test_set_output_mixin\", \"sklearn/utils/tests/test_set_output.py::test__safe_set_output_error\", \"sklearn/utils/tests/test_set_output.py::test_set_output_method\", \"sklearn/utils/tests/test_set_output.py::test_set_output_method_error\", \"sklearn/utils/tests/test_set_output.py::test__get_output_config\", \"sklearn/utils/tests/test_set_output.py::test_get_output_auto_wrap_false\", \"sklearn/utils/tests/test_set_output.py::test_auto_wrap_output_keys_errors_with_incorrect_input\", \"sklearn/utils/tests/test_set_output.py::test_set_output_mixin_custom_mixin\", \"sklearn/utils/tests/test_set_output.py::test__wrap_in_pandas_container_column_errors\", \"sklearn/utils/tests/test_set_output.py::test_set_output_mro\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8548",
+  "base_commit": "dd1615c59dc6fff633e27dbb3861f2d27e1fb976",
+  "difficulty": "1-4 hours",
+  "feature1": {
+    "prompt": "autodoc inherited-members won't work for inherited attributes (data members). autodoc searches for a cached docstring using (namespace, attrname) as search-key, but doesn't check for baseclass-namespace.",
+    "hint_texts": "This feature involves a refactoring and code improvement effort. The task is to remove the legacy analyzer parameter from the get_class_members function and integrate the ModuleAnalyzer directly inside it. Implementation must introduce proper error handling (e.g. catching PycodeError) and ensure that the refactored logic preserves the existing behavior. The focus is on improving the internal structure so that future enhancements can rely on a cleaner API.",
+    "entrypoint": "Files to modify: sphinx/ext/autodoc/__init__.py (update the call to get_class_members in get_object_members) and sphinx/ext/autodoc/importer.py (modify the definition of get_class_members by removing the analyzer parameter and incorporating ModuleAnalyzer.for_module along with robust error handling).",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "[\"tests/test_ext_autodoc_autoclass.py::test_classes\", \"tests/test_ext_autodoc_autoclass.py::test_instance_variable\", \"tests/test_ext_autodoc_autoclass.py::test_decorators\", \"tests/test_ext_autodoc_autoclass.py::test_slots_attribute\", \"tests/test_ext_autodoc_autoclass.py::test_show_inheritance_for_subclass_of_generic_type\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "autodoc inherited-members won't work for inherited attributes (data members). autodoc searches for a cached docstring using (namespace, attrname) as search-key, but doesn't check for baseclass-namespace.",
+    "hint_texts": "This feature focuses on enhancing autodoc to support inherited attributes. The implementation should adjust the logic in get_class_members so that it checks for the baseclass namespace when retrieving cached docstrings, thereby properly documenting inherited instance variables. Developers must ensure that the function correctly retrieves attribute documentation from base classes by comparing the class\u2019s __qualname__ with the analyzer information. It is essential that this new behavior is introduced without breaking the existing autodoc functionality.",
+    "entrypoint": "File to modify: sphinx/ext/autodoc/importer.py, in the get_class_members function. Update the logic to use ModuleAnalyzer.for_module to retrieve documentation and then compare the analyzer\u2019s attr_docs against the class\u2019s __qualname__ rather than a simple namespace. Also, ensure that proper exception handling (e.g. handling PycodeError) is in place.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"tests/test_ext_autodoc_autoclass.py::test_inherited_instance_variable\"]",
+      "PASS_TO_PASS": "[\"tests/roots/test-ext-autodoc/target/instance_variable.py\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/ext/autodoc/importer.py's get_class_members function, sphinx/ext/autodoc/__init__.py, and the ModuleAnalyzer component from sphinx.pycode.",
+    "integration_strategy": "Feature1 must refactor get_class_members to expose a clean and robust interface, ensuring that the analyzer parameter is removed and ModuleAnalyzer is used internally. Feature2 then builds on this refactored function by adding logic to check for the baseclass namespace and retrieve inherited attribute documentation. Both teams need to agree on error handling and the API contract for get_class_members to avoid integration conflicts.",
+    "communication_needs": "Developers working on each feature should coordinate on the changes made to get_class_members, particularly regarding error handling and the use of ModuleAnalyzer. Regular updates and merge reviews are required to handle potential conflicts in sphinx/ext/autodoc/importer.py and to ensure that the refactored code supports the new inherited-members enhancement."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_ext_autodoc_autoclass.py::test_inherited_instance_variable\"]",
+    "PASS_TO_PASS": "[\"tests/test_ext_autodoc_autoclass.py::test_classes\", \"tests/test_ext_autodoc_autoclass.py::test_instance_variable\", \"tests/test_ext_autodoc_autoclass.py::test_decorators\", \"tests/test_ext_autodoc_autoclass.py::test_slots_attribute\", \"tests/test_ext_autodoc_autoclass.py::test_show_inheritance_for_subclass_of_generic_type\"]"
+  }
+}

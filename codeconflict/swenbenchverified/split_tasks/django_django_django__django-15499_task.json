@@ -1,0 +1,73 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-15499",
+  "base_commit": "d90e34c61b27fba2527834806639eebbcfab9631",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Optimize CreateModel + AlterModelManagers to CreateModel. During migration optimization, CreateModel + AlterModelOptions is reduced to just CreateModel with the model options. Similarly, CreateModel + AlterModelManagers should be consolidated into a single CreateModel operation that incorporates the managers configuration. This enhancement simplifies the migration operations and improves efficiency by reducing the number of discrete operations.",
+    "hint_texts": "Implement the optimization logic in django/db/migrations/operations/models.py. Update the reduce method to detect when an AlterModelManagers operation follows a CreateModel for the same model and merge the managers into the CreateModel operation. Use the provided diff as guidance, and insert a new branch (around line 170) that checks for an instance of AlterModelManagers and returns a consolidated CreateModel operation.",
+    "entrypoint": "File: django/db/migrations/operations/models.py; focus on the reduce method and add a new conditional branch for AlterModelManagers. The starting point is near the existing branch for AlterModelOptions.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "AlterField should optimize into AddField.",
+        "RemoveField should cancel AddField",
+        "RenameField should optimize into AddField",
+        "test_alter_alter_index_model (migrations.test_optimizer.OptimizerTests)",
+        "test_alter_alter_owrt_model (migrations.test_optimizer.OptimizerTests)",
+        "test_alter_alter_table_model (migrations.test_optimizer.OptimizerTests)",
+        "test_alter_alter_unique_model (migrations.test_optimizer.OptimizerTests)",
+        "RemoveField should absorb AlterField",
+        "RenameField should optimize to the other side of AlterField,",
+        "test_create_alter_index_delete_model (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_index_field (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_model_options (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_owrt_delete_model (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_owrt_field (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_unique_delete_model (migrations.test_optimizer.OptimizerTests)",
+        "test_create_alter_unique_field (migrations.test_optimizer.OptimizerTests)",
+        "CreateModel and DeleteModel should collapse into nothing.",
+        "AddField should optimize into CreateModel.",
+        "AddField should NOT optimize into CreateModel if it's an M2M using a",
+        "AlterField should optimize into CreateModel.",
+        "test_create_model_and_remove_model_options (migrations.test_optimizer.OptimizerTests)",
+        "CreateModel order remains unchanged if the later AddField operation",
+        "A CreateModel that inherits from another isn't reordered to avoid",
+        "RemoveField should optimize into CreateModel.",
+        "RenameField should optimize into CreateModel.",
+        "AddField optimizes into CreateModel if it's a FK to a model that's",
+        "CreateModel reordering behavior doesn't result in an infinite loop if",
+        "CreateModel should absorb RenameModels.",
+        "test_none_app_label (migrations.test_optimizer.OptimizerTests)",
+        "test_optimize_elidable_operation (migrations.test_optimizer.OptimizerTests)",
+        "We should be able to optimize away create/delete through a create or",
+        "field-level through checking is working. This should manage to collapse",
+        "RenameModels should absorb themselves.",
+        "The optimizer does nothing on a single operation,",
+        "test_swapping_fields_names (migrations.test_optimizer.OptimizerTests)"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Optimize CreateModel + AlterModelManagers to CreateModel. The migration process should be enhanced so that when a CreateModel operation is immediately followed by an AlterModelManagers operation, they merge into a single CreateModel operation that includes the managers configuration. This feature focuses on ensuring that the revised behavior correctly consolidates the two operations. The expected result is a single CreateModel operation that contains all the appropriate model managers, simplifying the migration sequence.",
+    "hint_texts": "Develop a new verification routine in the migration optimizer tests to simulate a scenario where a CreateModel is followed by an AlterModelManagers operation. The verification should confirm that the optimizer successfully merges these operations into one CreateModel operation that carries the managers. Ensure that the new test precisely captures and validates this behavior without affecting other migration optimizations.",
+    "entrypoint": "File: tests/migrations/test_optimizer.py; add a new test method dedicated to verifying that a sequence of CreateModel and AlterModelManagers operations is optimized into a single CreateModel operation with the managers included.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "test_create_alter_model_managers (migrations.test_optimizer.OptimizerTests)"
+      ],
+      "PASS_TO_PASS": [
+        "diff --git a/tests/migrations/test_optimizer.py b/tests/migrations/test_optimizer.py\\n--- a/tests/migrations/test_optimizer.py\\n+++ b/tests/migrations/test_optimizer.py\\n@@ -129,6 +129,30 @@ def test_create_alter_model_options(self):\\n             ],\\n         )\\n \\n+    def test_create_alter_model_managers(self):\\n+        self.assertOptimizesTo(\\n+            [\\n+                migrations.CreateModel(\"Foo\", fields=[]),\\n+                migrations.AlterModelManagers(\\n+                    name=\"Foo\",\\n+                    managers=[\\n+                        (\"objects\", models.Manager()),\\n+                        (\"things\", models.Manager()),\\n+                    ],\\n+                ),\\n+            ],\\n+            [\\n+                migrations.CreateModel(\\n+                    \"Foo\",\\n+                    fields=[],\\n+                    managers=[\\n+                        (\"objects\", models.Manager()),\\n+                        (\"things\", models.Manager()),\\n+                    ],\\n+                ),\\n+            ],\\n+        )\\n+\\n     def test_create_model_and_remove_model_options(self):\\n         self.assertOptimizesTo(\\n             ["
+      ]
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the migration optimization logic in django/db/migrations/operations/models.py and the test suite in tests/migrations/test_optimizer.py.",
+    "integration_strategy": "Feature1 implements the core optimization that merges CreateModel and AlterModelManagers into one operation, while Feature2 establishes the verification that this behavior is correctly executed. The integration requires that changes in Feature1 directly enable the new test in Feature2 to pass without regression.",
+    "communication_needs": "Developers working on Feature1 and Feature2 must coordinate the expected behavior of the merged operation. They should discuss the design of the new conditional branch in the optimizer and ensure that the new test case in the optimizer test suite accurately reflects the intended functionality."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_create_alter_model_managers (migrations.test_optimizer.OptimizerTests)\"]",
+    "PASS_TO_PASS": "[\"AlterField should optimize into AddField.\", \"RemoveField should cancel AddField\", \"RenameField should optimize into AddField\", \"test_alter_alter_index_model (migrations.test_optimizer.OptimizerTests)\", \"test_alter_alter_owrt_model (migrations.test_optimizer.OptimizerTests)\", \"test_alter_alter_table_model (migrations.test_optimizer.OptimizerTests)\", \"test_alter_alter_unique_model (migrations.test_optimizer.OptimizerTests)\", \"RemoveField should absorb AlterField\", \"RenameField should optimize to the other side of AlterField,\", \"test_create_alter_index_delete_model (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_index_field (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_model_options (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_owrt_delete_model (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_owrt_field (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_unique_delete_model (migrations.test_optimizer.OptimizerTests)\", \"test_create_alter_unique_field (migrations.test_optimizer.OptimizerTests)\", \"CreateModel and DeleteModel should collapse into nothing.\", \"AddField should optimize into CreateModel.\", \"AddField should NOT optimize into CreateModel if it's an M2M using a\", \"AlterField should optimize into CreateModel.\", \"test_create_model_and_remove_model_options (migrations.test_optimizer.OptimizerTests)\", \"CreateModel order remains unchanged if the later AddField operation\", \"A CreateModel that inherits from another isn't reordered to avoid\", \"RemoveField should optimize into CreateModel.\", \"RenameField should optimize into CreateModel.\", \"AddField optimizes into CreateModel if it's a FK to a model that's\", \"CreateModel reordering behavior doesn't result in an infinite loop if\", \"CreateModel should absorb RenameModels.\", \"test_none_app_label (migrations.test_optimizer.OptimizerTests)\", \"test_optimize_elidable_operation (migrations.test_optimizer.OptimizerTests)\", \"We should be able to optimize away create/delete through a create or\", \"field-level through checking is working. This should manage to collapse\", \"RenameModels should absorb themselves.\", \"The optimizer does nothing on a single operation,\", \"test_swapping_fields_names (migrations.test_optimizer.OptimizerTests)\"]"
+  }
+}

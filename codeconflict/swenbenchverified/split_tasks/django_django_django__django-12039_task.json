@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-12039",
+  "base_commit": "58c1acb1d6054dfec29d0f30b1033bae6ef62aec",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "When creating an index without opclasses, the generated SQL currently does not include the necessary whitespace between the column name and the ordering keyword. For example, an index defined with a descending field such as '-name' produces SQL like: CREATE INDEX \"idx\" ON \"schema_author\" (\"name\"DESC) instead of the expected: CREATE INDEX \"idx\" ON \"schema_author\" (\"name\" DESC). This feature requires that the SQL output is reformatted so that non\u2010empty suffixes (such as the ordering indicator) are appended with a preceding space when needed. The fix should ensure that standard index definitions, without the complications introduced by opclasses, generate cleaner, more readable SQL statements.",
+    "hint_texts": "Part 1 involves cleaning up the whitespace handling for index definitions that do not make use of opclasses. The implementation should check for a non-empty suffix in the __str__ method and, if present, prepend a space to the suffix before concatenation. Focus on the logic that builds the SQL string for columns, ensuring that fields like '-name' correctly result in properly formatted SQL with 'DESC' separated by a space. This part is self-contained and primarily affects the standard formatting without opclasses.",
+    "entrypoint": "File: django/db/backends/ddl_references.py. Modify the __str__ method of the Columns class, specifically the inner function (col_str) where self.quote_name(column) and self.col_suffixes[idx] are concatenated. Reference the diff around lines 83-93 as a starting point for adjustments.",
+    "tests": {
+      "FAIL_TO_PASS": "test_descending_columns_list_sql (indexes.tests.SchemaIndexesTests)",
+      "PASS_TO_PASS": "test_columns_list_sql (indexes.tests.SchemaIndexesTests)"
+    }
+  },
+  "feature2": {
+    "prompt": "When creating an index that uses opclasses, the generated SQL exhibits irregular whitespace handling. In the case where an opclass is specified for a column (for example, text_pattern_ops), the SQL formatting should not include an unwanted trailing space when no explicit ordering is given, while still correctly handling descending order with opclasses. The expected behavior is that for an opclass-based index, the column definition is formatted as: (\"name\" text_pattern_ops) for ascending order and as (\"name\" text_pattern_ops DESC) for descending order. This feature targets the SQL generation logic that handles opclasses, ensuring that the output is consistent and clean.",
+    "hint_texts": "Part 2 focuses on the formatting adjustments required when opclasses are involved in the index definition. The solution should modify the section of code that constructs the column string for opclass-based indexes, ensuring that the opclass and any associated column suffix (like ordering) are concatenated correctly with proper whitespace. Developers should adjust the logic so that a non-empty suffix is only appended with a preceding space, avoiding unnecessary spaces, especially for ascending order. This update will refine the SQL output when opclasses are used.",
+    "entrypoint": "File: django/db/backends/ddl_references.py. Modify the portion of the code (around lines 114-122) that handles the col_str construction when an opclass is present. The changes should involve checking self.col_suffixes[idx] and only appending it with a space if it is non-empty, ensuring the proper formation of SQL statements involving opclasses.",
+    "tests": {
+      "FAIL_TO_PASS": "test_ops_class_descending_columns_list_sql (indexes.tests.SchemaIndexesTests)",
+      "PASS_TO_PASS": "test_ops_class_columns_lists_sql (indexes.tests.SchemaIndexesTests)"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "The file django/db/backends/ddl_references.py, specifically the Columns class and its methods used for SQL generation, is a shared resource. Both features interact with the col_suffixes handling and overall formatting of index creation SQL.",
+    "integration_strategy": "Both features must integrate their changes so that the overall SQL generation logic is consistent across index types. A review and joint testing session should be scheduled to run the full suite of index creation tests to verify that changes in one area do not adversely affect the other. Ensure that the modifications in the __str__ method (Feature 1) and the opclasses formatting (Feature 2) converge seamlessly.",
+    "communication_needs": "Developers implementing each feature should coordinate regarding the handling of column suffixes and the concatenation logic. Regular discussions are encouraged to align on the formatting conventions and integration testing strategies, ensuring that both standard and opclass-based index creations adhere to the expected SQL formatting."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_descending_columns_list_sql (indexes.tests.SchemaIndexesTests)\"]",
+    "PASS_TO_PASS": "[\"test_columns_list_sql (indexes.tests.SchemaIndexesTests)\", \"test_index_name (indexes.tests.SchemaIndexesTests)\", \"test_index_name_hash (indexes.tests.SchemaIndexesTests)\", \"test_index_together (indexes.tests.SchemaIndexesTests)\", \"test_index_together_single_list (indexes.tests.SchemaIndexesTests)\", \"test_create_index_ignores_opclasses (indexes.tests.SchemaIndexesNotPostgreSQLTests)\", \"test_boolean_restriction_partial (indexes.tests.PartialIndexTests)\", \"test_integer_restriction_partial (indexes.tests.PartialIndexTests)\", \"test_is_null_condition (indexes.tests.PartialIndexTests)\", \"test_multiple_conditions (indexes.tests.PartialIndexTests)\", \"test_partial_index (indexes.tests.PartialIndexTests)\"]"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-13810",
+  "base_commit": "429d089d0a8fbd400e0c010708df4f0d16218970",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "MiddlewareNotUsed leaves undesired side effects when loading middleware in ASGI context. I experienced strange issues when working with ASGI, django-debug-toolbar and my own small middleware. When starting the application and accessing /admin, it gives a TypeError: object HttpResponse can't be used in 'await' expression. Commenting out the problematic middleware fixes the issue by causing a 500 ImproperlyConfigured exception, indicating that the middleware loading process is not handling the MiddlewareNotUsed exception correctly.",
+    "hint_texts": "This feature addresses the core logic of middleware handling. Developers need to adjust the middleware-loading process in django/core/handlers/base.py by introducing a new variable to capture the output of self.adapt_method_mode. The goal is to avoid overwriting the original handler immediately, so that if MiddlewareNotUsed is raised, the previously adapted handler is not unintentionally propagated. This will ensure proper separation of synchronous and asynchronous processing and prevent errors like the TypeError encountered during async calls.",
+    "entrypoint": "File: django/core/handlers/base.py. Focus on the load_middleware function. Modify the code block where the handler is adapted: replace the assignment 'handler = self.adapt_method_mode(...)' with 'adapted_handler = self.adapt_method_mode(...)', and then, after successfully instantiating the middleware, assign 'handler = adapted_handler'. Refer to the diff provided in the code patch for precise changes.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "test_missing_root_urlconf (middleware_exceptions.tests.RootUrlconfTests)",
+        "test_do_not_log_when_debug_is_false (middleware_exceptions.tests.MiddlewareNotUsedTests)",
+        "test_log (middleware_exceptions.tests.MiddlewareNotUsedTests)",
+        "test_log_custom_message (middleware_exceptions.tests.MiddlewareNotUsedTests)",
+        "test_raise_exception (middleware_exceptions.tests.MiddlewareNotUsedTests)",
+        "test_exception_in_middleware_converted_before_prior_middleware (middleware_exceptions.tests.MiddlewareTests)",
+        "test_exception_in_render_passed_to_process_exception (middleware_exceptions.tests.MiddlewareTests)",
+        "test_process_template_response (middleware_exceptions.tests.MiddlewareTests)",
+        "test_process_template_response_returns_none (middleware_exceptions.tests.MiddlewareTests)",
+        "test_process_view_return_none (middleware_exceptions.tests.MiddlewareTests)",
+        "test_process_view_return_response (middleware_exceptions.tests.MiddlewareTests)",
+        "test_response_from_process_exception_short_circuits_remainder (middleware_exceptions.tests.MiddlewareTests)",
+        "test_response_from_process_exception_when_return_response (middleware_exceptions.tests.MiddlewareTests)",
+        "test_templateresponse_from_process_view_passed_to_process_template_response (middleware_exceptions.tests.MiddlewareTests)",
+        "test_templateresponse_from_process_view_rendered (middleware_exceptions.tests.MiddlewareTests)",
+        "test_view_exception_converted_before_middleware (middleware_exceptions.tests.MiddlewareTests)",
+        "test_view_exception_handled_by_process_exception (middleware_exceptions.tests.MiddlewareTests)",
+        "test_async_and_sync_middleware_async_call (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_async_and_sync_middleware_sync_call (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_async_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_async_middleware_async (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_not_sync_or_async_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_sync_decorated_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_sync_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_sync_middleware_async (middleware_exceptions.tests.MiddlewareSyncAsyncTests)",
+        "test_exception_in_async_render_passed_to_process_exception (middleware_exceptions.tests.AsyncMiddlewareTests)",
+        "test_exception_in_render_passed_to_process_exception (middleware_exceptions.tests.AsyncMiddlewareTests)",
+        "test_process_template_response (middleware_exceptions.tests.AsyncMiddlewareTests)",
+        "test_process_template_response_returns_none (middleware_exceptions.tests.AsyncMiddlewareTests)",
+        "test_process_view_return_response (middleware_exceptions.tests.AsyncMiddlewareTests)"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "I noticed that while MiddlewareNotUsed causes the middleware loop to skip further processing, it leaves the handler variable overwritten with the output of self.adapt_method_mode(). On the next pass, this incorrectly adapted handler is passed to subsequent middleware, disregarding previous checks for async support. This likely results in the middleware chain being 'poisoned', with the last middleware in the response cycle returning an HttpResponse as if it were synchronous instead of a coroutine. This behavior calls for a more robust handling of the separation between synchronous and asynchronous middleware execution.",
+    "hint_texts": "This feature focuses on verifying that the middleware chain behaves correctly after the core fix. Developers should add or update test cases to ensure that asynchronous calls no longer trigger the TypeError and that the middleware chain is not adversely affected by an improperly adapted handler. The tests should simulate scenarios with mixed synchronous and asynchronous middleware to check for correct responses and log messages.",
+    "entrypoint": "File: tests/middleware_exceptions/tests.py. Add a new asynchronous test case named 'test_async_and_sync_middleware_chain_async_call'. This test should use the async_client to send a request, then verify that the response status is 200 with the expected content, and check that the correct log messages are produced. This test directly validates that the changes in the core middleware handling prevent the previously observed errors.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "test_async_and_sync_middleware_chain_async_call (middleware_exceptions.tests.MiddlewareNotUsedTests)"
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the middleware handling mechanism in Django. Feature1 modifies core behavior within django/core/handlers/base.py, while Feature2 introduces tests in tests/middleware_exceptions/tests.py to verify that behavior. Shared resources include the middleware chain and logging configurations.",
+    "integration_strategy": "Implement the code changes in Feature1 first to correct the middleware handling. Then, use the tests developed in Feature2 to verify that the fix works as expected. Both features must be coordinated to ensure that changes in the middleware adaptation logic are accurately reflected in the test outcomes.",
+    "communication_needs": "Developers working on Feature1 should clearly document the changes in the middleware adaptation process, especially regarding variable assignments and error handling. Developers on Feature2 must align on the expected log messages and response behaviors. Regular communication between both teams is essential to synchronize the integration points and update tests if the core logic changes."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_async_and_sync_middleware_chain_async_call (middleware_exceptions.tests.MiddlewareNotUsedTests)\"]",
+    "PASS_TO_PASS": "[\"test_missing_root_urlconf (middleware_exceptions.tests.RootUrlconfTests)\", \"test_do_not_log_when_debug_is_false (middleware_exceptions.tests.MiddlewareNotUsedTests)\", \"test_log (middleware_exceptions.tests.MiddlewareNotUsedTests)\", \"test_log_custom_message (middleware_exceptions.tests.MiddlewareNotUsedTests)\", \"test_raise_exception (middleware_exceptions.tests.MiddlewareNotUsedTests)\", \"test_exception_in_middleware_converted_before_prior_middleware (middleware_exceptions.tests.MiddlewareTests)\", \"test_exception_in_render_passed_to_process_exception (middleware_exceptions.tests.MiddlewareTests)\", \"test_process_template_response (middleware_exceptions.tests.MiddlewareTests)\", \"test_process_template_response_returns_none (middleware_exceptions.tests.MiddlewareTests)\", \"test_process_view_return_none (middleware_exceptions.tests.MiddlewareTests)\", \"test_process_view_return_response (middleware_exceptions.tests.MiddlewareTests)\", \"test_response_from_process_exception_short_circuits_remainder (middleware_exceptions.tests.MiddlewareTests)\", \"test_response_from_process_exception_when_return_response (middleware_exceptions.tests.MiddlewareTests)\", \"test_templateresponse_from_process_view_passed_to_process_template_response (middleware_exceptions.tests.MiddlewareTests)\", \"test_templateresponse_from_process_view_rendered (middleware_exceptions.tests.MiddlewareTests)\", \"test_view_exception_converted_before_middleware (middleware_exceptions.tests.MiddlewareTests)\", \"test_view_exception_handled_by_process_exception (middleware_exceptions.tests.MiddlewareTests)\", \"test_async_and_sync_middleware_async_call (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_async_and_sync_middleware_sync_call (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_async_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_async_middleware_async (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_not_sync_or_async_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_sync_decorated_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_sync_middleware (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_sync_middleware_async (middleware_exceptions.tests.MiddlewareSyncAsyncTests)\", \"test_exception_in_async_render_passed_to_process_exception (middleware_exceptions.tests.AsyncMiddlewareTests)\", \"test_exception_in_render_passed_to_process_exception (middleware_exceptions.tests.AsyncMiddlewareTests)\", \"test_process_template_response (middleware_exceptions.tests.AsyncMiddlewareTests)\", \"test_process_template_response_returns_none (middleware_exceptions.tests.AsyncMiddlewareTests)\", \"test_process_view_return_response (middleware_exceptions.tests.AsyncMiddlewareTests)\"]"
+  }
+}

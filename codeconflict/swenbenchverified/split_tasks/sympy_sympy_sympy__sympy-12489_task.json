@@ -1,0 +1,33 @@
+{
+  "repo": "sympy/sympy",
+  "test_id": "sympy/sympy_sympy__sympy-12489",
+  "base_commit": "aa9780761ad8c3c0f68beeef3a0ce5caac9e100b",
+  "difficulty": "1-4 hours",
+  "feature1": {
+    "prompt": "combinatorics.Permutation cannot be subclassed properly because its object creation mechanism in __new__ relies on a static method that always creates an instance of the base Permutation class. This design flaw prevents any subclass from being instantiated correctly because the static method does not consider the subclass type. The solution is to refactor the object instantiation to use a class method so that the first argument (cls) is properly used to create the instance. After this fix, when __new__ is called on a subclass, the instance will be of the subclass rather than the base class.",
+    "hint_texts": "Review the implementation in sympy/combinatorics/permutations.py and update the Permutation class. Convert the _af_new routine from a static method into a class method, and modify __new__ to call cls._af_new instead of the static _af_new. Also update all methods that instantiate new Permutation objects (such as josephus, random, unrank_lex, etc.) to use the new approach. This refactor should maintain existing behavior while allowing subclassing to work as expected.",
+    "entrypoint": "sympy/combinatorics/permutations.py; focus on the __new__ method, the _af_new method, and any related methods that call _af_new.",
+    "tests": {
+      "FAIL_TO_PASS": "None",
+      "PASS_TO_PASS": "[\"test_Permutation\", \"test_josephus\", \"test_ranking\", \"test_mul\", \"test_args\", \"test_Cycle\", \"test_from_sequence\", \"test_printing_cyclic\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "The current design of combinatorics.Permutation prevents proper subclassing, resulting in the inability to extend its behavior through subclass methods. When a subclass is created, the existing static object creation mechanism forces all instances to be of the base type, undermining any customized behavior a subclass might intend to implement. The goal is to ensure that when Permutation is subclassed, the instance creation mechanism respects the subclass and returns an object of the appropriate type. This change will enable developers to override and extend Permutation functionality correctly.",
+    "hint_texts": "Introduce a dedicated test to verify that subclassing of Permutation now behaves correctly. Implement a custom subclass (for example, CustomPermutation) that overrides methods such as __call__, __eq__, and __hash__, and then check that operations on subclass instances return the correct type. The test should ensure that a subclass instance is accepted and behaves as its own type, and that interactions between base and subclass instances provide the expected results.",
+    "entrypoint": "sympy/combinatorics/tests/test_permutations.py; add the test_Permutation_subclassing function to exercise subclass creation and behavior.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_Permutation_subclassing\"]",
+      "PASS_TO_PASS": "None"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "The key shared resource is the sympy/combinatorics/permutations.py file, which contains the Permutation class and its instance creation methods. Both features depend on changes to this file to support proper subclassing.",
+    "integration_strategy": "Feature1 must be completed first to refactor the instantiation mechanism within the Permutation class. Feature2 will then validate these changes through a new test that ensures subclassing works. Integration testing should confirm that existing functionality remains intact while enabling the expected subclass behavior.",
+    "communication_needs": "Developers responsible for Feature1 and Feature2 should coordinate on the design and testing of the new object creation strategy. Clear communication is necessary to ensure that the refactored methods in the Permutation class meet the requirements for subclassing and that the new test effectively verifies this behavior. Regular syncs should be held to discuss potential impacts on existing functionality and integration outcomes."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_Permutation_subclassing\"]",
+    "PASS_TO_PASS": "[\"test_Permutation\", \"test_josephus\", \"test_ranking\", \"test_mul\", \"test_args\", \"test_Cycle\", \"test_from_sequence\", \"test_printing_cyclic\"]"
+  }
+}

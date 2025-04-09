@@ -1,0 +1,50 @@
+{
+  "analysis": "1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**: \n   - The changes in the PR are tightly coupled around a single logical issue: the handling of the `filterable` attribute in Django's query system. The modification in `django/db/models/sql/query.py` is directly related to the test changes in `tests/queries/tests.py` and `tests/queries/models.py`.\n   - The core change in the query logic (checking for `resolve_expression` before raising `NotSupportedError`) is directly tested by the new test case `test_field_with_filterable`. This test case is designed to verify the new behavior introduced by the code change.\n   - The test patch is not introducing a separate feature or functionality but is instead validating the fix applied to the query logic. The test ensures that the new logic correctly handles cases where the `filterable` attribute is set to `False`.\n\n3. **If NO**:\n   - The PR addresses a specific bug related to the `filterable` attribute in Django's query system. The change in logic and the corresponding test are inherently linked to ensure the bug is fixed and the behavior is as expected.\n   - The modification in the query logic and the test case are both necessary to confirm the fix. Separating them would not make sense as the test is directly verifying the change.\n   - Testing parts independently would be impractical because the test is specifically designed to validate the new behavior introduced by the code change. Without the test, the change would not be verified, and without the change, the test would fail.\n\nIn conclusion, the PR is a cohesive unit focused on fixing a specific issue, and splitting it would not provide any logical or practical benefit.",
+  "can_be_split": false,
+  "raw_response": {
+    "id": "chatcmpl-B6LvwKkH9lhzItS5yJadW5OUtfu3O",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**: \n   - The changes in the PR are tightly coupled around a single logical issue: the handling of the `filterable` attribute in Django's query system. The modification in `django/db/models/sql/query.py` is directly related to the test changes in `tests/queries/tests.py` and `tests/queries/models.py`.\n   - The core change in the query logic (checking for `resolve_expression` before raising `NotSupportedError`) is directly tested by the new test case `test_field_with_filterable`. This test case is designed to verify the new behavior introduced by the code change.\n   - The test patch is not introducing a separate feature or functionality but is instead validating the fix applied to the query logic. The test ensures that the new logic correctly handles cases where the `filterable` attribute is set to `False`.\n\n3. **If NO**:\n   - The PR addresses a specific bug related to the `filterable` attribute in Django's query system. The change in logic and the corresponding test are inherently linked to ensure the bug is fixed and the behavior is as expected.\n   - The modification in the query logic and the test case are both necessary to confirm the fix. Separating them would not make sense as the test is directly verifying the change.\n   - Testing parts independently would be impractical because the test is specifically designed to validate the new behavior introduced by the code change. Without the test, the change would not be verified, and without the change, the test would fail.\n\nIn conclusion, the PR is a cohesive unit focused on fixing a specific issue, and splitting it would not provide any logical or practical benefit.",
+          "refusal": null,
+          "role": "assistant",
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1740853980,
+    "model": "gpt-4o-2024-08-06",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_eb9dce56a8",
+    "usage": {
+      "completion_tokens": 359,
+      "prompt_tokens": 6130,
+      "total_tokens": 6489,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      }
+    }
+  },
+  "metadata": {
+    "repo": "django/django",
+    "instance_id": "django__django-13028",
+    "base_commit": "78ad4b4b0201003792bfdbf1a7781cbc9ee03539",
+    "version": "3.2",
+    "difficulty": "15 min - 1 hour",
+    "timestamp": "2025-03-01 10:33:09"
+  }
+}

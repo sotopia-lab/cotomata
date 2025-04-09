@@ -1,0 +1,1 @@
+Generate module pages for EPUB format only when explicitly enabled via configuration (`viewcode_enable_epub=True`). Module pages should not be created for EPUB by default.

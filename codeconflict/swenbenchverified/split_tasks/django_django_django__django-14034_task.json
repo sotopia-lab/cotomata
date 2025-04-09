@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-14034",
+  "base_commit": "db1fc5cd3c5d36cdb5d0fe4404efd6623dd3e8fb",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "MultiValueField ignores a required value of a sub field. In a form where a MultiValueField (MF) is defined with subfields having different required settings, the current behavior allows the form to be valid even when a required subfield is empty. The expected behavior is that if a required subfield is not provided a value, the form should be considered invalid. This issue is observed when the form is passed empty values for all subfields even though one subfield is marked as required. Additionally, when one subfield is provided a non\u2010empty value while the required subfield remains empty, the form should not validate successfully.",
+    "hint_texts": "Investigate the build_widget_attrs method in django/forms/boundfield.py. Focus on the conditional block that sets the 'required' attribute and update it to handle cases when the field uses a MultiWidget with require_all_fields set to False. The logic should iterate over each subfield and set the corresponding subwidget's 'required' attribute based on both the field's requirement and the widget's behavior. Ensure that the modified code preserves the original functionality for non-multi widget fields.",
+    "entrypoint": "File: django/forms/boundfield.py; Function: build_widget_attrs (around line 233). Modify the block that assigns the 'required' attribute so that for MultiWidget instances with require_all_fields as False, each subwidget is checked individually and assigned the 'required' attribute as needed.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_bad_choice (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_clean (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_clean_disabled_multivalue (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_disabled_has_changed (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_form_as_table (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_form_as_table_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_form_cleaned_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), Test when the first widget's data has changed. (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), Test when the last widget's data has changed. This ensures that it is (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_has_changed_no_initial (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), test_has_changed_same (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest), If insufficient data is provided, None is substituted. (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)"
+    }
+  },
+  "feature2": {
+    "prompt": "MultiValueField ignores a required value of a sub field. The problem requires that the form validation correctly enforce the required state of each subfield in a MultiValueField. The expected behavior is that if any required subfield is left empty, the overall form should be marked as invalid. This includes cases where all subfields are empty or when a non-required subfield receives input while a required subfield does not.",
+    "hint_texts": "Extend the test suite in tests/forms_tests/field_tests/test_multivaluefield.py by adding new test cases that simulate the scenarios described in the problem statement. Create new form and field definitions that mirror the MultiValueField structure and validate that the 'required' attribute is rendered properly on the HTML output. Develop tests that assert the form\u2019s validation status under different input conditions, ensuring that an empty required subfield causes the form to be invalid.",
+    "entrypoint": "File: tests/forms_tests/field_tests/test_multivaluefield.py; Add new classes (such as PartiallyRequiredField and PartiallyRequiredForm) and implement the new test method test_render_required_attributes to verify that the required attributes on subfields are applied correctly.",
+    "tests": {
+      "FAIL_TO_PASS": "test_render_required_attributes (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "django/forms/boundfield.py and tests/forms_tests/field_tests/test_multivaluefield.py, which both interact with the MultiValueField and its subfield handling.",
+    "integration_strategy": "Feature1's modifications to the core widget attribute logic must be integrated with Feature2's expanded test cases. Both features should be merged in a way that ensures any changes in build_widget_attrs are properly verified by the new tests, without affecting existing behavior.",
+    "communication_needs": "Developers implementing the code fix in build_widget_attrs must coordinate with the testing team to confirm that all expected validation behaviors are covered. Regular discussions are required to align on the expected outcomes for various subfield input scenarios and to address any discrepancies between the code changes and the test results."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_render_required_attributes (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\"]",
+    "PASS_TO_PASS": "[\"test_bad_choice (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_clean (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_clean_disabled_multivalue (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_disabled_has_changed (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_form_as_table (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_form_as_table_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_form_cleaned_data (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"Test when the first widget's data has changed.\", \"Test when the last widget's data has changed. This ensures that it is\", \"test_has_changed_no_initial (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"test_has_changed_same (forms_tests.field_tests.test_multivaluefield.MultiValueFieldTest)\", \"If insufficient data is provided, None is substituted.\"]"
+  }
+}

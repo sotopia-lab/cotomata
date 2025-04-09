@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-12155",
+  "base_commit": "e8fcdaad5c428878d0a5d6ba820d957013f75595",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Docutils reports an error rendering view docstring when the first line is not empty. Currently, admindoc works correctly only with docstrings where the first line is empty. In many cases, however, docstrings start immediately with content, which causes an error related to the default-role directive. The issue arises from the way the docstring is processed: the function that trims the docstring does not skip the first line, leading to an incorrect calculation of indentation. The solution is to modify the approach so that the first line is skipped when computing the minimum indentation.",
+    "hint_texts": "This feature involves refactoring the code to improve docstring processing. Remove the existing trim_docstring function from the utils module and update the associated functions to use Python's built-in cleandoc. Focus on modifying the parse_docstring function in the utils file to apply cleandoc, and update its usage in the views module. The change should ensure that even if the docstring does not have an empty first line, it is processed correctly without triggering errors.",
+    "entrypoint": "Files to modify: django/contrib/admindocs/utils.py (remove or update the trim_docstring function and update parse_docstring to use cleandoc) and django/contrib/admindocs/views.py (change the usage from trim_docstring to cleandoc when processing view docstrings). Key changes include replacing the manual indentation calculation block with a call to inspect.cleandoc.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_description_output (admin_docs.test_utils.TestUtils), test_initial_header_level (admin_docs.test_utils.TestUtils), test_parse_docstring (admin_docs.test_utils.TestUtils), test_parse_rst (admin_docs.test_utils.TestUtils), test_publish_parts (admin_docs.test_utils.TestUtils), test_title_output (admin_docs.test_utils.TestUtils)"
+    }
+  },
+  "feature2": {
+    "prompt": "Docutils reports an error rendering view docstring when the first line is not empty. Currently, admindoc only supports docstrings whose first line is empty, while many docstrings start immediately with content. This discrepancy causes an error due to an incorrect handling of indentation in the docstring processing pipeline. The intended solution is to adjust the processing so that docstrings starting on the first line are handled correctly, ensuring error-free rendering even when the first line contains text.",
+    "hint_texts": "This feature focuses on updating the test cases to validate the new behavior for processing docstrings. Remove any obsolete tests that target the old trim_docstring functionality and add new test cases to confirm that docstrings without a leading empty line are properly processed using cleandoc. Include tests that capture stderr output to ensure that no error messages are produced during rendering.",
+    "entrypoint": "File to modify: tests/admin_docs/test_utils.py. Update or remove the test case that directly tests the old trim_docstring functionality and add a new test (for example, test_parse_rst_with_docstring_no_leading_line_feed) to verify the correct handling of docstrings that do not start with an empty line.",
+    "tests": {
+      "FAIL_TO_PASS": "test_parse_rst_with_docstring_no_leading_line_feed (admin_docs.test_utils.TestUtils)",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "django/contrib/admindocs/utils.py, django/contrib/admindocs/views.py, and tests/admin_docs/test_utils.py",
+    "integration_strategy": "Feature1 provides a refactored implementation for docstring processing by using cleandoc, while Feature2 ensures that the new implementation is correctly validated through updated tests. Both features must be integrated such that the removal of trim_docstring in Feature1 is fully supported by the test updates in Feature2, ensuring consistency in behavior across the application.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate the timing of merging changes to guarantee that the new implementation and its tests are compatible. Regular updates, shared code reviews, and integration meetings are recommended to address any interdependencies between the refactoring changes and the test modifications."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_parse_rst_with_docstring_no_leading_line_feed (admin_docs.test_utils.TestUtils)\"]",
+    "PASS_TO_PASS": "[\"test_description_output (admin_docs.test_utils.TestUtils)\", \"test_initial_header_level (admin_docs.test_utils.TestUtils)\", \"test_parse_docstring (admin_docs.test_utils.TestUtils)\", \"test_parse_rst (admin_docs.test_utils.TestUtils)\", \"test_publish_parts (admin_docs.test_utils.TestUtils)\", \"test_title_output (admin_docs.test_utils.TestUtils)\"]"
+  }
+}

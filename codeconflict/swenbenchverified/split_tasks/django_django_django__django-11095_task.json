@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11095",
+  "base_commit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Add ModelAdmin.get_inlines() hook to allow set inlines based on the request or model instance. Currently, we can override the method get_inline_instances to achieve inline customization, but this requires copying a for loop into user code. By adding a dedicated hook get_inlines(request, obj=None), developers can more cleanly specify custom inlines based on request attributes or the model instance. This feature introduces the new hook to simplify custom inline handling.",
+    "hint_texts": "This part focuses on introducing the new get_inlines method. It should be defined in the ModelAdmin class in django/contrib/admin/options.py. The new method must accept a request and an optional obj parameter, and by default, it should return self.inlines. This hook will enable developers to override inline behavior without rewriting iteration logic.",
+    "entrypoint": "File: django/contrib/admin/options.py. Add the new method 'def get_inlines(self, request, obj):' immediately after the get_fieldsets method. The method should include a docstring (e.g., 'Hook for specifying custom inlines.') and return self.inlines.",
+    "tests": {
+      "FAIL_TO_PASS": "test_get_inlines_no_request_attribute (generic_inline_admin.tests.GenericInlineModelAdminTest) - should fail before the hook implementation and pass after implementing get_inlines.",
+      "PASS_TO_PASS": "test_get_inlines_with_request_attribute (generic_inline_admin.tests.GenericInlineModelAdminTest) - should pass by correctly returning the inline classes based on request attributes."
+    }
+  },
+  "feature2": {
+    "prompt": "Modify ModelAdmin.get_inline_instances to utilize the new get_inlines hook for setting inlines based on the request or model instance. Instead of iterating directly over self.inlines, the method should call get_inlines to obtain a customized list of inline classes. This integration ensures that any override of get_inlines is respected and that inline instance creation dynamically adapts to the request or model instance. The change refactors inline instance retrieval to be more flexible and maintainable.",
+    "hint_texts": "This part focuses on integrating the new get_inlines hook into the existing get_inline_instances method. Developers should update the for loop within get_inline_instances so that it iterates over self.get_inlines(request, obj) rather than self.inlines. This update guarantees that any customizations made by overriding get_inlines are carried forward into the creation of inline instances.",
+    "entrypoint": "File: django/contrib/admin/options.py. Locate the get_inline_instances method and modify its loop: change 'for inline_class in self.inlines:' to 'for inline_class in self.get_inlines(request, obj):'. This modification should occur after the new get_inlines method definition in the same file.",
+    "tests": {
+      "FAIL_TO_PASS": "test_get_inline_instances_no_request_attribute (generic_inline_admin.tests.GenericInlineModelAdminTest) - should fail before the integration and pass after updating get_inline_instances to call get_inlines.",
+      "PASS_TO_PASS": "test_get_inline_instances_with_request_attribute (generic_inline_admin.tests.GenericInlineModelAdminTest) - should pass by correctly returning inline instances based on the inline classes provided by get_inlines."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "The file django/contrib/admin/options.py and the ModelAdmin class are common to both features, particularly the self.inlines property and the handling of request and obj parameters.",
+    "integration_strategy": "Feature1 provides the new get_inlines hook that standardizes inline retrieval, while Feature2 updates get_inline_instances to rely on that hook. Developers must ensure that get_inlines returns inline classes in a format that get_inline_instances can iterate over accurately.",
+    "communication_needs": "Both feature teams need to coordinate on the design and behavior of the get_inlines hook, ensuring consistency in how inline data is returned. Changes to the expected return type or method signature in Feature1 should be clearly communicated to the team handling Feature2."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_get_inline_instances_override_get_inlines (generic_inline_admin.tests.GenericInlineModelAdminTest)\"]",
+    "PASS_TO_PASS": "[\"test_no_deletion (generic_inline_admin.tests.NoInlineDeletionTest)\", \"test_custom_form_meta_exclude (generic_inline_admin.tests.GenericInlineModelAdminTest)\", \"test_custom_form_meta_exclude_with_readonly (generic_inline_admin.tests.GenericInlineModelAdminTest)\", \"test_get_fieldsets (generic_inline_admin.tests.GenericInlineModelAdminTest)\", \"test_get_formset_kwargs (generic_inline_admin.tests.GenericInlineModelAdminTest)\", \"test_get_formsets_with_inlines_returns_tuples (generic_inline_admin.tests.GenericInlineModelAdminTest)\", \"test_extra_param (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_get_extra (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_get_max_num (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_get_min_num (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_max_num_param (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_min_num_param (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_no_param (generic_inline_admin.tests.GenericInlineAdminParametersTest)\", \"test_add (generic_inline_admin.tests.GenericInlineAdminWithUniqueTogetherTest)\", \"test_delete (generic_inline_admin.tests.GenericInlineAdminWithUniqueTogetherTest)\", \"test_basic_add_GET (generic_inline_admin.tests.GenericAdminViewTest)\", \"test_basic_add_POST (generic_inline_admin.tests.GenericAdminViewTest)\", \"test_basic_edit_GET (generic_inline_admin.tests.GenericAdminViewTest)\", \"test_basic_edit_POST (generic_inline_admin.tests.GenericAdminViewTest)\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "scikit-learn/scikit-learn",
+  "test_id": "scikit-learn/scikit-learn_scikit-learn__scikit-learn-13496",
+  "base_commit": "3aefc834dce72e850bff48689bea3c7dff5f3fad",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Expose warm_start in the IsolationForest class to enable incremental addition of new trees. The implementation should allow users to set warm_start to True, so that when fit is called repeatedly with an increased n_estimators, the existing estimators are preserved and additional trees are appended. This change must integrate the warm_start parameter into the __init__ method of IsolationForest by passing it to the parent class, ensuring consistency with the behavior found in RandomForestClassifier. The expected behavior is that setting warm_start to True will reuse the previous solution rather than starting from scratch.",
+    "hint_texts": "Implement code changes by modifying the IsolationForest.__init__ method in sklearn/ensemble/iforest.py to accept a warm_start parameter (default False) and pass it to BaseBagging. Ensure that when the parameter is active and n_estimators is increased, previously fitted trees are not overwritten. Add a test case in the test suite to validate that the initial trees persist after additional fitting.",
+    "entrypoint": "File: sklearn/ensemble/iforest.py, specifically the IsolationForest.__init__ method; update the constructor to include and pass warm_start. Additionally, modify file: sklearn/ensemble/tests/test_iforest.py by adding or updating the test function test_iforest_warm_start to verify proper incremental behavior.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest_warm_start\"]",
+      "PASS_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_sparse\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_error\", \"sklearn/ensemble/tests/test_iforest.py::test_recalculate_max_depth\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_attribute\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_parallel_regression\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_performance\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[0.25]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[auto]\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_consistency\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_subsampled_features\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_average_path_length\", \"sklearn/ensemble/tests/test_iforest.py::test_score_samples\", \"sklearn/ensemble/tests/test_iforest.py::test_deprecation\", \"sklearn/ensemble/tests/test_iforest.py::test_behaviour_param\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[auto-2]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[auto-2]\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Update the documentation for IsolationForest to include the warm_start parameter. The docstring should clearly describe that when warm_start is set to True, the previous solution is reused and additional estimators are appended instead of starting a new forest. The documentation must follow the style used for RandomForestClassifier, explicitly stating the default value and explaining the behavior so that users can easily understand how to use this feature.",
+    "hint_texts": "Focus on updating the documentation by modifying the docstring of the IsolationForest class in the file sklearn/ensemble/iforest.py. Add a detailed description of the warm_start parameter, including its default value (False) and behavior when set to True. Ensure consistency with similar parameters in other ensemble classes and, if applicable, update the IsolationForest example entry to reflect the new feature.",
+    "entrypoint": "File: sklearn/ensemble/iforest.py; update the docstring for the IsolationForest class before the __init__ method to document the warm_start parameter, mirroring the documentation style of the RandomForestClassifier.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features require modifications to the file sklearn/ensemble/iforest.py. The implementation of warm_start in the __init__ method and its documentation in the class docstring must remain consistent.",
+    "integration_strategy": "Feature1 implements the functional behavior and associated tests for warm_start, while Feature2 updates the documentation to align with the new functionality. Integration requires that once Feature1 is merged, Feature2 cross-checks that the documentation accurately reflects the behavior introduced in Feature1.",
+    "communication_needs": "Developers working on the code changes and tests (Feature1) need to coordinate with those updating the documentation (Feature2) to ensure that any changes in implementation or API are correctly and promptly documented."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest_warm_start\"]",
+    "PASS_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_sparse\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_error\", \"sklearn/ensemble/tests/test_iforest.py::test_recalculate_max_depth\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_attribute\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_parallel_regression\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_performance\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[0.25]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[auto]\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_consistency\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_subsampled_features\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_average_path_length\", \"sklearn/ensemble/tests/test_iforest.py::test_score_samples\", \"sklearn/ensemble/tests/test_iforest.py::test_deprecation\", \"sklearn/ensemble/tests/test_iforest.py::test_behaviour_param\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[auto-2]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[auto-2]\"]"
+  }
+}

@@ -1,0 +1,1 @@
+Add configuration option to display unqualified type names (without module prefix) in documentation while preserving proper cross-references.

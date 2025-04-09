@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-16901",
+  "base_commit": "ee36e101e8f8c0acde4bb148b738ab7034e902a0",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Modify the SQL generation logic in Django so that when the database lacks native XOR support, the evaluation of Q(...) ^ Q(...) ^ Q(...) operates according to parity rather than as exactly one true value. Currently, when more than two conditions are chained with the XOR operator, the fallback generates an SQL condition that wrongly evaluates the expression. The fix must update the logic to compute whether an odd number of the conditions are true, ensuring that an expression like a ^ b ^ c returns true when exactly one or any odd count is true. The solution should align the fallback behavior with that of databases that support native XOR, such as MySQL, and follow the expected pattern (e.g., 1, 0, 1, 0, 1 as the number of true conditions increases).",
+    "hint_texts": "This part focuses on updating Django's SQL generation for the XOR operation. Developers should locate the as_sql method in django/db/models/sql/where.py and change the logic for handling multiple children in the XOR expression. Replace the previous logic that checked for equality with 1 by computing the modulo of the sum of boolean values. Ensure that the new implementation uses the imported Mod function to determine if an odd number of conditions are true.",
+    "entrypoint": "File: django/db/models/sql/where.py; within the as_sql method. Modify the code block that handles converting XOR expressions when there are more than two operands. The update should occur around the logic that builds the lhs and rhs expressions by integrating the Mod function to compute MOD(sum, 2).",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"test_empty_in (xor_lookups.tests.XorLookupsTests.test_empty_in)\", \"test_exclude (xor_lookups.tests.XorLookupsTests.test_exclude)\", \"test_filter (xor_lookups.tests.XorLookupsTests.test_filter)\", \"test_filter_negated (xor_lookups.tests.XorLookupsTests.test_filter_negated)\", \"test_pk_q (xor_lookups.tests.XorLookupsTests.test_pk_q)\", \"test_stages (xor_lookups.tests.XorLookupsTests.test_stages)\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Ensure that Django\u2019s behavior for evaluating XOR expressions is validated by confirming that multiple XOR conditions yield true when an odd number of operands are true and false otherwise. The expected behavior is that a chain of XOR operations applies a parity check rather than just testing for the existence of a single true condition. This requirement means that when more than two conditions are combined using the XOR operator, the evaluation must follow the correct logical parity, producing results that match the intended pattern. The implemented solution should guarantee consistency for databases lacking native XOR support by matching the expected outcomes.",
+    "hint_texts": "This part involves validating the changes made to the XOR SQL logic. Developers should create or update a validation function that verifies the correct behavior when multiple XOR conditions are applied. The new validation should focus on ensuring that when various conditions are chained using XOR, the result reflects the parity evaluation (i.e., an odd number of true conditions yields a true result). The implementation must confirm that the modified SQL generation is operating as intended across different scenarios.",
+    "entrypoint": "File: tests/xor_lookups/tests.py; add or modify the function responsible for checking the behavior of multi-operand XOR, specifically within the test_filter_multiple function. This test should be designed to trigger the fixed logic and verify that the output matches the parity-based expectation.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_filter_multiple (xor_lookups.tests.XorLookupsTests.test_filter_multiple)\"]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the SQL generation file (django/db/models/sql/where.py) and rely on the underlying XOR evaluation logic. They also share the common data structures used for building query expressions in Django.",
+    "integration_strategy": "The SQL generation changes implemented in Feature1 must be verified by the validation logic introduced in Feature2. Integration requires that the new modular arithmetic approach in the as_sql method is correctly captured by the tests added in Feature2, ensuring consistency in behavior across databases.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate to ensure that the new logic is properly exposed and that the validation function accurately reflects the behavioral changes. Regular discussions should be held to verify that any modifications in the SQL construction are well understood and correctly incorporated in the test validations."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_filter_multiple (xor_lookups.tests.XorLookupsTests.test_filter_multiple)\"]",
+    "PASS_TO_PASS": "[\"test_empty_in (xor_lookups.tests.XorLookupsTests.test_empty_in)\", \"test_exclude (xor_lookups.tests.XorLookupsTests.test_exclude)\", \"test_filter (xor_lookups.tests.XorLookupsTests.test_filter)\", \"test_filter_negated (xor_lookups.tests.XorLookupsTests.test_filter_negated)\", \"test_pk_q (xor_lookups.tests.XorLookupsTests.test_pk_q)\", \"test_stages (xor_lookups.tests.XorLookupsTests.test_stages)\"]"
+  }
+}

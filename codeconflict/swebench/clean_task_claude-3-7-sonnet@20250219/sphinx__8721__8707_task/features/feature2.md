@@ -1,0 +1,1 @@
+Improve viewcode anchor generation to ensure source links work correctly even after incremental builds that switch between different builder types (e.g., from singlehtml to html).

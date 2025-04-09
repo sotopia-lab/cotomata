@@ -1,0 +1,70 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8638",
+  "base_commit": "4b452338f914d4f6b54704222d70ae8a746e3db5",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Instance variables erroneously link to other variables of the same name across the project. When autodoc processes a class, the instance variable documentation may incorrectly reference a global variable or a similar variable from another class or subpackage. The intended behavior is that each class's variable documentation remains isolated and does not auto-link to unrelated variables. This feature focuses on modifying the core behavior to prevent unintentional cross-referencing in the documentation.",
+    "hint_texts": "Modify the configuration of the PyTypedField in sphinx/domains/python.py so that the 'rolename' parameter is removed for the 'variable' field. This change should stop the auto-linking of instance variables to other unrelated variables in the project. Developers should review the current implementation within the PyObject class and adjust the instantiation of the variable field accordingly.",
+    "entrypoint": "sphinx/domains/python.py: Locate the PyTypedField definition for 'variable' (around line 354) and remove the rolename='obj' parameter from its instantiation. This is the starting point to fix the unwanted auto-linking behavior for instance variables.",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "tests/test_domain_py.py::test_function_signatures",
+        "tests/test_domain_py.py::test_domain_py_xrefs",
+        "tests/test_domain_py.py::test_domain_py_objects",
+        "tests/test_domain_py.py::test_resolve_xref_for_properties",
+        "tests/test_domain_py.py::test_domain_py_find_obj",
+        "tests/test_domain_py.py::test_get_full_qualified_name",
+        "tests/test_domain_py.py::test_parse_annotation",
+        "tests/test_domain_py.py::test_pyfunction_signature",
+        "tests/test_domain_py.py::test_pyfunction_signature_full",
+        "tests/test_domain_py.py::test_pyfunction_signature_full_py38",
+        "tests/test_domain_py.py::test_pyfunction_with_number_literals",
+        "tests/test_domain_py.py::test_optional_pyfunction_signature",
+        "tests/test_domain_py.py::test_pyexception_signature",
+        "tests/test_domain_py.py::test_exceptions_module_is_ignored",
+        "tests/test_domain_py.py::test_pydata_signature",
+        "tests/test_domain_py.py::test_pydata_signature_old",
+        "tests/test_domain_py.py::test_pyobject_prefix",
+        "tests/test_domain_py.py::test_pydata",
+        "tests/test_domain_py.py::test_pyfunction",
+        "tests/test_domain_py.py::test_pyclass_options",
+        "tests/test_domain_py.py::test_pymethod_options",
+        "tests/test_domain_py.py::test_pyclassmethod",
+        "tests/test_domain_py.py::test_pystaticmethod",
+        "tests/test_domain_py.py::test_pyattribute",
+        "tests/test_domain_py.py::test_pydecorator_signature",
+        "tests/test_domain_py.py::test_pydecoratormethod_signature",
+        "tests/test_domain_py.py::test_canonical",
+        "tests/test_domain_py.py::test_info_field_list",
+        "tests/test_domain_py.py::test_module_index",
+        "tests/test_domain_py.py::test_module_index_submodule",
+        "tests/test_domain_py.py::test_module_index_not_collapsed",
+        "tests/test_domain_py.py::test_modindex_common_prefix",
+        "tests/test_domain_py.py::test_noindexentry",
+        "tests/test_domain_py.py::test_warn_missing_reference"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "The issue also needs verification to ensure that a documented instance variable does not mistakenly link to an unrelated variable. When generating documentation using autodoc, a variable defined in a class should not auto-link to a global or another similar variable found in different subpackages. The expected behavior is a clear and isolated representation of instance variables without unintended cross-references. This feature is dedicated to validating that the documentation output adheres to this isolation.",
+    "hint_texts": "Introduce a new test case to verify the removal of the unwanted linking behavior for instance variables. The test should simulate the documentation generation for a class with an instance variable and then assert that no auto-generated cross-reference appears where it shouldn\u2019t. Ensure that the test case targets the specific behavior change so that the fix can be reliably validated.",
+    "entrypoint": "tests/test_domain_py.py: Add a new test function named test_info_field_list_var. This function should create a scenario where a class with an instance variable is documented, and then it should check that the documentation does not include erroneous links to unrelated variables. This is the entry point for confirming the fix is effective.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "tests/test_domain_py.py::test_info_field_list_var"
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features involve modifications to the sphinx/domains/python.py file and interact with the tests in tests/test_domain_py.py. These shared files constitute the main integration points between the two features.",
+    "integration_strategy": "Ensure that the changes in the PyTypedField configuration (feature1) are fully validated by the new test case (feature2). Integration requires running the complete documentation test suite so that the removal of unintended auto-linking is confirmed without regressions.",
+    "communication_needs": "Developers working on feature1 and feature2 should coordinate to align on the expected documentation output. They must discuss the specifics of the code change and the assertions used in the test case to ensure that the fix and its verification are tightly integrated."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_domain_py.py::test_info_field_list_var\"]",
+    "PASS_TO_PASS": "[\"tests/test_domain_py.py::test_function_signatures\", \"tests/test_domain_py.py::test_domain_py_xrefs\", \"tests/test_domain_py.py::test_domain_py_objects\", \"tests/test_domain_py.py::test_resolve_xref_for_properties\", \"tests/test_domain_py.py::test_domain_py_find_obj\", \"tests/test_domain_py.py::test_get_full_qualified_name\", \"tests/test_domain_py.py::test_parse_annotation\", \"tests/test_domain_py.py::test_pyfunction_signature\", \"tests/test_domain_py.py::test_pyfunction_signature_full\", \"tests/test_domain_py.py::test_pyfunction_signature_full_py38\", \"tests/test_domain_py.py::test_pyfunction_with_number_literals\", \"tests/test_domain_py.py::test_optional_pyfunction_signature\", \"tests/test_domain_py.py::test_pyexception_signature\", \"tests/test_domain_py.py::test_exceptions_module_is_ignored\", \"tests/test_domain_py.py::test_pydata_signature\", \"tests/test_domain_py.py::test_pydata_signature_old\", \"tests/test_domain_py.py::test_pyobject_prefix\", \"tests/test_domain_py.py::test_pydata\", \"tests/test_domain_py.py::test_pyfunction\", \"tests/test_domain_py.py::test_pyclass_options\", \"tests/test_domain_py.py::test_pymethod_options\", \"tests/test_domain_py.py::test_pyclassmethod\", \"tests/test_domain_py.py::test_pystaticmethod\", \"tests/test_domain_py.py::test_pyattribute\", \"tests/test_domain_py.py::test_pydecorator_signature\", \"tests/test_domain_py.py::test_pydecoratormethod_signature\", \"tests/test_domain_py.py::test_canonical\", \"tests/test_domain_py.py::test_info_field_list\", \"tests/test_domain_py.py::test_module_index\", \"tests/test_domain_py.py::test_module_index_submodule\", \"tests/test_domain_py.py::test_module_index_not_collapsed\", \"tests/test_domain_py.py::test_modindex_common_prefix\", \"tests/test_domain_py.py::test_noindexentry\", \"tests/test_domain_py.py::test_warn_missing_reference\"]"
+  }
+}

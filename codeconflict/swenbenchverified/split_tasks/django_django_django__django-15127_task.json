@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-15127",
+  "base_commit": "9a6e2df3a8f01ea761529bec48e5a8dc0ea9575b",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "LEVEL_TAGS not updated when using @override_settings. When reading messages inside tests, new message tags created using @override_settings is not updated. This issue causes the django.contrib.messages.storage.base.Message.level_tag property to be an empty string and not reflect the new tags. To fix this, the application configuration must be enhanced so that whenever MESSAGE_TAGS is overridden, the LEVEL_TAGS constant is updated accordingly. After the fix, any change to MESSAGE_TAGS will automatically trigger an update of LEVEL_TAGS, ensuring that messages show the correct level tags.",
+    "hint_texts": "Modify the file django/contrib/messages/apps.py to introduce a new signal handler called update_level_tags. This function should check if the changed setting is 'MESSAGE_TAGS' and update base.LEVEL_TAGS using get_level_tags. Then, update the MessagesConfig.ready() method to connect the update_level_tags function to the setting_changed signal. Make sure that the signal handler is only invoked when MESSAGE_TAGS is modified.",
+    "entrypoint": "File: django/contrib/messages/apps.py. Add the update_level_tags function and update the MessagesConfig.ready() method to connect setting_changed to update_level_tags. Use the necessary imports from django.contrib.messages.storage.base, django.contrib.messages.utils (for get_level_tags), and django.test.signals (for setting_changed).",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "feature2": {
+    "prompt": "LEVEL_TAGS not updated when using @override_settings. When reading messages inside tests, new message tags created using @override_settings is not updated, which leaves the LEVEL_TAGS property as an empty string. The test environment should observe the updated message tags when overriding MESSAGE_TAGS. After the fix, tests must reflect that message tags are correctly updated so that messages show the appropriate level tags.",
+    "hint_texts": "Focus on modifying test-related files under tests/messages_tests. In the base.py file, remove the custom override_settings_tags helper and replace it with the standard override_settings decorator. In tests.py, add a new test case (test_override_settings_level_tags) that verifies that when MESSAGE_TAGS is overridden, base.LEVEL_TAGS is updated accordingly. Also ensure that existing tests (such as test_eq) continue to pass without regression.",
+    "entrypoint": "Files: tests/messages_tests/base.py and tests/messages_tests/tests.py. In base.py, remove the override_settings_tags class and use override_settings directly. In tests.py, add the new test test_override_settings_level_tags to validate the update of LEVEL_TAGS, and confirm that the test_eq function remains unchanged.",
+    "tests": {
+      "FAIL_TO_PASS": "test_override_settings_level_tags (messages_tests.tests.TestLevelTags)",
+      "PASS_TO_PASS": "test_eq (messages_tests.tests.MessageTests)"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "The base.LEVEL_TAGS variable in django/contrib/messages/storage/base.py and the MESSAGE_TAGS setting in Django settings.",
+    "integration_strategy": "Feature1 must implement the dynamic update of LEVEL_TAGS upon a setting change using a signal handler, and Feature2 must adjust the test suite to verify that behavior. Both features rely on the proper handling of the MESSAGE_TAGS setting, so integration testing should combine direct signal simulation with the modified test cases.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate on the interface between the configuration update (signal handling) and its verification in the tests. They should agree on how to simulate setting changes during tests and ensure that the test modifications accurately reflect the updated logic. Regular check-ins are recommended to confirm that the two parts integrate seamlessly."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_override_settings_level_tags (messages_tests.tests.TestLevelTags)\"]",
+    "PASS_TO_PASS": "[\"test_eq (messages_tests.tests.MessageTests)\"]"
+  }
+}

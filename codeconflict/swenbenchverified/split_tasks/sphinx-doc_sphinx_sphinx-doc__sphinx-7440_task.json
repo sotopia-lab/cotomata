@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-7440",
+  "base_commit": "9bb204dcabe6ba0fc422bf4a45ad0c79c680d90b",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Feature 1 problem statement: The issue involves a duplicate glossary term error caused by forcing glossary terms to be stored in lowercase. As described, when a term like 'MySQL' is entered, it is converted to 'mysql', which then conflicts with an existing glossary entry. The desired behavior is that glossary terms are stored in their original case so that 'MySQL' and 'mysql' are treated as separate entities. This feature focuses on ensuring that the glossary storage mechanism preserves the original casing of the term.",
+    "hint_texts": "Modify the function responsible for storing glossary terms by removing the automatic lowercasing. Specifically, locate the code where note_object is called and change the argument from termtext.lower() to termtext so that the term is recorded exactly as provided.",
+    "entrypoint": "File: sphinx/domains/std.py, in the make_glossary_term function (around line 305). Change the call from std.note_object('term', termtext.lower(), node_id, location=term) to std.note_object('term', termtext, node_id, location=term).",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_domain_std.py::test_glossary",
+      "PASS_TO_PASS": "[\"tests/test_domain_std.py::test_glossary_warning\", \"tests/test_domain_std.py::test_glossary_comment\", \"tests/test_domain_std.py::test_glossary_comment2\", \"tests/test_domain_std.py::test_glossary_sorted\", \"tests/test_domain_std.py::test_glossary_alphanumeric\", \"tests/test_domain_std.py::test_glossary_conflicted_labels\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2 problem statement: The issue arises from the handling of glossary term references, where term names are automatically converted to lowercase. This leads to a situation in which references to a term like 'MySQL' inadvertently match 'mysql', causing incorrect cross-reference resolution. The expected behavior is that term references retain their original casing, ensuring that 'MySQL' and 'mysql' are recognized as distinct. This feature is aimed at modifying the reference mechanism to respect the case of glossary terms.",
+    "hint_texts": "Update the cross-reference role configuration by removing the lowercase conversion. Look for the section in the StandardDomain class where the role for 'term' is defined and remove the 'lowercase=True' parameter so that references keep the original term case.",
+    "entrypoint": "File: sphinx/domains/std.py, within the StandardDomain class (around line 565). Change the role definition from XRefRole(lowercase=True, innernodeclass=nodes.inline, warn_dangling=True) to XRefRole(innernodeclass=nodes.inline, warn_dangling=True) for the 'term' role.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_domain_std.py::test_glossary",
+      "PASS_TO_PASS": "[\"tests/test_domain_std.py::test_process_doc_handle_figure_caption\", \"tests/test_domain_std.py::test_process_doc_handle_table_title\", \"tests/test_domain_std.py::test_get_full_qualified_name\", \"tests/test_domain_std.py::test_cmdoption\", \"tests/test_domain_std.py::test_multiple_cmdoptions\", \"tests/test_domain_std.py::test_disabled_docref\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the file sphinx/domains/std.py and interact with the glossary term data structures managed by the StandardDomain.",
+    "integration_strategy": "Feature 1 ensures that glossary terms are stored with the original casing while Feature 2 makes sure that term references are resolved in a case-sensitive manner. The integration point is the consistent handling of glossary terms between storage and cross-reference resolution.",
+    "communication_needs": "Developers working on Feature 1 and Feature 2 should coordinate on the changes in the glossary data handling. They need to ensure that modifications in term storage (Feature 1) are consistently reflected in the way terms are referenced (Feature 2) to avoid any unexpected behavior."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_domain_std.py::test_glossary\"]",
+    "PASS_TO_PASS": "[\"tests/test_domain_std.py::test_process_doc_handle_figure_caption\", \"tests/test_domain_std.py::test_process_doc_handle_table_title\", \"tests/test_domain_std.py::test_get_full_qualified_name\", \"tests/test_domain_std.py::test_glossary_warning\", \"tests/test_domain_std.py::test_glossary_comment\", \"tests/test_domain_std.py::test_glossary_comment2\", \"tests/test_domain_std.py::test_glossary_sorted\", \"tests/test_domain_std.py::test_glossary_alphanumeric\", \"tests/test_domain_std.py::test_glossary_conflicted_labels\", \"tests/test_domain_std.py::test_cmdoption\", \"tests/test_domain_std.py::test_multiple_cmdoptions\", \"tests/test_domain_std.py::test_disabled_docref\"]"
+  }
+}

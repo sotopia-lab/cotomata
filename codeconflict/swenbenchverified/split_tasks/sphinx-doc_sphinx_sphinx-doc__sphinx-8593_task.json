@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8593",
+  "base_commit": "07983a5a8704ad91ae855218ecbda1c8598200ca",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Autodoc: `:meta public:` does not effect to variables. In the provided reproduction, the example module (example.py) defines a variable _foo with the annotation `:meta public:` and the index.rst uses the automodule directive with :members:. The bug report indicates that although _foo is marked as public, it is not shown in the built documentation.",
+    "hint_texts": "This feature focuses on refactoring the autodoc module. It involves moving the logic for retrieving module members from the importer into a dedicated method in sphinx/ext/autodoc/__init__.py and marking the old get_module_members in sphinx/ext/autodoc/importer.py as deprecated. The objective is to reorganize the code while preserving backward compatibility without altering the external behavior.",
+    "entrypoint": "Modify the file sphinx/ext/autodoc/__init__.py by adding a new method named get_module_members that gathers members from a module. Remove the direct import of get_module_members from sphinx/ext/autodoc/importer.py and, in that file, insert a deprecation warning inside the old get_module_members function.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "feature2": {
+    "prompt": "Autodoc: `:meta public:` does not effect to variables. The expected behavior is that a variable like _foo, annotated with `:meta public:`, should appear in the built documentation. Users report that when the marker is applied, _foo should be shown, yet it remains hidden in the current output.",
+    "hint_texts": "This feature is aimed at enhancing the handling of the `:meta public:` marker for module members. It requires updating the member retrieval and filtering logic in sphinx/ext/autodoc/__init__.py so that variables carrying the :meta public: directive are correctly recognized and displayed. Developers should ensure that the adjusted logic interacts correctly with the new get_module_members API from Feature1 and that the documentation output reflects the public designation.",
+    "entrypoint": "Update sphinx/ext/autodoc/__init__.py to modify the behavior of get_object_members (or related methods) so that when variables are annotated with `:meta public:`, they are not omitted from the documentation output. This enhancement must work with the refactored API introduced in Feature1 and be verified against the documentation generation process.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_field\", \"tests/test_ext_autodoc_private_members.py::test_private_members\"]",
+      "PASS_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_field_and_private_members\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify files in the sphinx/ext/autodoc directory, specifically __init__.py and importer.py, which handle module member retrieval and documentation generation.",
+    "integration_strategy": "Feature1 introduces a new get_module_members API and deprecates the old one; Feature2 must utilize this API to correctly implement the handling of `:meta public:`. Integration testing is essential to ensure that the refactored code and the enhanced functionality work together seamlessly.",
+    "communication_needs": "Developers working on Feature1 and Feature2 should coordinate on the interface and behavior of the new member retrieval method. Discussions should focus on ensuring that deprecation warnings and refactoring changes do not inadvertently break the public member detection logic, with regular syncs and code reviews to align integration details."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_field\", \"tests/test_ext_autodoc_private_members.py::test_private_members\"]",
+    "PASS_TO_PASS": "[\"tests/test_ext_autodoc_private_members.py::test_private_field_and_private_members\"]"
+  }
+}

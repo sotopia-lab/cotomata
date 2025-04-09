@@ -1,0 +1,133 @@
+{
+    "total_repos": 6,
+    "step1_success": 6,
+    "step2_success": 3,
+    "step3_success": 3,
+    "failed_repos": {
+        "sphinx__9902__9931_task": {
+            "status": "PASS",
+            "errors": {},
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                },
+                "negative": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                }
+            }
+        },
+        "requests__2148__2153_task": {
+            "status": "PASS",
+            "errors": {},
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                },
+                "negative": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                }
+            }
+        },
+        "sphinx__8721__8707_task": {
+            "status": "FAIL_STEP2",
+            "errors": {
+                "step2": {
+                    "test_feature2.py": "EEEEE\n======================================================================\nERROR: test_viewcode_anchor_conversion_for_epub_when_enabled (__main__.Feature2Tests)\nTest that viewcode_anchors are converted for EPUB when viewcode_enable_epub is True.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/test_feature2.py\", line 131, in test_viewcode_anchor_conversion_for_epub_when_enabled\n    transform.apply()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 151, in apply\n    self.run(**kwargs)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 165, in run\n    self.convert_viewcode_anchors()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 171, in convert_viewcode_anchors\n    for node in self.document.traverse(viewcode_anchor):\nAttributeError: 'Node' object has no attribute 'traverse'\n\n======================================================================\nERROR: test_viewcode_anchor_conversion_for_supported_builder (__main__.Feature2Tests)\nTest that viewcode_anchors are converted to links for supported builders.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/test_feature2.py\", line 50, in test_viewcode_anchor_conversion_for_supported_builder\n    transform.apply()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 151, in apply\n    self.run(**kwargs)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 165, in run\n    self.convert_viewcode_anchors()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 171, in convert_viewcode_anchors\n    for node in self.document.traverse(viewcode_anchor):\nAttributeError: 'Node' object has no attribute 'traverse'\n\n======================================================================\nERROR: test_viewcode_anchor_creation (__main__.Feature2Tests)\nTest that viewcode_anchor nodes are created during doctree_read.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/test_feature2.py\", line 22, in test_viewcode_anchor_creation\n    doctree_read(app, doctree)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 228, in doctree_read\n    for node in doctree.traverse():\nAttributeError: 'Node' object has no attribute 'traverse'\n\n======================================================================\nERROR: test_viewcode_anchor_removal_for_epub_when_disabled (__main__.Feature2Tests)\nTest that viewcode_anchors are removed for EPUB when viewcode_enable_epub is False.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/test_feature2.py\", line 108, in test_viewcode_anchor_removal_for_epub_when_disabled\n    transform.apply()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 151, in apply\n    self.run(**kwargs)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 167, in run\n    self.remove_viewcode_anchors()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 186, in remove_viewcode_anchors\n    for node in self.document.traverse(viewcode_anchor):\nAttributeError: 'Node' object has no attribute 'traverse'\n\n======================================================================\nERROR: test_viewcode_anchor_removal_for_unsupported_builder (__main__.Feature2Tests)\nTest that viewcode_anchors are removed for unsupported builders.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/test_feature2.py\", line 85, in test_viewcode_anchor_removal_for_unsupported_builder\n    transform.apply()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 151, in apply\n    self.run(**kwargs)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 167, in run\n    self.remove_viewcode_anchors()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__8721__8707_task/answer/codebase.py\", line 186, in remove_viewcode_anchors\n    for node in self.document.traverse(viewcode_anchor):\nAttributeError: 'Node' object has no attribute 'traverse'\n\n----------------------------------------------------------------------\nRan 5 tests in 0.000s\n\nFAILED (errors=5)\n"
+                }
+            },
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": false
+                    }
+                },
+                "negative": {}
+            }
+        },
+        "scikit-learn__13779__13780_task": {
+            "status": "PASS",
+            "errors": {},
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                },
+                "negative": {
+                    "test_feature1.py": {
+                        "success": true
+                    },
+                    "test_feature2.py": {
+                        "success": true
+                    }
+                }
+            }
+        },
+        "sphinx__9997__10021_task": {
+            "status": "FAIL_STEP2",
+            "errors": {
+                "step2": {
+                    "test_feature1.py": "FFF...F\n======================================================================\nFAIL: test_literal_type (__main__.TestParametrizedTypesFormatting)\nTest that Literal types are properly formatted.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature1.py\", line 51, in test_literal_type\n    self.assertEqual(\nAssertionError: 'typing.Literal[a, b]' != \"Literal['a', 'b']\"\n- typing.Literal[a, b]\n+ Literal['a', 'b']\n\n\n======================================================================\nFAIL: test_nested_parametrized_types (__main__.TestParametrizedTypesFormatting)\nTest that nested parametrized types are properly formatted.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature1.py\", line 28, in test_nested_parametrized_types\n    self.assertEqual(\nAssertionError: 'list[dict[str, int]]' != 'List[Dict[str, int]]'\n- list[dict[str, int]]\n? ^    ^\n+ List[Dict[str, int]]\n? ^    ^\n\n\n======================================================================\nFAIL: test_parametrized_types (__main__.TestParametrizedTypesFormatting)\nTest that parametrized types are properly formatted.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature1.py\", line 22, in test_parametrized_types\n    self.assertEqual(codebase.stringify_annotation(List[int]), \"List[int]\")\nAssertionError: 'list[int]' != 'List[int]'\n- list[int]\n? ^\n+ List[int]\n? ^\n\n\n======================================================================\nFAIL: test_union_types (__main__.TestParametrizedTypesFormatting)\nTest that Union types are properly formatted.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature1.py\", line 39, in test_union_types\n    self.assertEqual(\nAssertionError: 'typing.Union[int, str]' != 'Union[int, str]'\n- typing.Union[int, str]\n? -------\n+ Union[int, str]\n\n\n----------------------------------------------------------------------\nRan 7 tests in 0.001s\n\nFAILED (failures=4)\n",
+                    "test_feature2.py": "FFEF\n======================================================================\nERROR: test_type_formatter_respects_config (__main__.TestUnqualifiedTypeHints)\nTest that the TypeFormatter respects the unqualified_typehints config setting.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature2.py\", line 74, in test_type_formatter_respects_config\n    processed = formatter.process_typehints(None, hints)\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/codebase.py\", line 190, in process_typehints\n    return resul\nNameError: name 'resul' is not defined\n\n======================================================================\nFAIL: test_default_mode (__main__.TestUnqualifiedTypeHints)\nTest the default mode ('fully-qualified-except-typing').\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature2.py\", line 53, in test_default_mode\n    self.assertEqual(\nAssertionError: 'list[int]' != 'List[int]'\n- list[int]\n? ^\n+ List[int]\n? ^\n\n\n======================================================================\nFAIL: test_fully_qualified_mode (__main__.TestUnqualifiedTypeHints)\nTest the 'fully-qualified' mode which includes all module prefixes.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature2.py\", line 41, in test_fully_qualified_mode\n    self.assertEqual(\nAssertionError: 'typing.list[int]' != 'typing.List[int]'\n- typing.list[int]\n?        ^\n+ typing.List[int]\n?        ^\n\n\n======================================================================\nFAIL: test_unqualified_mode (__main__.TestUnqualifiedTypeHints)\nTest the 'smart' mode which uses unqualified type names.\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/sphinx__9997__10021_task/answer/test_feature2.py\", line 23, in test_unqualified_mode\n    self.assertEqual(\nAssertionError: '~typing.list[int]' != '~typing.List[int]'\n- ~typing.list[int]\n?         ^\n+ ~typing.List[int]\n?         ^\n\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nFAILED (failures=3, errors=1)\n"
+                }
+            },
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": false
+                    },
+                    "test_feature2.py": {
+                        "success": false
+                    }
+                },
+                "negative": {}
+            }
+        },
+        "django__13121__13128_task": {
+            "status": "FAIL_STEP2",
+            "errors": {
+                "step2": {
+                    "test_feature1.py": "EE.E\n======================================================================\nERROR: test_duration_expression_sql_generation (__main__.TestDurationExpressions)\nTest SQL generation for duration expressions in non-native duration databases\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature1.py\", line 89, in test_duration_expression_sql_generation\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 275, in resolve_expression\n    c = self.copy()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 81, in copy\n    return self.__class__()\nTypeError: __init__() missing 3 required positional arguments: 'lhs', 'connector', and 'rhs'\n\n======================================================================\nERROR: test_duration_plus_timedelta (__main__.TestDurationExpressions)\nTest that F('duration_field') + timedelta works correctly\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature1.py\", line 58, in test_duration_plus_timedelta\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 275, in resolve_expression\n    c = self.copy()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 81, in copy\n    return self.__class__()\nTypeError: __init__() missing 3 required positional arguments: 'lhs', 'connector', and 'rhs'\n\n======================================================================\nERROR: test_timedelta_plus_duration (__main__.TestDurationExpressions)\nTest that timedelta + F('duration_field') works correctly (reversed order)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature1.py\", line 77, in test_timedelta_plus_duration\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 275, in resolve_expression\n    c = self.copy()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 81, in copy\n    return self.__class__()\nTypeError: __init__() missing 3 required positional arguments: 'lhs', 'connector', and 'rhs'\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nFAILED (errors=3)\n",
+                    "test_feature2.py": "EEEEE\n======================================================================\nERROR: test_date_subtraction_auto_resolution (__main__.TestTemporalSubtraction)\nTest that F('date_field') - F('date_field') auto-resolves to TemporalSubtraction\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature2.py\", line 58, in test_date_subtraction_auto_resolution\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 271, in resolve_expression\n    return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 198, in resolve_expression\n    c = self.__class__(\nTypeError: __init__() takes 3 positional arguments but 4 were given\n\n======================================================================\nERROR: test_datetime_subtraction_auto_resolution (__main__.TestTemporalSubtraction)\nTest that F('end') - F('start') auto-resolves to TemporalSubtraction with DurationField\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature2.py\", line 44, in test_datetime_subtraction_auto_resolution\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 271, in resolve_expression\n    return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 198, in resolve_expression\n    c = self.__class__(\nTypeError: __init__() takes 3 positional arguments but 4 were given\n\n======================================================================\nERROR: test_datetime_subtraction_with_value (__main__.TestTemporalSubtraction)\nTest subtraction with a datetime value\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature2.py\", line 89, in test_datetime_subtraction_with_value\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 271, in resolve_expression\n    return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 198, in resolve_expression\n    c = self.__class__(\nTypeError: __init__() takes 3 positional arguments but 4 were given\n\n======================================================================\nERROR: test_mixed_temporal_fields_not_handled (__main__.TestTemporalSubtraction)\nTest that mixing different temporal field types doesn't produce a TemporalSubtraction\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature2.py\", line 103, in test_mixed_temporal_fields_not_handled\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 275, in resolve_expression\n    c = self.copy()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 81, in copy\n    return self.__class__()\nTypeError: __init__() missing 3 required positional arguments: 'lhs', 'connector', and 'rhs'\n\n======================================================================\nERROR: test_time_subtraction_auto_resolution (__main__.TestTemporalSubtraction)\nTest that F('time_field') - F('time_field') auto-resolves to TemporalSubtraction\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/test_feature2.py\", line 72, in test_time_subtraction_auto_resolution\n    resolved = expression.resolve_expression()\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 271, in resolve_expression\n    return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(\n  File \"/Users/yichengfu/cotomata/codeconflict/swebench/clean_task_claude-3-7-sonnet@20250219/django__13121__13128_task/answer/codebase.py\", line 198, in resolve_expression\n    c = self.__class__(\nTypeError: __init__() takes 3 positional arguments but 4 were given\n\n----------------------------------------------------------------------\nRan 5 tests in 0.000s\n\nFAILED (errors=5)\n"
+                }
+            },
+            "test_results": {
+                "positive": {
+                    "test_feature1.py": {
+                        "success": false
+                    },
+                    "test_feature2.py": {
+                        "success": false
+                    }
+                },
+                "negative": {}
+            }
+        }
+    }
+}

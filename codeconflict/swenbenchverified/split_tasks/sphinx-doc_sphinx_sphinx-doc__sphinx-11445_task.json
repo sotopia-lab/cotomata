@@ -1,0 +1,45 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-11445",
+  "base_commit": "71db08c05197545944949d5aa76cd340e7143627",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The current implementation exhibits an issue where using rst_prolog results in the removal of top level headings that contain a domain directive, such as those starting with ':mod:'. This disrupts the expected rendering as the heading is neither displayed correctly nor included in the table of contents. The goal for this feature is to revisit the underlying code that processes these headings and ensure that field markers are detected properly. After these changes, documents that are not affected by the bug should continue to display their headings as expected.",
+    "hint_texts": "Refactor the import statements in sphinx/util/rst.py by eliminating the conditional import of pass_environment and replacing it with a direct import. Introduce a direct import of Body from docutils.parsers.rst.states, and use Body.patterns['field_marker'] to define a new regex (FIELD_NAME_RE). Replace the old docinfo regex with FIELD_NAME_RE to correctly match field markers in the document content.",
+    "entrypoint": "File: sphinx/util/rst.py \u2013 update the import section at the top of the file to use a direct import of pass_environment and include Body. Modify the regex definition by replacing the docinfo_re with FIELD_NAME_RE, and update its usage within the prepend_prolog function (around the condition that checks for docinfo lines).",
+    "tests": {
+      "FAIL_TO_PASS": [],
+      "PASS_TO_PASS": [
+        "tests/test_util_rst.py::test_escape",
+        "tests/test_util_rst.py::test_append_epilog",
+        "tests/test_util_rst.py::test_prepend_prolog",
+        "tests/test_util_rst.py::test_prepend_prolog_with_CR",
+        "tests/test_util_rst.py::test_prepend_prolog_without_CR",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections",
+        "tests/test_util_rst.py::test_textwidth",
+        "tests/test_util_rst.py::test_heading"
+      ]
+    }
+  },
+  "feature2": {
+    "prompt": "Documents using rst_prolog that feature a domain directive in the first heading (e.g., ':mod:') do not render the heading properly, leading to its omission from the output and the table of contents. The objective of this feature is to address the bug by ensuring that the handling of roles within section headings is corrected. The fix must adjust the processing so that the rst_prolog is properly prepended even when a heading starts with a role directive, thereby preserving the intended display. As a result, a heading using a role like ':mod:' should render as a normal heading and be correctly included in the toctree.",
+    "hint_texts": "Refine the behavior of the prepend_prolog function in sphinx/util/rst.py to better handle cases where section headings include a role. Focus on the insertion logic to ensure that the prolog is placed correctly after any initial docinfo or field markers, and address situations involving both the presence and absence of a trailing newline in the prolog. This adjustment will ensure that headings with a domain directive are not mistakenly removed or misprocessed.",
+    "entrypoint": "File: sphinx/util/rst.py \u2013 specifically modify the prepend_prolog function to correct the handling of headings with roles. Also, review and update the corresponding test cases in tests/test_util_rst.py (for example, test_prepend_prolog_with_roles_in_sections_with_newline and test_prepend_prolog_with_roles_in_sections_without_newline) to validate the fix.",
+    "tests": {
+      "FAIL_TO_PASS": [
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_with_newline",
+        "tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_without_newline"
+      ],
+      "PASS_TO_PASS": []
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features involve modifications to the file sphinx/util/rst.py and rely on the shared behavior of the prepend_prolog function. In addition, tests in tests/test_util_rst.py will validate the changes implemented by both features.",
+    "integration_strategy": "Feature1 establishes a refactored foundation by improving imports and regex handling, while Feature2 builds upon this by addressing the specific bug in handling roles within section headings. It is essential that Feature2\u2019s bug fix integrates smoothly with the refactored code from Feature1 with consistent behavior across all tests.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate closely to ensure that changes to import statements and regex patterns do not adversely affect the bug fix. Regular discussions should be held to confirm that the interface and internal workings of functions such as prepend_prolog remain stable, thereby avoiding integration issues."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_with_newline\", \"tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections_without_newline\"]",
+    "PASS_TO_PASS": "[\"tests/test_util_rst.py::test_escape\", \"tests/test_util_rst.py::test_append_epilog\", \"tests/test_util_rst.py::test_prepend_prolog\", \"tests/test_util_rst.py::test_prepend_prolog_with_CR\", \"tests/test_util_rst.py::test_prepend_prolog_without_CR\", \"tests/test_util_rst.py::test_prepend_prolog_with_roles_in_sections\", \"tests/test_util_rst.py::test_textwidth\", \"tests/test_util_rst.py::test_heading\"]"
+  }
+}

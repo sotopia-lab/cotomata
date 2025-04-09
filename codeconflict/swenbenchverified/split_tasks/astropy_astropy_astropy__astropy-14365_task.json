@@ -1,0 +1,33 @@
+{
+  "repo": "astropy/astropy",
+  "test_id": "astropy/astropy_astropy__astropy-14365",
+  "base_commit": "7269fa3e33e8d02485a647da91a5a2a60a06af61",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Feature 1 problem statement: The ascii.qdp file format parser currently assumes that QDP commands are provided in all uppercase. This assumption causes issues when commands are written in lower case, for example 'read serr 1 2', which leads to parsing errors and crashes. The parser should be updated to handle command lines in a case-insensitive manner so that commands, regardless of their case, are correctly recognized and processed.",
+    "hint_texts": "This part involves modifying the regular expression used to identify QDP command lines. The change requires updating the compilation of the regex to include a case-insensitive flag. By doing so, the parser will be able to match commands written in any letter case, preventing errors when commands appear in lower case.",
+    "entrypoint": "File: astropy/io/ascii/qdp.py; Function: _line_type. Locate the line where '_line_type_re' is compiled (look for re.compile(_type_re)) and modify it to include 're.IGNORECASE'. This is the starting point for implementing a case-insensitive command parser.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_qdp.py::test_roundtrip[True]\"]",
+      "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_qdp.py::test_get_tables_from_qdp_file\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip[False]\", \"astropy/io/ascii/tests/test_qdp.py::test_read_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example_comma\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple_specify_name\", \"astropy/io/ascii/tests/test_qdp.py::test_get_lines_from_qdp\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2 problem statement: The QDP file parser must process the entire file in a case-insensitive fashion. Beyond the commands, the parser should interpret data tokens and special markers without being affected by letter case. This ensures that files created by hand, which may contain mixed-case entries, are correctly read and parsed without errors.",
+    "hint_texts": "This part focuses on the logic that processes individual data tokens in the file. Instead of using a case-sensitive equality check for special tokens, the implementation should convert the token to a standard case (such as upper case) before comparison. This modification will ensure that tokens representing special values (for instance, those indicating masked data) are reliably identified regardless of their casing.",
+    "entrypoint": "File: astropy/io/ascii/qdp.py; Function: _get_tables_from_qdp_file. Locate the loop that iterates over tokens in a data line and change the condition from 'if v == \"NO\"' to 'if v.upper() == \"NO\"'. This is the key entry point for updating data token parsing.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_qdp.py::test_get_tables_from_qdp_file\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip[False]\", \"astropy/io/ascii/tests/test_qdp.py::test_read_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example_comma\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple_specify_name\", \"astropy/io/ascii/tests/test_qdp.py::test_get_lines_from_qdp\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "The primary file affected by both features is astropy/io/ascii/qdp.py; additionally, the test file astropy/io/ascii/tests/test_qdp.py is used to verify the changes. Both features impact the core QDP parsing logic.",
+    "integration_strategy": "After separate development of each feature, the changes should be integrated so that the parser applies case insensitivity uniformly for both command identification and data token recognition. End-to-end tests with mixed-case QDP files should be run to ensure seamless functioning.",
+    "communication_needs": "Developers working on feature1 and feature2 must coordinate over the shared modifications in astropy/io/ascii/qdp.py. They should discuss the unified approach for case insensitivity, verify that API interfaces remain consistent, and ensure that no conflicts arise between command parsing and data token handling."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"astropy/io/ascii/tests/test_qdp.py::test_roundtrip[True]\"]",
+    "PASS_TO_PASS": "[\"astropy/io/ascii/tests/test_qdp.py::test_get_tables_from_qdp_file\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip[False]\", \"astropy/io/ascii/tests/test_qdp.py::test_read_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example\", \"astropy/io/ascii/tests/test_qdp.py::test_roundtrip_example_comma\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple\", \"astropy/io/ascii/tests/test_qdp.py::test_read_write_simple_specify_name\", \"astropy/io/ascii/tests/test_qdp.py::test_get_lines_from_qdp\"]"
+  }
+}

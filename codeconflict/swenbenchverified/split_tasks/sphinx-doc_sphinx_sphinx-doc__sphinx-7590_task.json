@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-7590",
+  "base_commit": "2e506c5ab457cba743bb47eb5b8c8eb9dd51d23d",
+  "difficulty": ">4 hours",
+  "feature1": {
+    "prompt": "Implement support for C++ User Defined Literals in the Sphinx C++ domain. The current implementation fails when processing code such as:\n\n  namespace units::si {\n    inline constexpr auto planck_constant = 6.62607015e-34q_J * 1q_s;\n  }\n\nThis produces an error: 'WARNING: Invalid definition: Expected end of definition.' As indicated by the Sphinx reference, the parser does not currently handle UDLs. The fix should enable Sphinx to recognize and correctly process user defined literal suffixes.",
+    "hint_texts": "Focus on changes in sphinx/domains/cpp.py related to UDL parsing and handling. Implement the ASTUserDefinedLiteral class and update the _parse_literal and describe_signature methods to support a new 'udl' description mode. Review the new udl_identifier_re definition and the _udl helper function to ensure proper token matching for UDLs.",
+    "entrypoint": "File: sphinx/domains/cpp.py \u2013 update the _parse_literal function around the identification of float and integer literals, add the new ASTUserDefinedLiteral class implementation, and modify describe_signature to handle 'udl' mode. Look for the newly added udl_identifier_re and _udl helper as starting points.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_domain_cpp.py::test_expressions",
+      "PASS_TO_PASS": "exprCheck(i + '_udl', ...); exprCheck(f + '_udl', ...); exprCheck('\"abc\"_udl', ...); exprCheck('6.62607015e-34q_J', ...)"
+    }
+  },
+  "feature2": {
+    "prompt": "Enhance the literal parsing mechanism in Sphinx to correctly handle numeric literal suffixes in C++ code. The parser currently does not properly terminate when a user defined literal suffix is present, leading to errors. The update should ensure that numeric literals, including those with suffixes, are accurately parsed without producing definition errors. This improvement will refine the overall literal parsing process in Sphinx.",
+    "hint_texts": "Focus on refactoring the numeric literal parsing in sphinx/domains/c.py and sphinx/util/cfamily.py. Update and integrate the new regex patterns (integers_literal_suffix_re and float_literal_suffix_re) into the _parse_literal functions. Ensure that the modified logic correctly processes decimal, hexadecimal, and character literals including their suffixes.",
+    "entrypoint": "Files: sphinx/domains/c.py and sphinx/util/cfamily.py \u2013 modify the _parse_literal function to use the new regex definitions for literal suffixes and update related parsing logic. Start by reviewing the changes around the introduction of integers_literal_suffix_re and float_literal_suffix_re in the test patch.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "exprCheck(e + suffix, ...) for decimal and hex floats; exprCheck(\"{}'{}'\".format(p, c), ...) for character literals"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "sphinx/domains/cpp.py and sphinx/util/cfamily.py, including the shared regex definitions and the _parse_literal functions that are used by both UDL support and numeric literal parsing.",
+    "integration_strategy": "Ensure that the new UDL handling in Feature1 builds on the refined literal parsing logic from Feature2. Both features must coordinate on updates to shared parsing routines and regex patterns to maintain consistent behavior across the C and C++ domains.",
+    "communication_needs": "Developers need to discuss changes in the _parse_literal implementations and the impact on the overall parsing infrastructure. Regular coordination is required to resolve merge conflicts in shared files and to align on updates to the parsing APIs, especially regarding the interpretation of literal suffixes."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_domain_cpp.py::test_expressions\"]",
+    "PASS_TO_PASS": "[\"tests/test_domain_cpp.py::test_fundamental_types\", \"tests/test_domain_cpp.py::test_type_definitions\", \"tests/test_domain_cpp.py::test_concept_definitions\", \"tests/test_domain_cpp.py::test_member_definitions\", \"tests/test_domain_cpp.py::test_function_definitions\", \"tests/test_domain_cpp.py::test_operators\", \"tests/test_domain_cpp.py::test_class_definitions\", \"tests/test_domain_cpp.py::test_union_definitions\", \"tests/test_domain_cpp.py::test_enum_definitions\", \"tests/test_domain_cpp.py::test_anon_definitions\", \"tests/test_domain_cpp.py::test_templates\", \"tests/test_domain_cpp.py::test_template_args\", \"tests/test_domain_cpp.py::test_initializers\", \"tests/test_domain_cpp.py::test_attributes\", \"tests/test_domain_cpp.py::test_xref_parsing\", \"tests/test_domain_cpp.py::test_build_domain_cpp_multi_decl_lookup\", \"tests/test_domain_cpp.py::test_build_domain_cpp_warn_template_param_qualified_name\", \"tests/test_domain_cpp.py::test_build_domain_cpp_backslash_ok\", \"tests/test_domain_cpp.py::test_build_domain_cpp_semicolon\", \"tests/test_domain_cpp.py::test_build_domain_cpp_anon_dup_decl\", \"tests/test_domain_cpp.py::test_build_domain_cpp_misuse_of_roles\", \"tests/test_domain_cpp.py::test_build_domain_cpp_with_add_function_parentheses_is_True\", \"tests/test_domain_cpp.py::test_build_domain_cpp_with_add_function_parentheses_is_False\", \"tests/test_domain_cpp.py::test_xref_consistency\"]"
+  }
+}

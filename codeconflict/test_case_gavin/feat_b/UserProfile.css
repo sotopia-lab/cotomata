@@ -1,0 +1,107 @@
+.user-profile {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.responsive-desktop {
+  max-width: 800px;
+}
+
+.responsive-tablet {
+  max-width: 600px;
+}
+
+.responsive-mobile {
+  max-width: 100%;
+  padding: 15px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  border-radius: 50%;
+  margin-right: 15px;
+}
+
+.avatar-desktop {
+  width: 64px;
+  height: 64px;
+}
+
+.avatar-tablet {
+  width: 50px;
+  height: 50px;
+}
+
+.avatar-mobile {
+  width: 40px;
+  height: 40px;
+}
+
+.name-mobile {
+  font-size: 1.2rem;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.profile-details {
+  line-height: 1.5;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.responsive-tablet .contact-info {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.responsive-mobile .contact-info {
+  font-size: 0.9rem;
+}
+
+.additional-info {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.action-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.responsive-desktop .action-button {
+  width: auto;
+}
+
+.action-button:hover {
+  background-color: #3a70b2;
+}
+
+.action-button.secondary {
+  background-color: #6c757d;
+}
+
+.action-button.secondary:hover {
+  background-color: #5a6268;
+}

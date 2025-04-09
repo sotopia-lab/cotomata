@@ -1,0 +1,33 @@
+{
+  "repo": "pylint-dev/pylint",
+  "test_id": "pylint-dev/pylint_pylint-dev__pylint-4604",
+  "base_commit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Unused-import false positive for a module used in a type comment presents an issue where a module imported only for type annotation purposes is incorrectly flagged as unused. In the reproduced scenario, code imports a module (for example, 'abc') and later refers to its members in type comments; however, a warning is emitted even though the module is being used. The expected behavior is that when a module is referenced in a type comment, no unused-import warning (W0611) should be produced. This feature focuses on correcting the type comment handling logic so that attribute references within type annotations are properly recognized.",
+    "hint_texts": "This feature involves modifying the type annotation processing in the variable checker. Developers should update the function responsible for storing type annotation nodes so that it examines whether the annotation is an attribute. When an attribute is detected, its underlying expression should be recorded appropriately to signify its usage. This change will prevent the unused-import warning from being triggered when the module is only used in type comments.",
+    "entrypoint": "File: pylint/checkers/variables.py, Function: _store_type_annotation_node. Investigate the logic around handling different types of AST nodes, particularly after line 1826, and add a check for type_annotation being an instance of astroid.Attribute.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/checkers/unittest_variables.py::TestVariablesChecker::test_attribute_in_type_comment",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "feature2": {
+    "prompt": "The false positive unused-import issue also requires that the solution remain consistent across different runtime environments as indicated by the version information provided. The problem statement shows that when a module is used in a type comment, the warning should not be emitted regardless of the environment details. The expected behavior is to maintain compatibility with the given Python versions and underlying libraries while ensuring that the import usage is correctly recognized. This feature is part of the overall fix and supports environment-sensitive configuration to ensure robustness of the solution.",
+    "hint_texts": "This feature focuses on updating the configuration constants to enable environment-specific behavior. Developers should introduce new constants or modify existing ones in the configuration file so that runtime checks can be applied when processing type annotations. The changes should be implemented in a central constants file and designed to support conditional logic in tests and analysis, ensuring the fix works across the targeted Python versions.",
+    "entrypoint": "File: pylint/constants.py. Add the necessary import statements and define the new constant in this file so that its value reflects the runtime environment. Make sure that its usage in the overall type comment handling logic is clearly documented.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/checkers/unittest_variables.py::TestVariablesChecker (conditional behavior that leverages the new constant to determine if the test should be executed)",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify and interact with the test file tests/checkers/unittest_variables.py and depend on the corrected detection of type comments in the source code.",
+    "integration_strategy": "Feature1 implements the core logic changes in the variable checker to properly recognize type annotations, while Feature2 handles the configuration constants for environment-specific testing. Both features must integrate so that the new constant is effectively used by the type comment handling logic. A merge of these parts ensures that tests involving type comments behave consistently regardless of the interpreter.",
+    "communication_needs": "Developers for both features should coordinate on changes in tests/checkers/unittest_variables.py to avoid conflicts. They need to confirm that the new constant introduced in Feature2 is referenced properly in Feature1's logic. Regular meetings or shared documentation will help resolve any integration issues that might emerge during merging."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/checkers/unittest_variables.py::TestVariablesChecker::test_bitbucket_issue_78\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_no_name_in_module_skipped\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_all_elements_without_parent\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_ignored\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_custom_modules\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_modname_not_ignored\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_redefined_builtin_in_function\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_unassigned_global\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_listcomp_in_decorator\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_listcomp_in_ancestors\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_return_type_annotation\", \"tests/checkers/unittest_variables.py::TestVariablesChecker::test_attribute_in_type_comment\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_custom_callback_string\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_redefined_builtin_modname_not_ignored\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_redefined_builtin_in_function\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_import_as_underscore\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_lambda_in_classdef\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_nested_lambda\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_ignored_argument_names_no_message\", \"tests/checkers/unittest_variables.py::TestVariablesCheckerWithTearDown::test_ignored_argument_names_starred_args\", \"tests/checkers/unittest_variables.py::TestMissingSubmodule::test_package_all\"]",
+    "PASS_TO_PASS": "[]"
+  }
+}

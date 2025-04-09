@@ -1,0 +1,50 @@
+{
+  "analysis": "1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**:\n   - The changes in the PR are focused on a single logical enhancement: allowing `cleaned_data` to overwrite fields' default values in Django forms. This is a cohesive change that addresses a specific issue in the form handling logic.\n   - The modification in `django/forms/models.py` is a single conditional logic change that directly ties into the behavior of form data processing. This change is not easily separable into distinct parts without losing the context of the enhancement.\n   - The test addition in `tests/model_forms/tests.py` is directly related to verifying the new behavior introduced by the change in the form logic. It is designed to test the specific scenario that the code change addresses.\n\n3. **If NO**:\n   - The PR is a cohesive unit because it addresses a single issue: the inability to overwrite default values with `cleaned_data` in forms. The code change and the test are tightly coupled to this specific functionality.\n   - The change in logic is a single conditional statement that cannot be split without losing its intended purpose. The test is specifically designed to validate this new behavior, making it impractical to test parts independently.\n   - Splitting the PR would not provide any meaningful separation of functionality or testability, as both the code change and the test are integral to the same feature enhancement.",
+  "can_be_split": false,
+  "raw_response": {
+    "id": "chatcmpl-B6LvT8SZR5Y4oM29PPzVRq1HbNN7X",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "1. **Summary Assessment**: No, the PR cannot be split into two logical parts.\n\n2. **Reasoning**:\n   - The changes in the PR are focused on a single logical enhancement: allowing `cleaned_data` to overwrite fields' default values in Django forms. This is a cohesive change that addresses a specific issue in the form handling logic.\n   - The modification in `django/forms/models.py` is a single conditional logic change that directly ties into the behavior of form data processing. This change is not easily separable into distinct parts without losing the context of the enhancement.\n   - The test addition in `tests/model_forms/tests.py` is directly related to verifying the new behavior introduced by the change in the form logic. It is designed to test the specific scenario that the code change addresses.\n\n3. **If NO**:\n   - The PR is a cohesive unit because it addresses a single issue: the inability to overwrite default values with `cleaned_data` in forms. The code change and the test are tightly coupled to this specific functionality.\n   - The change in logic is a single conditional statement that cannot be split without losing its intended purpose. The test is specifically designed to validate this new behavior, making it impractical to test parts independently.\n   - Splitting the PR would not provide any meaningful separation of functionality or testability, as both the code change and the test are integral to the same feature enhancement.",
+          "refusal": null,
+          "role": "assistant",
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1740853951,
+    "model": "gpt-4o-2024-08-06",
+    "object": "chat.completion",
+    "service_tier": "default",
+    "system_fingerprint": "fp_eb9dce56a8",
+    "usage": {
+      "completion_tokens": 290,
+      "prompt_tokens": 3469,
+      "total_tokens": 3759,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      }
+    }
+  },
+  "metadata": {
+    "repo": "django/django",
+    "instance_id": "django__django-11433",
+    "base_commit": "21b1d239125f1228e579b1ce8d94d4d5feadd2a6",
+    "version": "3.0",
+    "difficulty": "<15 min fix",
+    "timestamp": "2025-03-01 10:32:36"
+  }
+}

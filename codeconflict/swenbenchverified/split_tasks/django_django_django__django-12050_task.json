@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-12050",
+  "base_commit": "b93a0e34d9b9b99d41103782b7e7aeabf47517e3",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Query.resolve_lookup_value coerces value of type list to tuple. Changes introduced in #30687 cause an input value list to be coerced to tuple, breaking exact value queries for ORM fields such as PickledField. The expected iterable return type should match the input iterable type. The fix should ensure that if a list is provided as input, the method returns a list (or the appropriate iterable type), preserving the original type for correct behavior in value comparisons.",
+    "hint_texts": "This feature focuses on refactoring the resolve_lookup_value method to preserve the input iterable's type. Developers should modify the code in django/db/models/sql/query.py so that instead of converting the iterable to a tuple, it returns an iterable of the same type as provided. The implementation should resolve each sub-value appropriately while constructing the output using the type constructor of the input. Care should be taken to ensure that the changes do not negatively affect existing behavior on other queries.",
+    "entrypoint": "File: django/db/models/sql/query.py; Function: resolve_lookup_value. Begin modifications at the code block handling iterables (starting near line 1059 in the diff) to return an object of type(value) instead of a tuple.",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"test_clone_select_related (queries.test_query.TestQuery)\", \"test_complex_query (queries.test_query.TestQuery)\", \"test_foreign_key (queries.test_query.TestQuery)\", \"test_foreign_key_exclusive (queries.test_query.TestQuery)\", \"test_foreign_key_f (queries.test_query.TestQuery)\", \"test_multiple_fields (queries.test_query.TestQuery)\", \"test_negated_nullable (queries.test_query.TestQuery)\", \"test_simple_query (queries.test_query.TestQuery)\", \"test_simplecol_query (queries.test_query.TestQuery)\", \"test_transform (queries.test_query.TestQuery)\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Query.resolve_lookup_value coerces value of type list to tuple, which impacts exact value queries for certain ORM fields like PickledField. The expected behavior is that the returned iterable type should remain consistent with the input type. This ensures that when an iterable such as a list is provided, it is not altered to a different type, thus preserving the matching semantics required by the ORM. The solution must guarantee that the type integrity is maintained for proper value comparisons.",
+    "hint_texts": "This feature is about validating the changes made to resolve_lookup_value. Developers need to add a new mechanism to verify that the method now returns an iterable of the same type as the input. Care should be taken to cover scenarios where the input is a list, ensuring that the output type has not been coerced into a tuple. The implementation should be clear and modular so that it can be independently validated.",
+    "entrypoint": "File: tests/queries/test_query.py; Add a new test function (for example, test_iterable_lookup_value) that builds a query using an iterable input and asserts that the output is of the same type as that input.",
+    "tests": {
+      "FAIL_TO_PASS": "[\"test_iterable_lookup_value (queries.test_query.TestQuery)\"]",
+      "PASS_TO_PASS": "[]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the resolve_lookup_value method in django/db/models/sql/query.py and depend on test cases in tests/queries/test_query.py to ensure type consistency in the ORM.",
+    "integration_strategy": "Feature1's refactoring must be completed and merged first, so that Feature2's new test case can be used to validate the changes. Both developers need to coordinate to ensure that the expected behavior of preserving the input iterable type is consistently implemented and verified.",
+    "communication_needs": "Developers working on feature1 and feature2 should discuss the precise expectations for the behavior of resolve_lookup_value. They need to agree on how the input iterable type is determined and maintained, and ensure that the test case in feature2 accurately reflects this logic. Regular communication will help address any discrepancies or adjustments needed for a seamless integration."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_iterable_lookup_value (queries.test_query.TestQuery)\"]",
+    "PASS_TO_PASS": "[\"test_clone_select_related (queries.test_query.TestQuery)\", \"test_complex_query (queries.test_query.TestQuery)\", \"test_foreign_key (queries.test_query.TestQuery)\", \"test_foreign_key_exclusive (queries.test_query.TestQuery)\", \"test_foreign_key_f (queries.test_query.TestQuery)\", \"test_multiple_fields (queries.test_query.TestQuery)\", \"test_negated_nullable (queries.test_query.TestQuery)\", \"test_simple_query (queries.test_query.TestQuery)\", \"test_simplecol_query (queries.test_query.TestQuery)\", \"test_transform (queries.test_query.TestQuery)\"]"
+  }
+}

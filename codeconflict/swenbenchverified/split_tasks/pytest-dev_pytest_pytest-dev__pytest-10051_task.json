@@ -1,0 +1,33 @@
+{
+  "repo": "pytest-dev/pytest",
+  "test_id": "pytest-dev/pytest_pytest-dev__pytest-10051",
+  "base_commit": "aa55975c7d3f6c9f6d7f68accc41bb7cadf0eb9a",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Feature 1 problem statement - caplog.get_records() gets decoupled from the actual log records when caplog.clear() is called. The internal logging mechanism does not clear its state correctly because the handler replaces its records list instead of clearing it. This results in the get_records() method remaining frozen and not accepting new log entries. The fix requires enhancing the internal logging handler by introducing a clear method that properly resets both the records and the log text stream.",
+    "hint_texts": "This feature involves extending the internal logging handler by adding a new clear method. The new method should clear the records list and reset the stream (using a fresh StringIO instance), ensuring that the internal state is fully refreshed.",
+    "entrypoint": "File: src/_pytest/logging.py; within the logging handler class (the class that contains the reset method), add a new method named 'clear' that calls self.records.clear() and resets self.stream to a new StringIO().",
+    "tests": {
+      "FAIL_TO_PASS": "[]",
+      "PASS_TO_PASS": "[\"testing/logging/test_fixture.py::test_clear\"]"
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2 problem statement - caplog.get_records() becomes decoupled from the actual log records after caplog.clear() is called because the caplog.clear() method does not properly update the internal state. The caplog interface needs to be updated so that when caplog.clear() is invoked, it utilizes the new clear method from the logging handler. This adjustment will ensure that the log records and captured messages remain in sync after a clear operation. The goal is to have caplog.clear() correctly reset the internal state and allow get_records() to track new log entries as expected.",
+    "hint_texts": "This feature focuses on modifying the caplog.clear() method. Instead of calling the old handler.reset(), it should now call the new handler.clear() method. This change will ensure that the caplog interface properly reflects the refreshed state provided by the internal logging handler.",
+    "entrypoint": "File: src/_pytest/logging.py; within the caplog object\u2019s clear method, change the call from self.handler.reset() to self.handler.clear().",
+    "tests": {
+      "FAIL_TO_PASS": "[\"testing/logging/test_fixture.py::test_clear_for_call_stage\"]",
+      "PASS_TO_PASS": "[\"testing/logging/test_fixture.py::test_change_level\", \"testing/logging/test_fixture.py::test_with_statement\", \"testing/logging/test_fixture.py::test_log_access\", \"testing/logging/test_fixture.py::test_messages\", \"testing/logging/test_fixture.py::test_record_tuples\", \"testing/logging/test_fixture.py::test_unicode\", \"testing/logging/test_fixture.py::test_caplog_captures_for_all_stages\", \"testing/logging/test_fixture.py::test_fixture_help\", \"testing/logging/test_fixture.py::test_change_level_undo\", \"testing/logging/test_fixture.py::test_change_level_undos_handler_level\", \"testing/logging/test_fixture.py::test_ini_controls_global_log_level\", \"testing/logging/test_fixture.py::test_caplog_can_override_global_log_level\", \"testing/logging/test_fixture.py::test_caplog_captures_despite_exception\", \"testing/logging/test_fixture.py::test_log_report_captures_according_to_config_option_upon_failure\"]"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the file src/_pytest/logging.py. They share the internal logging handler class and the caplog interface, which together manage the log records and stream.",
+    "integration_strategy": "Feature 1 introduces a new clear method within the logging handler that properly resets internal state. Feature 2 then adapts the caplog.clear() method to use this new handler method. Integration requires that the new API exposed by Feature 1 is correctly consumed by Feature 2, ensuring consistency between the internal state and the caplog interface.",
+    "communication_needs": "Developers working on each feature should coordinate to agree on the signature and behavior of the new clear method. They must also discuss the integration in the caplog.clear() method to ensure that both sides of the change (internal state management and external interface) are compatible and thoroughly tested."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"testing/logging/test_fixture.py::test_clear_for_call_stage\"]",
+    "PASS_TO_PASS": "[\"testing/logging/test_fixture.py::test_change_level\", \"testing/logging/test_fixture.py::test_with_statement\", \"testing/logging/test_fixture.py::test_log_access\", \"testing/logging/test_fixture.py::test_messages\", \"testing/logging/test_fixture.py::test_record_tuples\", \"testing/logging/test_fixture.py::test_unicode\", \"testing/logging/test_fixture.py::test_clear\", \"testing/logging/test_fixture.py::test_caplog_captures_for_all_stages\", \"testing/logging/test_fixture.py::test_fixture_help\", \"testing/logging/test_fixture.py::test_change_level_undo\", \"testing/logging/test_fixture.py::test_change_level_undos_handler_level\", \"testing/logging/test_fixture.py::test_ini_controls_global_log_level\", \"testing/logging/test_fixture.py::test_caplog_can_override_global_log_level\", \"testing/logging/test_fixture.py::test_caplog_captures_despite_exception\", \"testing/logging/test_fixture.py::test_log_report_captures_according_to_config_option_upon_failure\"]"
+  }
+}

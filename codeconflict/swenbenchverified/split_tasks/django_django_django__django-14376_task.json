@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-14376",
+  "base_commit": "d06c5b358149c02a62da8a5469264d05f29ac659",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "Update the MySQL backend so that it no longer uses the deprecated 'db' and 'passwd' keyword arguments. MySQLclient marked these two kwargs as deprecated in favor of 'database' and 'password', and Django (versions 2.2, 3.1, and 3.2) requires a minimum mysqlclient version newer than 1.3.8. The backend connection logic must be modified such that the new keyword arguments are used to configure the database connection, ensuring that connections are established using the supported keys. This change is focused on the core handling of connection parameters in the backend.",
+    "hint_texts": "Focus on refactoring the code in the backend where connection parameters are retrieved and passed on. In particular, update the sections in django/db/backends/mysql/base.py to replace assignments from 'db' to 'database' and from 'passwd' to 'password'. Also, modify django/db/backends/mysql/client.py so that the command-line construction (via settings_to_cmd_args_env) correctly prefers and uses the new keys. Make sure that the changes work seamlessly with the existing configuration structure and maintain backward compatibility.",
+    "entrypoint": "Files to update: django/db/backends/mysql/base.py (within the get_connection_params function around lines 200-205) and django/db/backends/mysql/client.py (within the settings_to_cmd_args_env function near lines 51-59). These locations are the starting points for implementing the replacement of the deprecated keys with 'database' and 'password'.",
+    "tests": {
+      "FAIL_TO_PASS": "No specific failing tests are associated with backend changes; ensure legacy behavior remains unaffected.",
+      "PASS_TO_PASS": "test_basic_params_specified_in_settings (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_can_connect_using_sockets (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_crash_password_does_not_leak (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_fails_with_keyerror_on_incomplete_config (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_options_charset (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_ssl_certificate_is_added (dbshell.test_mysql.MySqlDbshellCommandTestCase)"
+    }
+  },
+  "feature2": {
+    "prompt": "Ensure that the MySQL backend\u2019s handling of connection parameters is fully aligned with the deprecation of 'db' and 'passwd' in favor of 'database' and 'password'. MySQLclient now only supports the updated keys, and Django must honor this change to work with supported mysqlclient versions (1.3.8 or newer). The system should process configuration settings correctly, maintaining backward compatibility with previous usage while enforcing the new keywords. This feature emphasizes a complete and robust integration of the updated parameter handling.",
+    "hint_texts": "Concentrate on enhancing the test suite to validate the changes made in the backend. Update the tests to cover scenarios where both the deprecated and updated connection parameter keys are used. Make sure that the tests accurately verify that, regardless of which pair of keys is supplied, the backend processes them correctly and builds the proper command-line arguments and environment settings. This will involve adding sub-tests or additional checks within existing test functions to ensure comprehensive coverage.",
+    "entrypoint": "File to update: tests/dbshell/test_mysql.py. Focus on modifying test functions such as test_options_override_settings_proper_values and test_options_non_deprecated_keys_preferred, and update test_parameters if necessary. The entry point is to expand these tests so that they validate both the legacy and the updated keyword arguments.",
+    "tests": {
+      "FAIL_TO_PASS": "test_options_non_deprecated_keys_preferred (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_options_override_settings_proper_values (dbshell.test_mysql.MySqlDbshellCommandTestCase), test_parameters (dbshell.test_mysql.MySqlDbshellCommandTestCase)",
+      "PASS_TO_PASS": "No additional passing tests specified for these changes; existing tests that pass before the fix should remain unchanged."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Files that are shared include django/db/backends/mysql/base.py, django/db/backends/mysql/client.py, and tests/dbshell/test_mysql.py. The connection parameter logic and configuration structures in these files are common resources that both features rely on.",
+    "integration_strategy": "Feature1\u2019s backend updates must expose the updated connection parameter handling, which Feature2\u2019s enhanced tests will validate. Integration requires that the changes in the core backend logic are consistent with what is verified by the test suite. Developers should ensure that both the backend refactoring and the test updates align to provide backward compatibility while enforcing the new behavior.",
+    "communication_needs": "Regular coordination between the developers working on feature1 and feature2 is necessary. They should discuss the expected behavior of handling connection parameters, align on file modifications in both the backend and test suites, and ensure that integration is smooth. Clear communication about any observed discrepancies or edge cases during integration is essential."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_options_non_deprecated_keys_preferred (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_options_override_settings_proper_values (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_parameters (dbshell.test_mysql.MySqlDbshellCommandTestCase)\"]",
+    "PASS_TO_PASS": "[\"test_basic_params_specified_in_settings (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_can_connect_using_sockets (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_crash_password_does_not_leak (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_fails_with_keyerror_on_incomplete_config (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_options_charset (dbshell.test_mysql.MySqlDbshellCommandTestCase)\", \"test_ssl_certificate_is_added (dbshell.test_mysql.MySqlDbshellCommandTestCase)\"]"
+  }
+}

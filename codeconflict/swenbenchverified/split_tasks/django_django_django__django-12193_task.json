@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-12193",
+  "base_commit": "3fb7c12158a2402f0f80824f6778112071235803",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "SplitArrayField with BooleanField always has widgets checked after the first True value. When providing a SplitArrayField BooleanField with preexisting data, the final_attrs dict is updated to include 'checked': True after the for loop has reached the first True value in the initial data array. As a result, every widget initialized after that is rendered as checked even though the backing data may be False. This issue is caused by the CheckboxInput widget's get_context() method modifying the attrs dict passed into it, which is the only widget exhibiting this behavior.",
+    "hint_texts": "This feature focuses on modifying the CheckboxInput widget's get_context() method to prevent in-place mutation of the attrs dictionary. Developers should remove the current logic that directly updates the attrs dict and instead merge the existing attributes with {'checked': True} in a non-destructive way. The goal is to ensure that only the intended widget reflects the checked state, while subsequent widgets use the unaltered attributes.",
+    "entrypoint": "File: django/forms/widgets.py; Function: get_context in the CheckboxInput widget. Locate the code block starting around line 522 where the attrs variable is checked and then modified, and replace it with a safe dictionary merge.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_render_check_exception (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_check_test (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_empty (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_false (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_none (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_true (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_render_value (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_value_from_datadict (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_value_from_datadict_string_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest), test_value_omitted_from_data (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)"
+    }
+  },
+  "feature2": {
+    "prompt": "SplitArrayField with BooleanField always has widgets checked after the first True value. When a SplitArrayField BooleanField is initialized with preexisting data, the final_attrs dict is updated to include 'checked': True after the first True value is reached, which causes every subsequent widget to be incorrectly marked as checked even if the actual data is False. This behavior originates from the CheckboxInput widget's get_context() method, which modifies the incoming attrs dict. The expected solution must preserve the original attributes so that each widget accurately reflects its true Boolean value.",
+    "hint_texts": "This feature is about adding tests to verify that the CheckboxInput widget does not mutate the attrs dictionary passed into get_context(). Developers should add test cases that simulate preexisting data conditions and ensure that an attrs dict (for example, one with 'checked': False) remains unchanged after processing. The tests should confirm that the checked state is correctly applied only when intended.",
+    "entrypoint": "Files: tests/forms_tests/widget_tests/test_checkboxinput.py and tests/postgres_tests/test_array.py. In test_checkboxinput.py, add a test that verifies the original attrs dict remains unmodified. In test_array.py, include tests that check the overall rendering of the SplitArrayWidget when using the CheckboxInput, ensuring the correct checked state is applied.",
+    "tests": {
+      "FAIL_TO_PASS": "test_get_context_does_not_mutate_attrs (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)",
+      "PASS_TO_PASS": "test_checkbox_get_context_attrs (tests/postgres_tests/test_array.py)"
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "django/forms/widgets.py (the CheckboxInput widget implementation), tests/forms_tests/widget_tests/test_checkboxinput.py, tests/postgres_tests/test_array.py, and the underlying attrs dictionary structure used by the widget.",
+    "integration_strategy": "Feature1 delivers the new implementation in the get_context() method to avoid mutating the attrs dict, while Feature2 provides comprehensive tests to verify that the change behaves as expected. Both features must be merged to ensure that the updated widget code passes all regression tests and the newly added test cases validate that each widget correctly reflects its state.",
+    "communication_needs": "Developers working on Feature1 should explain the new approach for handling the attrs dict, and those working on Feature2 must ensure their tests accurately reflect this change. Regular coordination and code reviews are necessary to align the implementation with the test expectations and to cover any edge cases related to widget rendering."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_get_context_does_not_mutate_attrs (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\"]",
+    "PASS_TO_PASS": "[\"test_render_check_exception (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_check_test (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_empty (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_false (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_none (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_true (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_render_value (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_value_from_datadict (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_value_from_datadict_string_int (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\", \"test_value_omitted_from_data (forms_tests.widget_tests.test_checkboxinput.CheckboxInputTest)\"]"
+  }
+}

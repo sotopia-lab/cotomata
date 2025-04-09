@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-11333",
+  "base_commit": "55b68de643b5c2d5f0a8ea7587ab3b2966021ccc",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "The URL resolver mechanism currently may instantiate multiple expensive URLResolvers because get_resolver does not check settings.ROOT_URLCONF before using its memoized cache. This leads to redundant calls to URLResolver._populate which can severely impact performance in applications with many routes. The fix requires modifying get_resolver so that it looks up settings.ROOT_URLCONF prior to calling the memoized function, ensuring consistent use of a cached URLResolver instance. This change will help guarantee that repeated calls (for example, from reverse and other call-sites) consistently use the same resolver when the configuration remains unchanged.",
+    "hint_texts": "Includes changes in django/urls/base.py and django/urls/resolvers.py to optimize the URL resolver caching mechanism. Introduce a new function _get_cached_resolver and update get_resolver to delegate to it, ensuring that settings.ROOT_URLCONF is consulted before using the memoized result. Adjust the clear_url_caches function to clear the cache for _get_cached_resolver. Developers should verify that the new caching logic prevents redundant invocations of URLResolver._populate.",
+    "entrypoint": "File: django/urls/base.py - update import statement to import _get_cached_resolver and modify clear_url_caches to call _get_cached_resolver.cache_clear(); File: django/urls/resolvers.py - change get_resolver to return _get_cached_resolver(urlconf) and add the new _get_cached_resolver function decorated with @functools.lru_cache.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_str (urlpatterns.test_resolvers.RegexPatternTests), test_str (urlpatterns.test_resolvers.RoutePatternTests)"
+    }
+  },
+  "feature2": {
+    "prompt": "Multiple URLResolvers may be unintentionally constructed by calls to get_resolver, leading to redundant executions of URLResolver._populate. This feature focuses on validating the improved caching behavior by adding tests that ensure get_resolver returns a consistent cached URLResolver instance when using the default URL configuration versus alternative configurations. The tests must confirm that the resolver caching mechanism correctly differentiates between the default settings. This verification is essential to ensure that the optimization effectively prevents unnecessary resource consumption in applications with a large number of routes.",
+    "hint_texts": "Includes additions to the tests in tests/urlpatterns/test_resolvers.py. Specifically, add a new test class (ResolverCacheTests) with a method test_resolver_cache_default__root_urlconf that uses override_settings to set ROOT_URLCONF. The test should confirm that get_resolver returns the same object when no URLconf argument is provided and when settings.ROOT_URLCONF is explicitly passed, while returning a different object for dynamic URL configurations.",
+    "entrypoint": "File: tests/urlpatterns/test_resolvers.py - add the ResolverCacheTests class and implement the test_resolver_cache_default__root_urlconf method that leverages override_settings to validate caching behavior.",
+    "tests": {
+      "FAIL_TO_PASS": "test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests)",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "django/urls/base.py, django/urls/resolvers.py, tests/urlpatterns/test_resolvers.py",
+    "integration_strategy": "Feature1 introduces a new caching API through _get_cached_resolver and modifies get_resolver, while Feature2 provides tests to validate this implementation. Both teams must ensure that the new caching mechanism works as expected, particularly the handling of settings.ROOT_URLCONF as the key for caching. Integration will require aligning on the API for caching and ensuring that any changes do not break existing functionality.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to discuss the changes to the resolver caching logic, the expected behavior when different URL configurations are used, and how the tests will verify the implementation. Regular updates and joint code reviews are recommended to address any integration issues or edge cases related to resolver caching."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"test_resolver_cache_default__root_urlconf (urlpatterns.test_resolvers.ResolverCacheTests)\"]",
+    "PASS_TO_PASS": "[\"test_str (urlpatterns.test_resolvers.RegexPatternTests)\", \"test_str (urlpatterns.test_resolvers.RoutePatternTests)\"]"
+  }
+}

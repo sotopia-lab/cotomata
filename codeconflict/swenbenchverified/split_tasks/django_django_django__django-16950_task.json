@@ -1,0 +1,33 @@
+{
+  "repo": "django/django",
+  "test_id": "django/django_django__django-16950",
+  "base_commit": "f64fd47a7627ed6ffe2df2a32ded6ee528a784eb",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "In Django Admin with Inlines, there is an issue where the parent's auto-generated primary key is being improperly nullified. In a typical setup, the main model uses a BigAutoField as its primary key along with an additional UUIDField that has a default auto-generated value. When inline forms are submitted without explicit data for the primary key, the default mechanism erroneously resets the auto-generated primary key to null. The solution must adjust the logic so that when no form data is provided or when the field corresponds to the parent model's primary key, the default auto-generation is respected.",
+    "hint_texts": "This feature requires updating the condition in the add_fields method to correctly ignore the default for the primary key when no form data is present. Developers should verify that the field being modified is the parent model's primary key by matching the field attribute with the model's PK name, or by checking the absence of form data. The adjustments should ensure that the primary key remains intact during inline processing.",
+    "entrypoint": "File: django/forms/models.py; Function: add_fields. Focus on the conditional block around the handling of fields with defaults (around line 1177) where the check for to_field.has_default() is located. Modify the logic to handle cases where the parent\u2019s auto-generated key, which is the primary key, should not be overwritten.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": "test_inlineformset_factory_ignores_default_pks_on_submit, test_inlineformset_factory_nulls_default_pks_uuid_parent_auto_child, test_inlineformset_factory_nulls_default_pks_alternate_key_relation"
+    }
+  },
+  "feature2": {
+    "prompt": "Django Admin inlines exhibit another issue where the parent's auto-generated alternate key (the UUIDField with a default) is incorrectly set to null when inline form data is provided. In scenarios where a new inline record is added alongside the parent record, the existence of form data should trigger the preservation of the alternate key. The requirement is to modify the handling so that when form data is present, the alternate key is maintained rather than nullified. This change will prevent errors caused by losing the intended default alternate key value.",
+    "hint_texts": "This feature focuses on adjusting the logic in add_fields to correctly handle the case when form data is submitted. The condition must distinguish between the primary key and alternate key situations by checking for the presence of form data. Developers should ensure that if form.data is present, then the auto-generated alternate key is retained and not mistakenly reset to None.",
+    "entrypoint": "File: django/forms/models.py; Function: add_fields. The implementation should begin by reviewing the changes made around line 1177 where the default check is performed, and then refine the condition to account for the scenario when form data is provided. This will ensure that the alternate key is properly set during inline submissions.",
+    "tests": {
+      "FAIL_TO_PASS": "test_inlineformset_factory_nulls_default_pks_alternate_key_relation_data",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "File: django/forms/models.py (specifically the add_fields method) and the model definitions that include both the primary key and alternate key fields.",
+    "integration_strategy": "Both features modify the same method; Feature1 ensures proper handling for cases without form data for the primary key, while Feature2 deals with preserving the alternate key when form data is present. Integration requires merging the updated conditional logic in add_fields so that both scenarios are correctly handled without conflict.",
+    "communication_needs": "Developers working on each feature should coordinate on the changes to the conditional logic in add_fields. They need to agree on the criteria for distinguishing between primary key and alternate key cases and review the integration to ensure that the overall behavior in Django Admin inlines is consistent and bug-free."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"If form data is provided, a parent's auto-generated alternate key is\"]",
+    "PASS_TO_PASS": "[\"#24377 - Inlines with a model field default should ignore that default\", \"#24377 - If we're adding a new object, a parent's auto-generated pk\", \"#24958 - Variant of test_inlineformset_factory_nulls_default_pks for\"]"
+  }
+}

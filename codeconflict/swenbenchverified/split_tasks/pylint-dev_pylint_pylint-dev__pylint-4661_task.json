@@ -1,0 +1,33 @@
+{
+  "repo": "pylint-dev/pylint",
+  "test_id": "pylint-dev/pylint_pylint-dev__pylint-4661",
+  "base_commit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Make pylint XDG Base Directory Specification compliant\nI have this really annoying `.pylint.d` directory in my home folder. From what I can tell (I don't do C or C++), this directory is storing data. \nThe problem with this is, quite simply, that data storage has a designated spot. The `$HOME/.local/share/<PROGRAM_NAME>` folder. This is a part of the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). A system that designates the folders for specific things like cached files (`$HOME/.cache/<PROGRAM_NAME>`), configuration files (`$HOME/.config/<PROGRAM_NAME>`), and data files (`$HOME/.local/share/<PROGRAM_NAME>`), among other things. The point is to keep user home directories clean and the user sane.\nThis should be pretty easy to implement. Simply change the variables/constants for where these files are made and stored to the appropriate directory. Simple as that, even for a large codebase (if it was done right).",
+    "hint_texts": "This feature focuses on the functional change of how directory paths are determined and managed. It requires updating pylint's runtime behavior by replacing the hardcoded home directory logic with a call to the appdirs library (appdirs.user_cache_dir('pylint')). Additionally, if an obsolete '.pylint.d' directory exists, a warning should be printed to inform the user that it can be safely removed.",
+    "entrypoint": "File: pylint/config/__init__.py - Locate the code block where PYLINT_HOME is assigned. Replace the use of os.path.join(USER_HOME, '.pylint.d') with appdirs.user_cache_dir('pylint') and insert logic to detect and warn about the presence of the old directory.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/lint/unittest_lint.py::test_pylint_home",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "feature2": {
+    "prompt": "Make pylint XDG Base Directory Specification compliant\nI have this really annoying `.pylint.d` directory in my home folder. From what I can tell (I don't do C or C++), this directory is storing data. \nThe problem with this is, quite simply, that data storage has a designated spot. The `$HOME/.local/share/<PROGRAM_NAME>` folder. This is a part of the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). A system that designates the folders for specific things like cached files (`$HOME/.cache/<PROGRAM_NAME>`), configuration files (`$HOME/.config/<PROGRAM_NAME>`), and data files (`$HOME/.local/share/<PROGRAM_NAME>`), among other things. The point is to keep user home directories clean and the user sane.\nThis should be pretty easy to implement. Simply change the variables/constants for where these files are made and stored to the appropriate directory. Simple as that, even for a large codebase (if it was done right).",
+    "hint_texts": "This feature targets the configuration and dependency management aspects of the change. It involves updating the project's setup configuration to properly include the appdirs library. Key actions include adding appdirs (version >=1.4.0) to the install_requires list, updating the known_third_party list to include appdirs, and incorporating a new mypy configuration section to handle potential import issues with appdirs.",
+    "entrypoint": "File: setup.cfg - In the [options] section, add 'appdirs>=1.4.0' to the install_requires list. Modify the known_third_party setting to include appdirs along with the existing third-party libraries, and add a new [mypy-appdirs] section with ignore_missing_imports set to True.",
+    "tests": {
+      "FAIL_TO_PASS": "",
+      "PASS_TO_PASS": ""
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features interact with the appdirs library and the overall configuration of where user data is stored. Changes in pylint/config/__init__.py and setup.cfg must be kept in sync to ensure that the new directory path is used and that the dependency is properly declared.",
+    "integration_strategy": "Feature1\u2019s functionality change needs to be integrated with Feature2\u2019s configuration updates. The appdirs library must be installed and available when the new runtime logic is executed. Both features should be merged such that the dependency management (in setup.cfg) aligns with the directory determination logic (in pylint/config/__init__.py).",
+    "communication_needs": "Developers should coordinate on the handling of legacy directories (i.e., '.pylint.d') and ensure that the configuration updates in setup.cfg do not conflict with the runtime changes. It is essential to confirm that the installation process and runtime behavior work together smoothly once both features are implemented."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/lint/unittest_lint.py::test_pylint_home\"]",
+    "PASS_TO_PASS": "[]"
+  }
+}

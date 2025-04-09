@@ -1,0 +1,33 @@
+{
+  "repo": "sphinx-doc/sphinx",
+  "test_id": "sphinx-doc/sphinx_sphinx-doc__sphinx-8721",
+  "base_commit": "82ef497a8c88f0f6e50d84520e7276bfbf65025d",
+  "difficulty": "<15 min fix",
+  "feature1": {
+    "prompt": "The viewcode extension is currently producing pages during documentation builds when it should not. When running the command \"make html epub\", unexpected module pages are generated. The output does not match the intended behavior, as module pages should be omitted in certain builder contexts. The fix should prevent this unwanted page generation so that the build output conforms to the expected behavior stated in the bug report.",
+    "hint_texts": "This feature focuses on modifying the behavior for one specific builder type. In the collect_pages function in sphinx/ext/viewcode.py, a condition must be added to check if the builder in use is the 'singlehtml' builder. If it is, the function should return immediately to bypass generating viewcode pages. This change isolates the behavior for singlehtml builds and prevents unnecessary module page creation.",
+    "entrypoint": "sphinx/ext/viewcode.py \u2013 function collect_pages (around line 182): insert the check \"if app.builder.name == \"singlehtml\": return\" before further processing.",
+    "tests": {
+      "FAIL_TO_PASS": "A new test case should be created (e.g., in tests/test_ext_viewcode.py) to verify that no viewcode pages are generated when the 'singlehtml' builder is used.",
+      "PASS_TO_PASS": "Existing tests that are unaffected by this change, such as test_linkcode and test_local_source_files, should continue to pass."
+    }
+  },
+  "feature2": {
+    "prompt": "A bug in the viewcode extension causes module pages for epub output to be created even when the configuration option viewcode_enable_epub is set to False. Running \"make html epub\" reproduces the issue, resulting in unwanted module pages. The expected behavior is that module pages should not be generated for epub builds by default. The fix should ensure that the viewcode_enable_epub configuration is properly enforced for epub so that the output meets user expectations.",
+    "hint_texts": "This feature requires a change specific to the epub builder. In the collect_pages function in sphinx/ext/viewcode.py, add a condition that checks if the builder\u2019s name starts with 'epub' and whether the configuration option viewcode_enable_epub is False. If both conditions are met, the function must return immediately to prevent the generation of module pages. This update directly addresses the reported bug for epub builds.",
+    "entrypoint": "sphinx/ext/viewcode.py \u2013 function collect_pages (around line 182): insert the condition \"if app.builder.name.startswith(\"epub\") and not env.config.viewcode_enable_epub: return\" immediately after the singlehtml check.",
+    "tests": {
+      "FAIL_TO_PASS": "tests/test_ext_viewcode.py::test_viewcode_epub_default should now pass since no viewcode pages are generated for epub when viewcode_enable_epub is False.",
+      "PASS_TO_PASS": "tests/test_ext_viewcode.py::test_viewcode_epub_enabled, test_linkcode, and test_local_source_files should continue to pass."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify sphinx/ext/viewcode.py (specifically, the collect_pages function) and rely on the shared configuration (env.config.viewcode_enable_epub). They also interact with the common test suite in tests/test_ext_viewcode.py.",
+    "integration_strategy": "The modifications introduced by feature1 and feature2 must be integrated in order. The condition for the 'singlehtml' builder should be checked before the condition for the epub builder. This ordering ensures that each builder\u2019s behavior is handled appropriately without conflict.",
+    "communication_needs": "Developers working on these features should coordinate on the placement and ordering of the new conditions in collect_pages. They must also ensure consistency in handling shared configuration options and align on creating or updating test cases, particularly for the new singlehtml scenario."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"tests/test_ext_viewcode.py::test_viewcode_epub_default\"]",
+    "PASS_TO_PASS": "[\"tests/test_ext_viewcode.py::test_viewcode_epub_enabled\", \"tests/test_ext_viewcode.py::test_linkcode\", \"tests/test_ext_viewcode.py::test_local_source_files\"]"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "repo": "astropy/astropy",
+  "test_id": "astropy/astropy_astropy__astropy-7671",
+  "base_commit": "a7141cd90019b62688d507ae056298507678c058",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "minversion failures: The change in PR #7647 causes the minversion function to fail in certain cases when handling version strings such as '1.14dev'. The error occurs because LooseVersion cannot compare numeric parts with non-numeric tokens like 'dev' or 'rc1', raising a TypeError ('<' not supported between instances of 'int' and 'str'). The fix requires altering the minversion function so that it extracts only the dotted numeric part of the version string using a regex (based on PEP440 guidelines). After the fix, invoking minversion with versions that include non-numeric components will perform the comparison correctly without error.",
+    "hint_texts": "This feature focuses on updating the core functionality of the minversion function. Modify the file astropy/utils/introspection.py to import the re module and add a regex that matches only the numeric portion of the version string. Use the regex pattern '^([1-9]\\d*!)?(0|[1-9]\\d*)(\\.(0|[1-9]\\d*))*' to extract the dotted numbers. The implementation should ensure that, when a match is found, the version parameter is replaced with the matched numeric part before performing the LooseVersion comparison. Make sure that the handling of both inclusive and exclusive comparisons remains correct.",
+    "entrypoint": "File: astropy/utils/introspection.py. Focus on the minversion function, specifically in the block after determining 'have_version' where the version string is processed. The implementation should begin by adding an import directive for the re module and then inserting the regex code block immediately before the comparison using LooseVersion.",
+    "tests": {
+      "FAIL_TO_PASS": "Include test(s) that demonstrate the previous failure when minversion is invoked with version strings such as '1.14dev' or '1.14rc1', ensuring a TypeError is no longer raised after the fix.",
+      "PASS_TO_PASS": "Ensure that existing scenarios using purely numeric version strings (e.g., '1.14', '1.14.3') continue to work as expected."
+    }
+  },
+  "feature2": {
+    "prompt": "minversion failures: The issue with minversion arises from its inability to correctly handle version strings that contain non-numeric tokens, leading to TypeErrors during comparison. The objective is to guarantee that minversion correctly processes version strings by considering only the numeric portions, thereby avoiding errors during version comparisons. The expected behavior is that, after the fix, version strings containing components such as 'dev' or 'rc' will be interpreted correctly and the function will return accurate Boolean comparisons without exception.",
+    "hint_texts": "This feature is centered on updating and enhancing the test suite to verify the improved behavior of the minversion function. Update the tests in astropy/utils/tests/test_introspection.py so that they not only capture the scenarios that previously led to failures (e.g., when using version strings like '0.12dev') but also affirm that normal cases continue to pass. The modification should involve augmenting the test_minversion function with additional version strings to fully exercise the new regex extraction logic. This update helps ensure that the core fix from Feature1 is fully validated across various edge cases.",
+    "entrypoint": "File: astropy/utils/tests/test_introspection.py. Focus on the test_minversion function where the list of good_versions is defined. Update this function to include additional version strings such as '0.12dev' to test that the regex-based extraction in the minversion function handles these cases properly.",
+    "tests": {
+      "FAIL_TO_PASS": "Incorporate the test case originally failing in astropy/utils/tests/test_introspection.py::test_minversion to now pass under the new implementation after adding the additional version cases.",
+      "PASS_TO_PASS": "Ensure that test cases such as astropy/utils/tests/test_pkg_finder, test_find_current_mod, and test_find_mod_objs continue to pass, confirming that no regressions are introduced in other parts of the code."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features will interact with the astropy/utils/introspection.py file (specifically the minversion function) and the astropy/utils/tests/test_introspection.py file. The minversion implementation and its corresponding test cases are the central shared components.",
+    "integration_strategy": "Feature1 must deliver a robust version-parsing mechanism that extracts the numeric part of version strings using regex. Feature2, in turn, must update and expand the test suite to cover both the edge cases that previously failed and the standard cases. Integration requires that the updated tests in Feature2 correctly reflect and validate the changes introduced in Feature1.",
+    "communication_needs": "Developers working on Feature1 and Feature2 need to coordinate on the exact regex logic and its behavior, as well as on the selection of version string scenarios to be tested. Regular discussions should ensure that the API changes in the minversion function and the expectations in the test suite are perfectly synchronized, avoiding any discrepancies between the core functionality and its validation."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"astropy/utils/tests/test_introspection.py::test_minversion\"]",
+    "PASS_TO_PASS": "[\"astropy/utils/tests/test_introspection.py::test_pkg_finder\", \"astropy/utils/tests/test_introspection.py::test_find_current_mod\", \"astropy/utils/tests/test_introspection.py::test_find_mod_objs\"]"
+  }
+}

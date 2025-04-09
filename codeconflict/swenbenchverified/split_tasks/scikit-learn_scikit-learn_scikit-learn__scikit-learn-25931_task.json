@@ -1,0 +1,33 @@
+{
+  "repo": "scikit-learn/scikit-learn",
+  "test_id": "scikit-learn/scikit-learn_scikit-learn__scikit-learn-25931",
+  "base_commit": "e3d1f9ac39e4bf0f31430e779acc50fb05fe1b64",
+  "difficulty": "15 min - 1 hour",
+  "feature1": {
+    "prompt": "Feature 1: Refactoring to introduce a private scoring method. The objective is to add a new method, _score_samples, which replicates the functionality of score_samples but without performing input validation that may remove valid feature names. This change ensures that the core scoring logic is encapsulated in a private function and that score_samples simply delegates the work to _score_samples. The expected behavior is that the output of score_samples remains identical to that of the new _score_samples method, and no additional warnings or errors are introduced due to redundant validation.",
+    "hint_texts": "This feature focuses on code refactoring. You need to add a new method _score_samples in the file sklearn/ensemble/_iforest.py which computes the anomaly scores without performing input validation. Modify the score_samples method so that it directly returns the value from _score_samples. Emphasize preserving the behavior of score_samples while eliminating redundant input validation to keep the original functionality intact.",
+    "entrypoint": "File: sklearn/ensemble/_iforest.py; functions: score_samples (modify it to call _score_samples) and add a new private method _score_samples that computes the score without input validation (see code block modifications starting around line 428).",
+    "tests": {
+      "FAIL_TO_PASS": "Tests verifying that score_samples returns identical results to _score_samples and that _score_samples does not perform input validation should now pass.",
+      "PASS_TO_PASS": "Existing tests for score computation, such as sklearn/ensemble/tests/test_iforest.py::test_score_samples, should continue to pass."
+    }
+  },
+  "feature2": {
+    "prompt": "Feature 2: Bug fix for feature name warnings in the fit method. The goal is to adjust the fit method so that it uses the new _score_samples method for computing the offset_ parameter when a non-default value is provided for contamination. This change addresses the issue where fitting an IsolationForest with a DataFrame generates an unexpected warning about valid feature names. After the fix, fitting the model should behave as expected, with no warnings related to feature names even when using a non-'auto' contamination value.",
+    "hint_texts": "This feature involves modifying the fit method in the file sklearn/ensemble/_iforest.py. Replace the call to score_samples with a call to _score_samples when computing the offset_. Make sure that the warning about feature names is eliminated in scenarios where contamination is not set to 'auto'. The change should maintain the correct calculation of offset_ without incurring extra input validation that strips feature names.",
+    "entrypoint": "File: sklearn/ensemble/_iforest.py; function: fit (specifically around the code block where offset_ is calculated, near the changes beginning at line 344). Replace the existing call to score_samples with a call to _score_samples for computing the offset_.",
+    "tests": {
+      "FAIL_TO_PASS": "Test: sklearn/ensemble/tests/test_iforest.py::test_iforest_preserve_feature_names should now pass without issuing warnings.",
+      "PASS_TO_PASS": "Other tests that validate the computation of offset_ and model fitting should continue to pass, ensuring that the behavior remains consistent."
+    }
+  },
+  "collaboration_points": {
+    "shared_resources": "Both features modify the same file: sklearn/ensemble/_iforest.py. The new _score_samples method introduced in Feature 1 is used by the fit method update in Feature 2.",
+    "integration_strategy": "Integrate the features by first ensuring that the refactoring in Feature 1 is implemented and thoroughly tested, then update the fit method in Feature 2 to rely on the new _score_samples method. Continuous integration tests should confirm that both the delegated scoring logic and the elimination of warnings work in unison.",
+    "communication_needs": "Developers should coordinate on the interface between score_samples, _score_samples, and the fit method. Discussions should focus on ensuring the refactored method\u2019s behavior is preserved and that the bug fix properly addresses the warning without affecting other model functionalities."
+  },
+  "overall_tests": {
+    "FAIL_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest_preserve_feature_names\"]",
+    "PASS_TO_PASS": "[\"sklearn/ensemble/tests/test_iforest.py::test_iforest[42]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_sparse[42]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_error\", \"sklearn/ensemble/tests/test_iforest.py::test_recalculate_max_depth\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_attribute\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_parallel_regression[42]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_performance[42]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[42-0.25]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_works[42-auto]\", \"sklearn/ensemble/tests/test_iforest.py::test_max_samples_consistency\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_subsampled_features\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_average_path_length\", \"sklearn/ensemble/tests/test_iforest.py::test_score_samples\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_warm_start\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[42-0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works1[42-auto-2]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[42-0.25-3]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_chunks_works2[42-auto-2]\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_with_uniform_data\", \"sklearn/ensemble/tests/test_iforest.py::test_iforest_with_n_jobs_does_not_segfault\", \"sklearn/ensemble/tests/test_iforest.py::test_base_estimator_property_deprecated\"]"
+  }
+}
