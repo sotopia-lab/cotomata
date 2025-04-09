@@ -1,128 +1,137 @@
-"""
-Tests for Feature 2: Consistent viewcode behavior across multiple builds
-"""
-
 import unittest
-import os
-import sys
-import shutil
-from pathlib import Path
+from codebase import (
+    Application, Config, Node, viewcode_anchor, 
+    doctree_read, ViewcodeAnchorTransform
+)
 
-# Add parent directory to path so we can import codebase
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from codebase import HTMLBuilder, SingleHTMLBuilder, viewcode_anchor, Node
-
-
-class Feature2Test(unittest.TestCase):
-    """Test cases for Feature 2: Consistent viewcode behavior."""
+class Feature2Tests(unittest.TestCase):
+    """Tests for Feature 2: Improved anchor generation for viewcode links."""
     
-    def setUp(self):
-        """Set up the test environment."""
-        # Create temporary output directory
-        output_dir = Path("test_output")
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        output_dir.mkdir()
+    def test_viewcode_anchor_creation(self):
+        """Test that viewcode_anchor nodes are created during doctree_read."""
+        # Setup
+        config = Config()
+        app = Application(builder_name="html", config=config)
         
-    def tearDown(self):
-        """Clean up after tests."""
-        # Remove temporary output directory
-        output_dir = Path("test_output")
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
+        # Create a simple document tree with a function node
+        doctree = Node()
+        func_node = Node(tagname='function', module='test_module', name='test_func')
+        doctree.add_child(func_node)
+        
+        # Process the doctree
+        doctree_read(app, doctree)
+        
+        # Check that a viewcode_anchor was added
+        anchors = list(doctree.traverse(viewcode_anchor))
+        self.assertEqual(len(anchors), 1, "One viewcode_anchor should be created")
+        
+        # Check anchor properties
+        anchor = anchors[0]
+        self.assertEqual(anchor['reftarget'], '_modules/test_module')
+        self.assertEqual(anchor['refid'], 'test_func')
     
-    def test_viewcode_anchors_preserved_in_document_tree(self):
-        """Test that viewcode anchors are inserted in the document tree regardless of builder."""
-        # Create a SingleHTML builder (not supported by viewcode)
-        builder = SingleHTMLBuilder()
+    def test_viewcode_anchor_conversion_for_supported_builder(self):
+        """Test that viewcode_anchors are converted to links for supported builders."""
+        # Setup
+        config = Config()
+        app = Application(builder_name="html", config=config)
         
-        # Collect modules - this will create document nodes
-        builder.env._viewcode_modules = {}  # Ensure we start fresh
-        builder.process_doctree()
+        # Create a document with a viewcode_anchor
+        doctree = Node()
+        anchor = viewcode_anchor(
+            reftarget='_modules/test_module',
+            refid='test_func',
+            refdoc='index'
+        )
+        doctree.add_child(anchor)
         
-        # Check that viewcode_anchor nodes were created during document reading
-        has_viewcode_anchors = False
-        for node in builder.env.document_nodes:
-            if isinstance(node, Node):
-                for child in list(node.children):
-                    if isinstance(child, viewcode_anchor):
-                        has_viewcode_anchors = True
-                        break
-                if has_viewcode_anchors:
-                    break
+        # Apply the transform
+        transform = ViewcodeAnchorTransform(app, doctree)
+        transform.apply()
         
-        self.assertTrue(has_viewcode_anchors, "viewcode_anchor nodes should be created during document reading")
+        # Check that the anchor was converted
+        self.assertEqual(len(doctree.children), 1)
+        refnode = doctree.children[0]
+        
+        # Check that it's no longer a viewcode_anchor
+        self.assertNotIsInstance(refnode, viewcode_anchor)
+        
+        # Check reference properties
+        self.assertEqual(refnode['reftype'], 'viewcode')
+        self.assertEqual(refnode['reftarget'], '_modules/test_module')
+        self.assertEqual(refnode['refid'], 'test_func')
+        
+        # Check that it has the [source] text
+        self.assertEqual(len(refnode.children), 1)
+        self.assertEqual(refnode.children[0].text, '[source]')
     
-    def test_anchors_converted_for_html_builder(self):
-        """Test that viewcode_anchor nodes are converted to source links for HTML builder."""
-        # Create an HTML builder (supported by viewcode)
-        builder = HTMLBuilder()
+    def test_viewcode_anchor_removal_for_unsupported_builder(self):
+        """Test that viewcode_anchors are removed for unsupported builders."""
+        # Setup
+        config = Config()
+        app = Application(builder_name="singlehtml", config=config)
         
-        # Process the document tree
-        builder.prepare()
+        # Create a document with a viewcode_anchor
+        doctree = Node()
+        anchor = viewcode_anchor(
+            reftarget='_modules/test_module',
+            refid='test_func',
+            refdoc='index'
+        )
+        doctree.add_child(anchor)
         
-        # Check that document nodes have [source] text for HTML builder
-        source_links = []
-        for node in builder.env.document_nodes:
-            if isinstance(node, object) and hasattr(node, 'children'):
-                for child in node.children:
-                    if hasattr(child, 'content') and child.content == "[source]":
-                        source_links.append(child)
+        # Apply the transform
+        transform = ViewcodeAnchorTransform(app, doctree)
+        transform.apply()
         
-        self.assertGreater(len(source_links), 0, "[source] links should be present for HTML builder")
+        # Check that the anchor was removed
+        self.assertEqual(len(doctree.children), 0, "Anchor should be removed for unsupported builder")
     
-    def test_anchors_removed_for_singlehtml_builder(self):
-        """Test that viewcode_anchor nodes are removed for SingleHTML builder."""
-        # Create a SingleHTML builder (not supported by viewcode)
-        builder = SingleHTMLBuilder()
+    def test_viewcode_anchor_removal_for_epub_when_disabled(self):
+        """Test that viewcode_anchors are removed for EPUB when viewcode_enable_epub is False."""
+        # Setup
+        config = Config()
+        config.viewcode_enable_epub = False
+        app = Application(builder_name="epub", config=config)
         
-        # Process the document tree
-        builder.prepare()
+        # Create a document with a viewcode_anchor
+        doctree = Node()
+        anchor = viewcode_anchor(
+            reftarget='_modules/test_module',
+            refid='test_func',
+            refdoc='index'
+        )
+        doctree.add_child(anchor)
         
-        # Check that no document nodes have viewcode_anchor or [source] links
-        has_anchors = False
-        for node in builder.env.document_nodes:
-            if isinstance(node, Node):
-                for child in list(node.children):
-                    if isinstance(child, viewcode_anchor) or (hasattr(child, 'content') and child.content == "[source]"):
-                        has_anchors = True
-                        break
-                if has_anchors:
-                    break
+        # Apply the transform
+        transform = ViewcodeAnchorTransform(app, doctree)
+        transform.apply()
         
-        self.assertFalse(has_anchors, "No viewcode_anchor nodes or [source] links should be present for SingleHTML builder")
+        # Check that the anchor was removed
+        self.assertEqual(len(doctree.children), 0, "Anchor should be removed for EPUB when disabled")
     
-    def test_sequential_builds_with_different_builders(self):
-        """Test that sequential builds with different builders work correctly."""
-        # First build with SingleHTML (not supported)
-        single_builder = SingleHTMLBuilder()
-        single_builder.build()
+    def test_viewcode_anchor_conversion_for_epub_when_enabled(self):
+        """Test that viewcode_anchors are converted for EPUB when viewcode_enable_epub is True."""
+        # Setup
+        config = Config()
+        config.viewcode_enable_epub = True
+        app = Application(builder_name="epub", config=config)
         
-        # Save the document tree (simulating environment preservation between builds)
-        document_tree = single_builder.env.document_nodes
+        # Create a document with a viewcode_anchor
+        doctree = Node()
+        anchor = viewcode_anchor(
+            reftarget='_modules/test_module',
+            refid='test_func',
+            refdoc='index'
+        )
+        doctree.add_child(anchor)
         
-        # Now build with HTML (supported)
-        html_builder = HTMLBuilder()
-        html_builder.env.document_nodes = document_tree
-        html_builder.build()
+        # Apply the transform
+        transform = ViewcodeAnchorTransform(app, doctree)
+        transform.apply()
         
-        # Check that HTML builder generated source pages
-        pages = []
-        for modname in html_builder.env._viewcode_modules:
-            pagename = os.path.join('_modules', modname.replace('.', '/'))
-            pages.append(pagename)
-        
-        self.assertGreater(len(pages), 0, "Source pages should be generated for HTML builder after SingleHTML build")
-        
-        # Check that document nodes have [source] text for HTML builder
-        source_links = []
-        for node in html_builder.env.document_nodes:
-            if isinstance(node, object) and hasattr(node, 'children'):
-                for child in node.children:
-                    if hasattr(child, 'content') and child.content == "[source]":
-                        source_links.append(child)
-        
-        self.assertGreater(len(source_links), 0, "[source] links should be present for HTML builder after SingleHTML build")
+        # Check that the anchor was converted (not removed)
+        self.assertEqual(len(doctree.children), 1, "Anchor should be converted for EPUB when enabled")
 
 
 if __name__ == "__main__":

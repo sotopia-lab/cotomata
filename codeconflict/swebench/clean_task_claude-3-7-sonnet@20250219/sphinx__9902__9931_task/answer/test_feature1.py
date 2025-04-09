@@ -1,53 +1,42 @@
-"""
-Unit tests for Feature 1: Support for cross-reference specifiers in type options.
-"""
-
 import unittest
-from codebase import type_to_xref, BuildEnvironment
+from codebase import TypeProcessor
 
-
-class TestCrossReferenceSpecifiers(unittest.TestCase):
-    """Test the cross-reference specifiers functionality."""
+class TestFeature1(unittest.TestCase):
+    """
+    Test the cross-reference specifier feature.
+    """
     
     def setUp(self):
-        """Set up test environment."""
-        self.env = BuildEnvironment()
+        self.processor = TypeProcessor()
     
-    def test_regular_type_reference(self):
-        """Test normal type reference without specifiers."""
-        xref = type_to_xref("module.Type", self.env)
-        self.assertEqual(xref.target, "module.Type")
-        self.assertEqual(xref.text, "module.Type")
-        self.assertFalse(xref.refspecific)
+    def test_normal_type_reference(self):
+        """Test normal type reference without prefix."""
+        result = self.processor.get_crossref("module.Type")
+        self.assertEqual(result['reftarget'], "module.Type")
+        self.assertEqual(result['reftext'], "module.Type")
+        self.assertFalse(result.get('refspecific', False))
     
-    def test_local_specifier(self):
-        """Test local reference specifier (.)."""
-        xref = type_to_xref(".Type", self.env)
-        self.assertEqual(xref.target, "Type")
-        self.assertEqual(xref.text, "Type")
-        self.assertTrue(xref.refspecific, "Local reference should have refspecific=True")
+    def test_relative_type_reference(self):
+        """Test relative type reference with dot prefix."""
+        result = self.processor.get_crossref(".Type")
+        self.assertEqual(result['reftarget'], "Type")
+        self.assertEqual(result['reftext'], "Type")
+        self.assertTrue(result['refspecific'])
     
-    def test_compact_specifier(self):
-        """Test compact reference specifier (~)."""
-        xref = type_to_xref("~module.submodule.Type", self.env)
-        self.assertEqual(xref.target, "module.submodule.Type")
-        self.assertEqual(xref.text, "Type")
-        self.assertFalse(xref.refspecific)
+    def test_shortened_type_reference(self):
+        """Test shortened type reference with tilde prefix."""
+        result = self.processor.get_crossref("~package.module.Type")
+        self.assertEqual(result['reftarget'], "package.module.Type")
+        self.assertEqual(result['reftext'], "Type")
+        self.assertFalse(result.get('refspecific', False))
     
-    def test_nested_type_with_compact_specifier(self):
-        """Test compact reference with nested type."""
-        xref = type_to_xref("~package.module.Class", self.env)
-        self.assertEqual(xref.target, "package.module.Class")
-        self.assertEqual(xref.text, "Class")
-        self.assertFalse(xref.refspecific)
-    
-    def test_none_type(self):
-        """Test None type handling."""
-        xref = type_to_xref("None", self.env)
-        self.assertEqual(xref.target, "None")
-        self.assertEqual(xref.text, "None")
-        self.assertEqual(xref.reftype, "obj", "None should use 'obj' reftype")
+    def test_format_type_with_prefixes(self):
+        """Test that format_type preserves prefixes for feature 1."""
+        # The dot notation is preserved through format_type
+        self.assertEqual(self.processor.format_type(".Type"), ".Type")
+        # The tilde notation is preserved through format_type
+        self.assertEqual(self.processor.format_type("~package.Type"), "~package.Type")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

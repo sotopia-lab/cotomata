@@ -1,1 +1,1 @@
-Add configuration option to display unqualified type hints by removing module prefixes from type references, making documentation more readable.
+Add configuration option to display unqualified type names (without module prefix) in documentation while preserving proper cross-references.

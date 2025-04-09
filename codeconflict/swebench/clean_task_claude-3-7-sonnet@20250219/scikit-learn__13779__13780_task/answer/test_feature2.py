@@ -1,191 +1,130 @@
 import unittest
 import numpy as np
-from codebase import VotingClassifier, VotingRegressor
+from codebase import VotingEstimator
 
-
-class DummyClassifier:
-    """Simple classifier that supports sample weights"""
-    def __init__(self, value=1):
-        self.value = value
-        self.sample_weight_used = None
-        
-    def fit(self, X, y, sample_weight=None):
-        self.sample_weight_used = sample_weight
-        return self
-        
-    def predict(self, X):
-        return np.ones(len(X)) * self.value
-
-
-class DummyRegressor:
-    """Simple regressor that supports sample weights"""
+class SimpleEstimator:
+    """A simple estimator that supports sample weights."""
     def __init__(self, value=1.0):
         self.value = value
-        self.sample_weight_used = None
+        self.is_fitted = False
         
     def fit(self, X, y, sample_weight=None):
-        self.sample_weight_used = sample_weight
+        self.is_fitted = True
+        self.sample_weight_used = sample_weight is not None
         return self
         
     def predict(self, X):
         return np.ones(len(X)) * self.value
-
-
-class NoSampleWeightClassifier:
-    """Simple classifier that does not support sample weights"""
-    def __init__(self, value=1):
-        self.value = value
-        
-    def fit(self, X, y):
-        # Does not accept sample_weight
-        return self
-        
-    def predict(self, X):
-        return np.ones(len(X)) * self.value
-
 
 class TestFeature2(unittest.TestCase):
-    """Tests for Feature 2: Support 'drop' as an alternative to None for disabling estimators"""
-    
-    def test_drop_equivalent_to_none_classifier(self):
-        # Create simple dataset
-        X = np.array([[1, 2], [3, 4], [5, 6]])
-        y = np.array([0, 1, 0])
+    def setUp(self):
+        # Create sample data
+        self.X = np.array([[1, 2], [3, 4], [5, 6]])
+        self.y = np.array([1, 2, 3])
+        self.sample_weight = np.ones(3)
         
+    def test_drop_works_same_as_none(self):
+        """Test that 'drop' works the same as None for removing estimators."""
         # Create estimators
-        clf1 = DummyClassifier(value=0)
-        clf2 = DummyClassifier(value=1)
-        clf3 = DummyClassifier(value=2)
+        est1 = SimpleEstimator(1.0)
+        est2 = SimpleEstimator(2.0)
         
-        # Create and fit with None
-        voter_none = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2), ('clf3', clf3)]
-        )
-        voter_none.fit(X, y)
-        voter_none.set_params(clf1=None)
-        voter_none.fit(X, y)
-        pred_none = voter_none.predict(X)
+        # Create VotingEstimator with None for est1
+        voting_none = VotingEstimator(estimators=[('est1', None), ('est2', est2)])
+        voting_none.fit(self.X, self.y)
+        pred_none = voting_none.predict(self.X)
         
-        # Create and fit with 'drop'
-        voter_drop = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2), ('clf3', clf3)]
-        )
-        voter_drop.fit(X, y)
-        voter_drop.set_params(clf1='drop')
-        voter_drop.fit(X, y)
-        pred_drop = voter_drop.predict(X)
+        # Create VotingEstimator with 'drop' for est1
+        voting_drop = VotingEstimator(estimators=[('est1', 'drop'), ('est2', est2)])
+        voting_drop.fit(self.X, self.y)
+        pred_drop = voting_drop.predict(self.X)
         
-        # Check both approaches give same results
+        # Verify predictions are the same
         np.testing.assert_array_equal(pred_none, pred_drop)
         
-        # Check that weights handling is equivalent
-        weights = [2, 1, 1]
+    def test_drop_with_sample_weights(self):
+        """Test using 'drop' with sample weights."""
+        # Create estimators
+        est1 = SimpleEstimator(1.0)
+        est2 = SimpleEstimator(2.0)
         
-        voter_none = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2), ('clf3', clf3)],
+        # Create and fit VotingEstimator
+        voting = VotingEstimator(estimators=[('est1', est1), ('est2', est2)])
+        voting.fit(self.X, self.y, sample_weight=self.sample_weight)
+        
+        # Set one estimator to 'drop' and verify it still fits with sample weights
+        voting.estimators = [('est1', 'drop'), ('est2', est2)]
+        voting.fit(self.X, self.y, sample_weight=self.sample_weight)
+        
+        # Verify the predictions still work
+        predictions = voting.predict(self.X)
+        self.assertEqual(predictions.shape, self.y.shape)
+        self.assertTrue(np.allclose(predictions, 2.0))  # Only est2 is used
+        
+    def test_weights_with_drop_estimators(self):
+        """Test that weights are correctly assigned when using 'drop'."""
+        # Create estimators
+        est1 = SimpleEstimator(1.0)
+        est2 = SimpleEstimator(2.0)
+        est3 = SimpleEstimator(3.0)
+        
+        # Create VotingEstimator with weights
+        weights = [1.0, 2.0, 3.0]
+        voting = VotingEstimator(
+            estimators=[('est1', est1), ('est2', est2), ('est3', est3)],
             weights=weights
         )
-        voter_none.fit(X, y)
-        voter_none.set_params(clf1=None)
-        voter_none.fit(X, y)
-        weight_none = voter_none._weights_not_none()
         
-        voter_drop = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2), ('clf3', clf3)],
-            weights=weights
-        )
-        voter_drop.fit(X, y)
-        voter_drop.set_params(clf1='drop')
-        voter_drop.fit(X, y)
-        weight_drop = voter_drop._weights_not_none()
+        # Fit with all estimators
+        voting.fit(self.X, self.y)
+        all_est_pred = voting.predict(self.X)
         
-        self.assertEqual(weight_none, weight_drop)
-    
-    def test_drop_equivalent_to_none_regressor(self):
-        # Create simple dataset
-        X = np.array([[1, 2], [3, 4], [5, 6]])
-        y = np.array([0.1, 0.2, 0.3])
+        # Expected prediction: (1*1 + 2*2 + 3*3) / (1 + 2 + 3) = 14/6 = 2.33
+        expected_all = (1*1.0 + 2*2.0 + 3*3.0) / (1 + 2 + 3)
+        self.assertTrue(np.allclose(all_est_pred, expected_all))
         
+        # Set est2 to 'drop' and verify weights are adjusted correctly
+        voting.estimators = [('est1', est1), ('est2', 'drop'), ('est3', est3)]
+        voting.fit(self.X, self.y)
+        drop_est_pred = voting.predict(self.X)
+        
+        # Expected prediction: (1*1 + 3*3) / (1 + 3) = 10/4 = 2.5
+        expected_drop = (1*1.0 + 3*3.0) / (1 + 3)
+        self.assertTrue(np.allclose(drop_est_pred, expected_drop))
+        
+    def test_error_when_all_estimators_drop(self):
+        """Test that VotingEstimator raises error when all estimators are 'drop'."""
         # Create estimators
-        reg1 = DummyRegressor(value=0.1)
-        reg2 = DummyRegressor(value=0.2)
-        reg3 = DummyRegressor(value=0.3)
+        est1 = SimpleEstimator(1.0)
+        est2 = SimpleEstimator(2.0)
         
-        # Create and fit with None
-        voter_none = VotingRegressor(
-            estimators=[('reg1', reg1), ('reg2', reg2), ('reg3', reg3)]
-        )
-        voter_none.fit(X, y)
-        voter_none.set_params(reg1=None)
-        voter_none.fit(X, y)
-        pred_none = voter_none.predict(X)
+        # Create VotingEstimator with all 'drop' estimators
+        voting = VotingEstimator(estimators=[('est1', 'drop'), ('est2', 'drop')])
         
-        # Create and fit with 'drop'
-        voter_drop = VotingRegressor(
-            estimators=[('reg1', reg1), ('reg2', reg2), ('reg3', reg3)]
-        )
-        voter_drop.fit(X, y)
-        voter_drop.set_params(reg1='drop')
-        voter_drop.fit(X, y)
-        pred_drop = voter_drop.predict(X)
-        
-        # Check both approaches give same results
-        np.testing.assert_array_almost_equal(pred_none, pred_drop)
-    
-    def test_sample_weight_error_message(self):
-        # Create simple dataset
-        X = np.array([[1, 2], [3, 4], [5, 6]])
-        y = np.array([0, 1, 0])
-        sample_weight = np.array([1.0, 2.0, 1.0])
-        
-        # Create estimators, one without sample_weight support
-        clf1 = DummyClassifier(value=0)
-        clf2 = NoSampleWeightClassifier(value=1)
-        
-        # Create voting classifier
-        voter = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2)]
-        )
-        
-        # Check that proper error message is raised
+        # Verify it raises an error
         with self.assertRaises(ValueError) as context:
-            voter.fit(X, y, sample_weight=sample_weight)
+            voting.fit(self.X, self.y)
         
-        self.assertIn("does not support sample weights", str(context.exception))
-        self.assertIn("NoSampleWeightClassifier", str(context.exception))
-    
-    def test_all_estimators_none_or_drop(self):
-        # Create simple dataset
-        X = np.array([[1, 2], [3, 4], [5, 6]])
-        y = np.array([0, 1, 0])
+        self.assertIn('All estimators are None or "drop"', str(context.exception))
         
+    def test_mixed_none_and_drop(self):
+        """Test that using a mix of None and 'drop' works correctly."""
         # Create estimators
-        clf1 = DummyClassifier(value=0)
-        clf2 = DummyClassifier(value=1)
+        est1 = SimpleEstimator(1.0)
+        est2 = SimpleEstimator(2.0)
+        est3 = SimpleEstimator(3.0)
         
-        # Create voting classifier
-        voter = VotingClassifier(
-            estimators=[('clf1', clf1), ('clf2', clf2)]
-        )
+        # Create VotingEstimator with mixed None and 'drop'
+        voting = VotingEstimator(estimators=[
+            ('est1', None), ('est2', 'drop'), ('est3', est3)
+        ])
         
-        # Set all estimators to None
-        voter.set_params(clf1=None, clf2=None)
-        with self.assertRaises(ValueError) as context:
-            voter.fit(X, y)
-        self.assertIn('All estimators are None or "drop"', str(context.exception))
+        # Fit and verify it works
+        voting.fit(self.X, self.y)
+        predictions = voting.predict(self.X)
         
-        # Set all estimators to 'drop'
-        voter.set_params(clf1='drop', clf2='drop')
-        with self.assertRaises(ValueError) as context:
-            voter.fit(X, y)
-        self.assertIn('All estimators are None or "drop"', str(context.exception))
-        
-        # Mix None and 'drop'
-        voter.set_params(clf1=None, clf2='drop')
-        with self.assertRaises(ValueError) as context:
-            voter.fit(X, y)
-        self.assertIn('All estimators are None or "drop"', str(context.exception))
-
+        # Only est3 should be used
+        self.assertTrue(np.allclose(predictions, 3.0))
 
 if __name__ == '__main__':
     unittest.main()

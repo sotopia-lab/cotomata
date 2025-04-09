@@ -1,176 +1,180 @@
 """
-A simplified implementation of a viewcode extension for documentation builders.
+Viewcode extension for HTML documentation generation.
 
-This module demonstrates how source code references can be added to documentation.
+This extension allows viewing source code for modules in documentation.
 """
 
-from typing import Dict, Any, Optional, List, Set, Tuple
 import os
+from typing import Dict, Any, Optional, Tuple, List, Set
+
+class Node:
+    """Base class for document nodes."""
+    def __init__(self, **kwargs):
+        self.attributes = kwargs
+        self.children = []
+        self.parent = None
+
+    def __getitem__(self, key):
+        return self.attributes[key]
+    
+    def __setitem__(self, key, value):
+        self.attributes[key] = value
+    
+    def add_child(self, child):
+        self.children.append(child)
+        child.parent = self
+    
+    def remove(self):
+        if self.parent:
+            self.parent.children.remove(self)
+            self.parent = None
+
+
+class TextNode(Node):
+    """A node that contains text."""
+    def __init__(self, text, **kwargs):
+        super().__init__(**kwargs)
+        self.text = text
+
 
 class Builder:
     """Base class for documentation builders."""
-    
-    def __init__(self, name='html', config=None):
-        self.name = name
-        self.config = config or {}
+    def __init__(self, config):
+        self.config = config
+        self.name = "base"
+        self.format = "base"
         self.env = Environment()
-        self.outdir = "output"
+        
+    def build_all(self):
+        """Build all documentation files."""
+        pass
     
-    def build(self):
-        """Build the documentation."""
-        self.prepare()
-        self.generate_pages()
-        
-    def prepare(self):
-        """Prepare the build environment."""
-        self.process_doctree()
-        
-    def process_doctree(self):
-        """Process the document tree."""
-        # In a real implementation, this would process a document tree
-        # For our example, we'll just simulate collecting module information
-        collect_modules(self)
-    
-    def generate_pages(self):
-        """Generate output pages."""
-        # In a real implementation, this would generate HTML or other format pages
-        # For our example, we'll just simulate the process
-        collect_pages(self)
-        
     def get_relative_uri(self, from_path, to_path):
-        """Get relative URI between two paths."""
-        return os.path.join("_modules", to_path)
+        """Calculate relative path from from_path to to_path."""
+        return os.path.relpath(to_path, os.path.dirname(from_path))
 
 
 class HTMLBuilder(Builder):
-    """HTML builder implementation."""
+    """Builder for HTML documentation."""
+    def __init__(self, config):
+        super().__init__(config)
+        self.name = "html"
+        self.format = "html"
+        self.highlighter = "pygments"
+
+
+class SingleHTMLBuilder(HTMLBuilder):
+    """Builder that creates a single HTML file."""
+    def __init__(self, config):
+        super().__init__(config)
+        self.name = "singlehtml"
+
+
+class EPUBBuilder(HTMLBuilder):
+    """Builder for EPUB documentation."""
+    def __init__(self, config):
+        super().__init__(config)
+        self.name = "epub"
+
+
+class Application:
+    """Application class that manages the documentation generation process."""
+    def __init__(self, builder_name="html", config=None):
+        if config is None:
+            config = Config()
+        
+        # Initialize builder based on name
+        if builder_name == "html":
+            self.builder = HTMLBuilder(config)
+        elif builder_name == "singlehtml":
+            self.builder = SingleHTMLBuilder(config)
+        elif builder_name == "epub":
+            self.builder = EPUBBuilder(config)
+        else:
+            self.builder = Builder(config)
+        
+        self.config = config
+        self.transforms = []
     
-    def __init__(self, config=None):
-        super().__init__('html', config)
-
-
-class SingleHTMLBuilder(Builder):
-    """Single HTML page builder implementation."""
-    
-    def __init__(self, config=None):
-        super().__init__('singlehtml', config)
-
-
-class EPUBBuilder(Builder):
-    """EPUB builder implementation."""
-    
-    def __init__(self, config=None):
-        super().__init__('epub', config)
+    def add_transform(self, transform):
+        """Add a post-transform to the application."""
+        self.transforms.append(transform)
 
 
 class Environment:
-    """Build environment to store document information."""
-    
+    """Environment for the documentation build process."""
     def __init__(self):
-        self._viewcode_modules = {}
         self.docname = "index"
+        self._viewcode_modules = {}
 
 
-class Node:
-    """Base class for document tree nodes."""
-    
-    def __init__(self, content=""):
-        self.content = content
-        self.children = []
-        self.parent = None
-        self.attributes = {}
-    
-    def __iadd__(self, node):
-        self.append(node)
-        return self
-    
-    def append(self, node):
-        """Add a child node."""
-        self.children.append(node)
-        node.parent = self
+class Config:
+    """Configuration for the documentation build process."""
+    def __init__(self):
+        # Default configuration values
+        self.viewcode_enable_epub = False
 
 
-def collect_modules(builder):
-    """
-    Collect module information during document reading phase.
-    
-    This function simulates the process of extracting module information
-    from a Python source file and storing it in the environment.
-    """
-    env = builder.env
-    
-    # Sample module data for demonstration
-    module_data = {
-        'spam.mod1': {
-            'path': 'spam/mod1.py',
-            'items': {
-                'func1': ('function', 'index'),
-                'Class1': ('class', 'index'),
-            },
-            'lines': [
-                'def func1():',
-                '    """Sample function."""',
-                '    return True',
-                '',
-                'class Class1:',
-                '    """Sample class."""',
-                '    pass',
-            ]
-        }
-    }
-    
-    env._viewcode_modules = module_data
+# Main viewcode functions
 
-
-def doctree_read(builder):
-    """
-    Process the document tree during the reading phase.
-    
-    In a real implementation, this would add source code links to
-    the document tree for classes, functions, etc.
-    """
-    # In the real implementation, this function would add [source] links to
-    # function and class definitions
-    pass
-
-
-def collect_pages(builder) -> List[Tuple[str, Dict[str, Any], str]]:
-    """
-    Generate source code pages for modules.
-    
-    In a real implementation, this would create HTML pages containing
-    syntax-highlighted source code for each module.
-    """
-    env = builder.env
-    
+def collect_pages(app):
+    """Collect source code pages for modules."""
+    env = app.builder.env
     if not hasattr(env, '_viewcode_modules'):
-        return []
+        return
     
-    # For demonstration purposes, we'll just print what would happen
-    result = []
-    for modname, data in env._viewcode_modules.items():
-        pagename = os.path.join('_modules', modname.replace('.', '/'))
-        print(f"Would generate page: {pagename}")
-        
-        # In a real implementation, this would create a page with
-        # syntax-highlighted source code
-        code = "\n".join(data['lines'])
-        context = {
-            'title': f"Source code for {modname}",
-            'body': f"<pre>{code}<pre>"
-        }
-        result.append((pagename, context, 'module.html'))
-    
-    return result
+    # Generate module pages
+    for modname, entry in env._viewcode_modules.items():
+        code = entry.get('code', '')
+        yield (f'_modules/{modname}', {'title': modname, 'code': code}, 'module.html')
 
 
-def setup(app) -> Dict[str, Any]:
-    """
-    Set up the viewcode extension.
+def doctree_read(app, doctree):
+    """Process a doctree when it's read."""
+    env = app.builder.env
+    if not hasattr(env, '_viewcode_modules'):
+        env._viewcode_modules = {}
+
+    # For each function/class reference in the document:
+    # Add source links if appropriate
+    for node in doctree.traverse():
+        if getattr(node, 'tagname', '') == 'function':
+            modname = node.get('module')
+            if modname:
+                # Add source link to function node
+                add_source_link(env, node, modname, node.get('name'))
+
+
+def add_source_link(env, node, modname, name):
+    """Add a source link to a node."""
+    pagename = f'_modules/{modname}'
     
-    This function registers the extension with the documentation application.
-    """
-    app.add_config_value('viewcode_enable_epub', False, 'html')
+    # Create source link node
+    inline = TextNode('[source]', classes=['viewcode-link'])
+    source_ref = Node(
+        reftype='viewcode',
+        refdomain='std',
+        refexplicit=False,
+        reftarget=pagename,
+        refid=name,
+        refdoc=env.docname
+    )
+    source_ref.add_child(inline)
+    
+    only_html = Node(expr='html')
+    only_html.add_child(source_ref)
+    
+    node.add_child(only_html)
+
+
+def setup(app):
+    """Set up the viewcode extension."""
+    app.config.viewcode_enable_epub = False
+    
+    # Connect event handlers
+    app.doctree_read = doctree_read
+    app.collect_pages = collect_pages
+    
     return {
         'version': '1.0',
         'parallel_read_safe': True,

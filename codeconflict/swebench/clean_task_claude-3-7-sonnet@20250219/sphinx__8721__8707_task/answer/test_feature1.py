@@ -1,103 +1,65 @@
-"""
-Tests for Feature 1: EPUB support with configuration option
-"""
-
 import unittest
-import os
-import sys
-import shutil
-from pathlib import Path
+from codebase import Application, Config, collect_pages
 
-# Add parent directory to path so we can import codebase
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from codebase import EPUBBuilder, collect_pages, setup
-
-
-class Feature1Test(unittest.TestCase):
-    """Test cases for Feature 1: EPUB support configuration."""
-    
-    def setUp(self):
-        """Set up the test environment."""
-        # Create temporary output directory
-        output_dir = Path("test_output")
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        output_dir.mkdir()
-        
-    def tearDown(self):
-        """Clean up after tests."""
-        # Remove temporary output directory
-        output_dir = Path("test_output")
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
+class Feature1Tests(unittest.TestCase):
+    """Tests for Feature 1: EPUB module page generation only when enabled."""
     
     def test_epub_disabled_by_default(self):
-        """Test that EPUB source pages are disabled by default."""
-        # Create an EPUB builder with default config
-        builder = EPUBBuilder()
+        """Test that module pages are not generated for EPUB by default."""
+        # Setup
+        config = Config()
+        self.assertFalse(config.viewcode_enable_epub)  # Verify default setting
         
-        # Prepare the builder
-        builder.prepare()
+        app = Application(builder_name="epub", config=config)
+        app.builder.env._viewcode_modules = {"test_module": {"code": "def test(): pass"}}
         
-        # Get pages that would be generated
-        pages = collect_pages(builder)
+        # Test
+        pages = list(collect_pages(app))
         
-        # Verify no pages are generated for EPUB by default
-        self.assertEqual(len(pages), 0, "No source pages should be generated for EPUB by default")
+        # Assert
+        self.assertEqual(len(pages), 0, "No pages should be generated for EPUB when disabled")
     
-    def test_epub_enabled_via_config(self):
-        """Test that EPUB source pages can be enabled via configuration."""
-        # Create an EPUB builder with viewcode_enable_epub set to True
-        builder = EPUBBuilder(config={'viewcode_enable_epub': True})
+    def test_epub_enabled_generates_pages(self):
+        """Test that module pages are generated for EPUB when explicitly enabled."""
+        # Setup
+        config = Config()
+        config.viewcode_enable_epub = True
         
-        # Prepare the builder
-        builder.prepare()
+        app = Application(builder_name="epub", config=config)
+        app.builder.env._viewcode_modules = {"test_module": {"code": "def test(): pass"}}
         
-        # Get pages that would be generated
-        pages = collect_pages(builder)
+        # Test
+        pages = list(collect_pages(app))
         
-        # Verify pages are generated for EPUB when enabled
-        self.assertGreater(len(pages), 0, "Source pages should be generated for EPUB when enabled")
-        
-        # Check that the module page is included
-        page_paths = [page[0] for page in pages]
-        self.assertIn('_modules/spam/mod1', page_paths, "Module page should be generated")
+        # Assert
+        self.assertEqual(len(pages), 1, "Pages should be generated for EPUB when enabled")
+        self.assertEqual(pages[0][0], "_modules/test_module", "Page name should match module name")
     
-    def test_source_links_removed_for_epub_disabled(self):
-        """Test that [source] links are removed when EPUB is disabled."""
-        # Create an EPUB builder with default config (disabled)
-        builder = EPUBBuilder()
+    def test_html_always_generates_pages(self):
+        """Test that module pages are always generated for HTML regardless of EPUB setting."""
+        # Setup with EPUB disabled
+        config = Config()
+        self.assertFalse(config.viewcode_enable_epub)
         
-        # Prepare the builder - this will process anchors
-        builder.prepare()
+        app = Application(builder_name="html", config=config)
+        app.builder.env._viewcode_modules = {"test_module": {"code": "def test(): pass"}}
         
-        # Check that no document nodes have [source] text
-        source_links = []
-        for node in builder.env.document_nodes:
-            if isinstance(node, object) and hasattr(node, 'children'):
-                for child in node.children:
-                    if hasattr(child, 'content') and child.content == "[source]":
-                        source_links.append(child)
+        # Test
+        pages = list(collect_pages(app))
         
-        self.assertEqual(len(source_links), 0, "No [source] links should be present when EPUB is disabled")
-    
-    def test_source_links_present_for_epub_enabled(self):
-        """Test that [source] links are present when EPUB is enabled."""
-        # Create an EPUB builder with viewcode_enable_epub set to True
-        builder = EPUBBuilder(config={'viewcode_enable_epub': True})
+        # Assert
+        self.assertEqual(len(pages), 1, "Pages should be generated for HTML")
         
-        # Prepare the builder - this will process anchors
-        builder.prepare()
+        # Setup with EPUB enabled
+        config.viewcode_enable_epub = True
+        app = Application(builder_name="html", config=config)
+        app.builder.env._viewcode_modules = {"test_module": {"code": "def test(): pass"}}
         
-        # Check that document nodes have [source] text
-        source_links = []
-        for node in builder.env.document_nodes:
-            if isinstance(node, object) and hasattr(node, 'children'):
-                for child in node.children:
-                    if hasattr(child, 'content') and child.content == "[source]":
-                        source_links.append(child)
+        # Test
+        pages = list(collect_pages(app))
         
-        self.assertGreater(len(source_links), 0, "[source] links should be present when EPUB is enabled")
+        # Assert
+        self.assertEqual(len(pages), 1, "Pages should still be generated for HTML")
 
 
 if __name__ == "__main__":

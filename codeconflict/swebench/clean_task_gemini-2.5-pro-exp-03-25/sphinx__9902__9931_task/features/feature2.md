@@ -1,1 +1,0 @@
-Add an option to always shorten type names by removing module prefixes.

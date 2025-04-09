@@ -1,2 +1,0 @@
-# No external dependencies needed for the base or merged code.
-# unittest (used for tests) is a built-in Python package.

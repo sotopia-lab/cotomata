@@ -1,3 +1,3 @@
-# Feature 1: Duration Expression Support
+# Feature 1: Support Duration-Only Expressions in SQLite and MySQL
 
-Add support for using duration expressions directly without wrappers, ensuring they work correctly on all database backends including SQLite and MySQL by properly handling duration field values in arithmetic expressions.
+Add support for duration field expressions like `F('duration_field') + timedelta(1)` to work correctly in database backends that don't have native duration field support (SQLite and MySQL).

@@ -1,1 +1,3 @@
-Add support for using 'drop' as an alternative to None to disable estimators in Voting ensembles, maintaining consistency in the API.
+# Feature 2: Support 'drop' as Alternative to None for Removing Estimators
+
+Add support for using 'drop' as an alternative to None when specifying that an estimator should be excluded from the ensemble, maintaining consistent behavior between both methods.

@@ -1,1 +1,0 @@
-Allow explicit requests for short type names using a leading tilde (`~`).

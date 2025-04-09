@@ -1,1 +1,0 @@
-Add a configuration option to display *all* types using only their short names (without module prefixes).

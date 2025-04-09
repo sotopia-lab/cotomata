@@ -1,195 +1,124 @@
-import numpy as np
-from joblib import Parallel, delayed
-
-
-def clone(estimator):
-    """Simple clone function for the example"""
-    return estimator
-
-
-class Bunch(dict):
-    """Container object exposing keys as attributes"""
-    def __init__(self, **kwargs):
-        super().__init__(kwargs)
-        self.__dict__ = self
-
-
-class _BaseVoting:
-    """Base class for Voting estimators"""
+class VotingEstimator:
+    """
+    A voting estimator that combines multiple machine learning models.
     
-    def __init__(self, estimators, weights=None, n_jobs=None):
+    Parameters
+    ----------
+    estimators : list of (string, estimator) tuples
+        List of (name, estimator) tuples to be used in the ensemble.
+        An estimator can be set to None using set_params.
+    
+    weights : list, optional (default=None)
+        Sequence of weights for each estimator. If None, all estimators have equal weight.
+    """
+    
+    def __init__(self, estimators, weights=None):
         self.estimators = estimators
         self.weights = weights
-        self.n_jobs = n_jobs
-    
-    def _validate_estimators(self):
-        if not self.estimators:
-            raise ValueError("Invalid 'estimators' attribute, 'estimators' "
-                             "should be a list of (string, estimator) tuples.")
-        
-        names, estimators = zip(*self.estimators)
-        # validate names
-        self._validate_names(names)
-        
-        # validate estimators
-        for est in estimators:
-            if est is not None and not hasattr(est, 'fit'):
-                raise ValueError("All estimators should implement fit method, "
-                                "or be None")
-    
-    def _validate_names(self, names):
-        if len(set(names)) != len(names):
-            raise ValueError("Names provided are not unique: {}".format(names))
+        self.estimators_ = None
         
     def fit(self, X, y, sample_weight=None):
-        """Fit the estimators.
+        """
+        Fit the voting estimator.
         
         Parameters
         ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+        X : array-like, shape (n_samples, n_features)
             Training vectors.
         y : array-like, shape (n_samples,)
             Target values.
-        sample_weight : array-like, shape (n_samples,) or None
-            Sample weights. If None, then samples are equally weighted.
+        sample_weight : array-like, shape (n_samples,), optional
+            Sample weights for training.
             
         Returns
         -------
         self : object
         """
-        self._validate_estimators()
-        
         if self.weights is not None and len(self.weights) != len(self.estimators):
-            raise ValueError('Number of weights must match number of'
-                             ' estimators; got %d weights, %d estimators'
-                             % (len(self.weights), len(self.estimators)))
+            raise ValueError('Number of weights must match number of estimators;'
+                            f' got {len(self.weights)} weights, {len(self.estimators)} estimators')
         
-        names, clfs = zip(*self.estimators)
-        
-        n_isnone = sum([clf is None for clf in clfs])
-        if n_isnone == len(self.estimators):
+        # Validate that we have at least one estimator that is not None
+        if all(estimator is None for _, estimator in self.estimators):
             raise ValueError('All estimators are None. At least one is required!')
         
-        # Fit estimators
-        self.estimators_ = Parallel(n_jobs=self.n_jobs)(
-            delayed(_parallel_fit_estimator)(clone(clf), X, y, sample_weight=sample_weight)
-            for clf in clfs if clf is not None)
+        # Check if sample_weight can be used with all estimators
+        if sample_weight is not None:
+            for name, estimator in self.estimators:
+                if estimator is None:
+                    continue
+                if not hasattr(estimator, 'fit') or not self._accepts_sample_weight(estimator):
+                    raise ValueError(f"Underlying estimator '{name}' does not support sample weights.")
         
-        # Create a dict mapping from label to estimator
-        self.named_estimators_ = Bunch()
-        for k, e in zip(self.estimators, self.estimators_):
-            self.named_estimators_[k[0]] = e
+        # Fit each estimator
+        self.estimators_ = []
+        for name, estimator in self.estimators:
+            if estimator is not None:
+                # Clone the estimator to avoid modifying the original
+                est_copy = self._clone(estimator)
+                # Fit with sample_weight if provided
+                if sample_weight is not None:
+                    est_copy.fit(X, y, sample_weight=sample_weight)
+                else:
+                    est_copy.fit(X, y)
+                self.estimators_.append((name, est_copy))
         
         return self
     
-    def _weights_not_none(self):
-        """Get the weights of not `None` estimators"""
+    def predict(self, X):
+        """
+        Predict class labels for X.
+        
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+            
+        Returns
+        -------
+        y_pred : array-like, shape (n_samples,)
+            The predicted classes.
+        """
+        if self.estimators_ is None:
+            raise ValueError("Estimator not fitted, call 'fit' before making predictions!")
+        
+        # Simple implementation: average predictions from all estimators
+        predictions = []
+        weights = self._get_weights()
+        
+        for idx, (name, estimator) in enumerate(self.estimators_):
+            pred = estimator.predict(X)
+            weight = 1.0 if weights is None else weights[idx]
+            predictions.append((pred, weight))
+        
+        # Combine predictions (simple average for this example)
+        final_pred = sum(pred * weight for pred, weight in predictions) / sum(
+            weight for _, weight in predictions)
+        
+        return final_pred
+    
+    def _get_weights(self):
+        """Get weights for the active estimators."""
         if self.weights is None:
             return None
-        return [w for est, w in zip(self.estimators, self.weights) 
-                if est[1] is not None]
-    
-    def _predict(self, X):
-        """Collect results from estimators' predict calls"""
-        return [est.predict(X) for est in self.estimators_]
-
-
-def _parallel_fit_estimator(estimator, X, y, sample_weight=None):
-    """Private function used to fit an estimator within a job."""
-    if sample_weight is not None:
-        estimator.fit(X, y, sample_weight=sample_weight)
-    else:
-        estimator.fit(X, y)
-    return estimator
-
-
-class VotingClassifier(_BaseVoting):
-    """Soft Voting/Majority Rule classifier.
-    
-    A voting classifier is an ensemble meta-classifier that fits base classifiers 
-    each on the whole dataset and then uses average predicted probabilities 
-    (soft voting) or class labels (hard voting) for prediction.
-    
-    Parameters
-    ----------
-    estimators : list of (string, estimator) tuples
-        Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones
-        of those original estimators that will be stored in the class attribute
-        ``self.estimators_``. An estimator can be set to `None` using
-        ``set_params``.
-    weights : array-like, shape (n_classifiers,), optional (default=None)
-        If specified, the predicted class probabilities for each classifier are
-        multiplied by the classifier weight. Uses uniform weights if None.
-    n_jobs : int or None, optional (default=None)
-        The number of jobs to run in parallel for ``fit``. None means 1.
-    """
-    
-    def __init__(self, estimators, weights=None, n_jobs=None):
-        super().__init__(estimators=estimators, weights=weights, n_jobs=n_jobs)
-    
-    def predict(self, X):
-        """Predict class labels for X.
         
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The input samples.
-            
-        Returns
-        -------
-        predicted_labels : array-like, shape (n_samples,)
-            Predicted class labels.
-        """
-        pred = self._predict(X)
-        # Simple voting (returns the most frequent value)
-        prediction = np.apply_along_axis(
-            lambda x: np.argmax(np.bincount(x, weights=self._weights_not_none())),
-            axis=0, arr=pred)
-        return prediction
-
-
-class VotingRegressor(_BaseVoting):
-    """Prediction voting regressor for unfitted estimators.
-    
-    A voting regressor is an ensemble meta-estimator that fits base regressors 
-    each on the whole dataset and then averages the predictions to form a final 
-    prediction.
-    
-    Parameters
-    ----------
-    estimators : list of (string, estimator) tuples
-        Invoking the ``fit`` method on the ``VotingRegressor`` will fit clones
-        of those original estimators that will be stored in the class attribute
-        ``self.estimators_``. An estimator can be set to `None` using
-        ``set_params``.
-    weights : array-like, shape (n_regressors,), optional (default=None)
-        If specified, the predicted target values for each regressor are
-        multiplied by the regressor weight. Uses uniform weights if None.
-    n_jobs : int or None, optional (default=None)
-        The number of jobs to run in parallel for ``fit``. None means 1.
-    """
-    
-    def __init__(self, estimators, weights=None, n_jobs=None):
-        super().__init__(estimators=estimators, weights=weights, n_jobs=n_jobs)
-    
-    def predict(self, X):
-        """Predict regression target for X.
+        # Filter weights for only the active estimators (not None)
+        active_weights = []
+        active_idx = 0
         
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The input samples.
-            
-        Returns
-        -------
-        predicted_values : array-like, shape (n_samples,)
-            Predicted target values.
-        """
-        pred = self._predict(X)
-        weights = self._weights_not_none()
-        
-        if weights is None:
-            weights = np.ones(len(self.estimators_))
-            
-        avg = np.average(pred, axis=0, weights=weights)
-        return avg
+        for idx, (_, estimator) in enumerate(self.estimators):
+            if estimator is not None:
+                active_weights.append(self.weights[idx])
+                active_idx += 1
+                
+        return active_weights
+    
+    def _accepts_sample_weight(self, estimator):
+        """Check if estimator's fit method accepts sample_weight parameter."""
+        return 'sample_weight' in estimator.fit.__code__.co_varnames
+    
+    def _clone(self, estimator):
+        """Create a copy of the estimator."""
+        # In a real implementation, this would create a deep copy
+        # For simplicity, we'll assume estimators are already properly cloned
+        return estimator

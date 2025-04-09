@@ -1,3 +1,3 @@
-# Feature 2: Temporal Subtraction Without ExpressionWrapper
+# Feature 2: Auto-Resolve Mixed Temporal Type Expressions
 
-Implement automatic type resolution for temporal subtraction operations, allowing date/time fields to be subtracted without explicitly using ExpressionWrapper to specify the output field type.
+Make temporal expressions with mixed types (such as datetime subtraction) work without requiring explicit `ExpressionWrapper` with `output_field=DurationField()`.

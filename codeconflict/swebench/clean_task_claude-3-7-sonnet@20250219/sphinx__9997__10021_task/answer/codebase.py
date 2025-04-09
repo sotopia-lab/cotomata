@@ -1,26 +1,23 @@
 """
-A utility module for handling type annotations in documentation.
+A simplified module demonstrating type annotation handling for documentation.
 
-This module provides functionality to format and stringify Python type hints
-for documentation systems.
+This module provides utilities for formatting and processing type annotations
+in a documentation generation system.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union, TypeVar, get_type_hints
-import inspect
-import sys
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 
-def stringify_annotation(annotation, mode='fully-qualified-except-typing') -> str:
+def stringify_annotation(annotation: Any, mode: str = 'fully-qualified-except-typing') -> str:
     """
     Convert a type annotation to a string representation.
     
     Args:
         annotation: The type annotation to stringify
-        mode: The formatting mode to use:
-            - 'fully-qualified-except-typing': Show the module name and qualified name of the annotation
-              except the "typing" module.
-            - 'smart': Show the name of the annotation without module prefixes.
-            - 'fully-qualified': Show the module name and qualified name of the annotation.
+        mode: How to format the type strings, one of:
+              - 'fully-qualified-except-typing': Show module names except for typing module
+              - 'fully-qualified': Show all module names
+              - 'smart': Show short names without module prefixes
     
     Returns:
         A string representation of the type annotation
@@ -28,131 +25,166 @@ def stringify_annotation(annotation, mode='fully-qualified-except-typing') -> st
     if annotation is None:
         return 'None'
     
-    if isinstance(annotation, str):
-        return annotation
+    # Handle basic Python types
+    if annotation is type(None):
+        return 'None'
+    elif annotation is int:
+        return 'int'
+    elif annotation is str:
+        return 'str'
+    elif annotation is bool:
+        return 'bool'
+    elif annotation is float:
+        return 'float'
     
-    # Determine module prefix based on mode
-    if mode == 'smart':
-        modprefix = '~'
-    else:
-        modprefix = ''
-    
-    module = getattr(annotation, '__module__', None)
-    
-    # Handle special case for typing module
-    if module == 'typing':
-        name = getattr(annotation, '__name__', str(annotation))
-        if mode == 'smart' or mode == 'fully-qualified-except-typing':
-            # Just return the name without 'typing.' prefix
-            simple_name = name.split('.')[-1]
-            
-            # Handle generic types with arguments
-            if hasattr(annotation, '__args__'):
-                args = annotation.__args__
-                args_str = ', '.join(stringify_annotation(arg, mode) for arg in args)
-                return f"{simple_name}[{args_str}]"
-            
-            return simple_name
-        else:  # fully-qualified
-            # Include 'typing.' prefix
-            if hasattr(annotation, '__args__'):
-                args = annotation.__args__
-                args_str = ', '.join(stringify_annotation(arg, mode) for arg in args)
-                return f"typing.{simple_name}[{args_str}]"
-            
-            return f"typing.{simple_name}"
-    
-    # Handle generic types
-    if hasattr(annotation, '__origin__'):
-        origin = stringify_annotation(annotation.__origin__, mode)
+    # Handle types from typing module
+    if hasattr(annotation, '__module__') and annotation.__module__ == 'typing':
+        name = str(annotation)
+        prefix = ''
         
-        if hasattr(annotation, '__args__'):
-            args = annotation.__args__
-            args_str = ', '.join(stringify_annotation(arg, mode) for arg in args)
-            return f"{origin}[{args_str}]"
+        # Determine prefix based on mode
+        if mode == 'fully-qualified':
+            prefix = 'typing.'
+        elif mode == 'smart':
+            prefix = '~typing.'
+        
+        # Remove 'typing.' prefix from the name if appropriate
+        if name.startswith('typing.'):
+            name = name[7:]
+        
+        # Handle generic types (e.g., List[int])
+        if hasattr(annotation, '__args__') and annotation.__args__:
+            origin = getattr(annotation, '__origin__', None)
+            if origin is not None:
+                origin_name = origin.__name__ if hasattr(origin, '__name__') else str(origin)
+                
+                # Format the arguments recursively using the same mode
+                args_str = ', '.join(stringify_annotation(arg, mode) for arg in annotation.__args__)
+                return f"{prefix}{origin_name}[{args_str}]"
+        
+        # Handle simple typing types
+        return f"{prefix}{name}"
     
-    # Simple type
-    if module and module != 'builtins' and module != '__builtin__':
+    # For custom classes, use their fully qualified name
+    if hasattr(annotation, '__qualname__') and hasattr(annotation, '__module__'):
         if mode == 'smart':
-            return f"~{module}.{annotation.__name__}"
+            return f"~{annotation.__module__}.{annotation.__qualname__}"
         else:
-            return f"{module}.{annotation.__name__}"
+            return f"{annotation.__module__}.{annotation.__qualname__}"
     
+    # Default: convert to string
     return str(annotation)
 
 
-def parse_target(target: str, suppress_prefix: bool = False):
+def format_type_for_display(type_str: str) -> str:
     """
-    Parse a type string and return (reftype, target, display_text)
+    Format a type string for display in documentation.
     
     Args:
-        target: The type name to parse
-        suppress_prefix: If True, suppress module prefix in the display text
+        type_str: The type string to format
     
     Returns:
-        A tuple of (reftype, target, display_text)
+        A formatted string suitable for display in documentation
+    """
+    return type_str
+
+
+def parse_type_target(target: str, suppress_prefix: bool = False) -> tuple:
+    """
+    Parse a type string target and return various components needed for cross-referencing.
+    
+    Args:
+        target: The target type string
+        suppress_prefix: Whether to suppress the prefix in the display
+        
+    Returns:
+        A tuple of (reftype, reftarget, title, refspecific_flag)
     """
     refspecific = False
     
     # Handle special prefixes
     if target.startswith('.'):
         target = target[1:]
-        display_text = target
+        title = target
         refspecific = True
     elif target.startswith('~'):
         target = target[1:]
-        display_text = target.split('.')[-1]
+        title = target.split('.')[-1]
     elif suppress_prefix:
-        display_text = target.split('.')[-1]
+        title = target.split('.')[-1]
     elif target.startswith('typing.'):
-        display_text = target[7:]  # Remove 'typing.' prefix
+        title = target[7:] # Remove 'typing.' prefix from display
     else:
-        display_text = target
+        title = target
         
     # Determine reference type
     if target == 'None' or target.startswith('typing.'):
-        # typing module provides non-class types, so use obj reference
+        # typing module provides non-class types, use 'obj' reference
         reftype = 'obj'
     else:
         reftype = 'class'
         
-    return reftype, target, display_text, refspecific
+    return reftype, target, title, refspecific
 
 
-def type_to_reference(target: str, suppress_prefix: bool = False) -> str:
+def create_type_reference(target: str, domain: str = 'py', 
+                          suppress_prefix: bool = False) -> Dict[str, Any]:
     """
-    Convert a type string to a cross-reference format for documentation.
+    Create a cross-reference object for a type.
     
     Args:
-        target: The type name to convert
-        suppress_prefix: If True, suppress module prefix in the reference
-    
+        target: The target type name
+        domain: The documentation domain
+        suppress_prefix: Whether to suppress the prefix in the display
+        
     Returns:
-        A string with proper cross-reference formatting
+        A dictionary representing the cross-reference
     """
-    reftype, target, display_text, _ = parse_target(target, suppress_prefix)
+    reftype, reftarget, title, refspecific = parse_type_target(target, suppress_prefix)
     
-    return f":py:{reftype}:`{display_text} <{target}>`"
+    ref = {
+        'reftype': reftype,
+        'reftarget': reftarget,
+        'refdomain': domain,
+        'refspecific': refspecific,
+        'reftext': title
+    }
+    
+    return ref
 
 
-def format_type_for_docs(annotation, doc_format='normal', unqualified_typehints=False):
-    """
-    Format a type annotation for inclusion in documentation.
+class TypeFormatter:
+    """Class to handle the formatting of type annotations."""
     
-    Args:
-        annotation: The type annotation to format
-        doc_format: The documentation format style ('normal' or 'field')
-        unqualified_typehints: If True, use shorter form of type names
+    def __init__(self, config: Dict[str, Any] = None):
+        """
+        Initialize the TypeFormatter.
+        
+        Args:
+            config: Configuration dictionary
+        """
+        self.config = config or {}
     
-    Returns:
-        A formatted string suitable for inclusion in documentation
-    """
-    mode = 'smart' if unqualified_typehints else 'fully-qualified-except-typing'
-    type_str = stringify_annotation(annotation, mode)
-    
-    if doc_format == 'field':
-        # Format for field lists (e.g. :param x: description)
-        return f"*{type_str}*"
-    else:
-        # Default formatting
-        return type_str
+    def process_typehints(self, obj: Any, typehints: Dict[str, Any]) -> Dict[str, str]:
+        """
+        Process the type hints for an object.
+        
+        Args:
+            obj: The object being documented
+            typehints: Dictionary of type hints for the object
+        
+        Returns:
+            Processed type hint strings
+        """
+        result = {}
+        
+        # Determine mode based on configuration
+        if self.config.get('unqualified_typehints', False):
+            mode = 'smart'  # Use short names without module prefixes
+        else:
+            mode = 'fully-qualified'  # Include module names
+            
+        for name, hint in typehints.items():
+            result[name] = stringify_annotation(hint, mode)
+        
+        return resul

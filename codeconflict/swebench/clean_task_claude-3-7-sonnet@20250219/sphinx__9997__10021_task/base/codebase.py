@@ -1,22 +1,20 @@
 """
-A utility module for handling type annotations in documentation.
+A simplified module demonstrating type annotation handling for documentation.
 
-This module provides functionality to format and stringify Python type hints
-for documentation systems.
+This module provides utilities for formatting and processing type annotations
+in a documentation generation system.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union, TypeVar, get_type_hints
-import inspect
-import sys
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 
-def stringify_annotation(annotation, short_form=False) -> str:
+def stringify_annotation(annotation: Any, unqualified: bool = False) -> str:
     """
     Convert a type annotation to a string representation.
     
     Args:
         annotation: The type annotation to stringify
-        short_form: If True, use the shorter form of the type name (e.g., 'List' instead of 'typing.List')
+        unqualified: If True, use shorter representation without module names
     
     Returns:
         A string representation of the type annotation
@@ -24,68 +22,111 @@ def stringify_annotation(annotation, short_form=False) -> str:
     if annotation is None:
         return 'None'
     
-    if isinstance(annotation, str):
-        return annotation
+    # Handle basic Python types
+    if annotation is type(None):
+        return 'None'
+    elif annotation is int:
+        return 'int'
+    elif annotation is str:
+        return 'str'
+    elif annotation is bool:
+        return 'bool'
+    elif annotation is float:
+        return 'float'
     
-    if short_form:
-        # Return shorter form without module prefix
-        module = getattr(annotation, '__module__', None)
-        if module == 'typing':
-            name = getattr(annotation, '__name__', str(annotation))
-            return name.split('.')[-1]
+    # Handle types from typing module
+    if hasattr(annotation, '__module__') and annotation.__module__ == 'typing':
+        name = str(annotation)
+        
+        # Handle generic types (e.g., List[int])
+        if hasattr(annotation, '__args__') and annotation.__args__:
+            origin = getattr(annotation, '__origin__', None)
+            if origin is not None:
+                origin_name = origin.__name__
+                args_str = ', '.join(stringify_annotation(arg, unqualified) for arg in annotation.__args__)
+                return f"{origin_name}[{args_str}]"
+        
+        # Handle simple typing types
+        return name.replace('typing.', '')
     
-    # Return fully qualified name
-    if hasattr(annotation, '__origin__'):
-        # Handle generic types like List[int]
-        origin = annotation.__origin__.__name__
-        args = annotation.__args__
-        args_str = ', '.join(stringify_annotation(arg, short_form) for arg in args)
-        return f"{origin}[{args_str}]"
+    # For custom classes, use their fully qualified name
+    if hasattr(annotation, '__qualname__') and hasattr(annotation, '__module__'):
+        if unqualified:
+            return annotation.__qualname__
+        else:
+            return f"{annotation.__module__}.{annotation.__qualname__}"
     
-    # Simple type
+    # Default: convert to string
     return str(annotation)
 
 
-def format_type_for_docs(annotation, doc_format='normal'):
+def format_type_for_display(type_str: str) -> str:
     """
-    Format a type annotation for inclusion in documentation.
+    Format a type string for display in documentation.
     
     Args:
-        annotation: The type annotation to format
-        doc_format: The documentation format style ('normal' or 'field')
+        type_str: The type string to format
     
     Returns:
-        A formatted string suitable for inclusion in documentation
+        A formatted string suitable for display in documentation
     """
-    type_str = stringify_annotation(annotation)
-    
-    if doc_format == 'field':
-        # Format for field lists (e.g. :param x: description)
-        return type_str
-    else:
-        # Default formatting
-        return type_str
+    return type_str
 
 
-def type_to_reference(target: str, suppress_prefix: bool = False) -> str:
+def create_type_reference(target: str, domain: str = 'py') -> Dict[str, Any]:
     """
-    Convert a type string to a cross-reference format for documentation.
+    Create a cross-reference object for a type.
     
     Args:
-        target: The type name to convert
-        suppress_prefix: If True, suppress module prefix in the reference
+        target: The target type name
+        domain: The documentation domain
     
     Returns:
-        A string with proper cross-reference formatting
+        A dictionary representing the cross-reference
     """
-    if target == 'None':
-        reftype = 'obj'
-    else:
-        reftype = 'class'
+    is_typing_object = target.startswith('typing.')
     
-    if suppress_prefix:
-        text = target.split('.')[-1]
-    else:
-        text = target
+    ref = {
+        'reftype': 'class',
+        'reftarget': target,
+        'refdomain': domain,
+        'refspecific': False,
+    }
     
-    return f":py:{reftype}:`{text}`"
+    # Fix display text to remove module name for brevity
+    if '.' in target:
+        ref['reftext'] = target.split('.')[-1]
+    
+    return ref
+
+
+class TypeFormatter:
+    """Class to handle the formatting of type annotations."""
+    
+    def __init__(self, config: Dict[str, Any] = None):
+        """
+        Initialize the TypeFormatter.
+        
+        Args:
+            config: Configuration dictionary
+        """
+        self.config = config or {}
+    
+    def process_typehints(self, obj: Any, typehints: Dict[str, Any]) -> Dict[str, str]:
+        """
+        Process the type hints for an object.
+        
+        Args:
+            obj: The object being documented
+            typehints: Dictionary of type hints for the object
+        
+        Returns:
+            Processed type hint strings
+        """
+        result = {}
+        use_unqualified = self.config.get('unqualified_typehints', False)
+        
+        for name, hint in typehints.items():
+            result[name] = stringify_annotation(hint, use_unqualified)
+        
+        return resul

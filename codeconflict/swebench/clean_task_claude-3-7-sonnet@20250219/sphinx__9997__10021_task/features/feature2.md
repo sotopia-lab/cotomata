@@ -1,1 +1,4 @@
-Feature 2: Support unqualified type hints in documentation descriptions when autodoc_unqualified_typehints option is enabled.
+# Feature 2: Respect Unqualified Type Hints Setting in Description Mode
+
+When the `unqualified_typehints` setting is enabled, ensure that typehints displayed in parameter descriptions 
+are also shown in the unqualified form (without module paths), maintaining consistency across all documentation modes.

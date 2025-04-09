@@ -1,105 +1,165 @@
+"""
+A simplified module representing Django's expression handling for database operations.
+This is a minimal representation to demonstrate the merge conflicts.
+"""
 import datetime
 from decimal import Decimal
 
-class DurationField:
-    """A field for storing duration values"""
-    def __init__(self):
-        self.name = None
-    
-    def get_internal_type(self):
-        return 'DurationField'
-
-class DateTimeField:
-    """A field for storing datetime values"""
-    def __init__(self):
-        self.name = None
-    
-    def get_internal_type(self):
-        return 'DateTimeField'
 
 class FieldError(Exception):
-    """Raised when a field operation is not valid"""
+    """Raised when there is an error with a model field."""
     pass
 
-class Connection:
-    """Represents a database connection"""
-    def __init__(self, has_native_duration_field=False):
-        self.features = ConnectionFeatures(has_native_duration_field)
-        self.ops = DatabaseOperations()
 
-class ConnectionFeatures:
-    """Database features configuration"""
-    def __init__(self, has_native_duration_field):
-        self.has_native_duration_field = has_native_duration_field
+class Field:
+    """Base field class"""
+    def get_internal_type(self):
+        return self.__class__.__name__
+
+
+class DateTimeField(Field):
+    """Field for storing datetime values"""
+    pass
+
+
+class DateField(Field):
+    """Field for storing date values"""
+    pass
+
+
+class TimeField(Field):
+    """Field for storing time values"""
+    pass
+
+
+class DurationField(Field):
+    """Field for storing time duration values"""
+    pass
+
+
+class DatabaseFeatures:
+    """Database backend features"""
+    def __init__(self):
+        self.has_native_duration_field = False
         self.supports_temporal_subtraction = True
+
 
 class DatabaseOperations:
     """Database operations handler"""
     def check_expression_support(self, expression):
-        """Check if the expression is supported by the database"""
+        """Checks if the database supports the given expression"""
         pass
-    
+
     def format_for_duration_arithmetic(self, sql):
         """Format SQL for duration arithmetic"""
         return sql
-
-class Value:
-    """Represents a constant value in a database expression"""
-    def __init__(self, value, output_field=None):
-        self.value = value
-        self.output_field = output_field
     
-    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
+    def convert_durationfield_value(self, value, expression, connection):
+        """Convert duration field value from database"""
+        try:
+            return str(Decimal(value) / Decimal(1000000))
+        except Exception as e:
+            raise e
+
+
+class Connection:
+    """Database connection"""
+    def __init__(self):
+        self.features = DatabaseFeatures()
+        self.ops = DatabaseOperations()
+
+
+class Expression:
+    """Base class for all query expressions"""
+    def resolve_expression(self, query=None, allow_joins=True, reuse=None, 
+                          summarize=False, for_save=False):
+        """Resolve expression into something the database can handle"""
         return self
     
-    def as_sql(self, compiler, connection):
-        if hasattr(self.value, 'as_sql'):
-            return self.value.as_sql(compiler, connection)
-        return '%s', [self.value]
+    def copy(self):
+        """Return a copy of the expression"""
+        return self.__class__()
+    
+    def output_field(self):
+        """Return the field that represents the output of this expression"""
+        return None
 
-class F:
-    """Represents a model field reference in a database expression"""
-    def __init__(self, name):
-        self.name = name
-        self.output_field = None  # This would be set at runtime based on the model field
-    
-    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
-        return self
-    
     def as_sql(self, compiler, connection):
-        return self.name, []
+        """Return the SQL and parameters for this expression"""
+        raise NotImplementedError("Subclasses must implement as_sql()")
+
+
+class Combinable:
+    """Methods for combining expressions"""
+    ADD = '+'
+    SUB = '-'
+    
+    def _combine(self, other, connector, reversed):
+        """Combine this expression with another expression"""
+        if not hasattr(other, 'resolve_expression'):
+            # everything must be resolvable to an expression
+            output_field = (
+                DurationField()
+                if isinstance(other, datetime.timedelta) else
+                None
+            )
+            other = Value(other, output_field=output_field)
+            
+        if reversed:
+            return CombinedExpression(other, connector, self)
+        else:
+            return CombinedExpression(self, connector, other)
     
     def __add__(self, other):
-        if not hasattr(other, 'resolve_expression'):
-            output_field = DurationField() if isinstance(other, datetime.timedelta) else None
-            other = Value(other, output_field=output_field)
-        return CombinedExpression(self, '+', other)
+        return self._combine(other, self.ADD, False)
     
     def __sub__(self, other):
-        if not hasattr(other, 'resolve_expression'):
-            output_field = None
-            if isinstance(other, datetime.datetime):
-                output_field = DateTimeField()  
-            other = Value(other, output_field=output_field)
-        return CombinedExpression(self, '-', other)
-
-class ExpressionWrapper:
-    """A wrapper for database expressions that provides an output_field"""
-    def __init__(self, expression, output_field):
-        self.expression = expression
-        self.output_field = output_field
+        return self._combine(other, self.SUB, False)
     
-    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
-        return ExpressionWrapper(
-            self.expression.resolve_expression(query, allow_joins, reuse, summarize, for_save),
-            self.output_field
-        )
+    def __radd__(self, other):
+        return self._combine(other, self.ADD, True)
+    
+    def __rsub__(self, other):
+        return self._combine(other, self.SUB, True)
+
+
+class Value(Expression, Combinable):
+    """Represents a wrapped value as a query expression"""
+    def __init__(self, value, output_field=None):
+        self.value = value
+        self._output_field = output_field
+    
+    @property
+    def output_field(self):
+        return self._output_field
     
     def as_sql(self, compiler, connection):
-        return self.expression.as_sql(compiler, connection)
+        connection.ops.check_expression_support(self)
+        return "%s", [self.value]
 
-class DurationExpression(CombinedExpression):
-    """Special expression for duration arithmetic"""
+
+class F(Expression, Combinable):
+    """Reference to a model field"""
+    def __init__(self, name):
+        self.name = name
+        self._output_field = None
+
+    @property
+    def output_field(self):
+        return self._output_field
+    
+    def as_sql(self, compiler, connection):
+        return "%s", [self.name]
+
+
+class DurationExpression(Expression, Combinable):
+    """An expression that deals with duration arithmetic"""
+    def __init__(self, lhs, connector, rhs):
+        self.lhs = lhs
+        self.connector = connector
+        self.rhs = rhs
+        self.is_summary = False
+    
     def compile(self, side, compiler, connection):
         try:
             output = side.output_field
@@ -113,8 +173,9 @@ class DurationExpression(CombinedExpression):
     
     def as_sql(self, compiler, connection):
         if connection.features.has_native_duration_field:
-            return super().as_sql(compiler, connection)
-        
+            # Fall back to regular combined expression behavior
+            return CombinedExpression(self.lhs, self.connector, self.rhs).as_sql(compiler, connection)
+            
         connection.ops.check_expression_support(self)
         expressions = []
         expression_params = []
@@ -123,67 +184,47 @@ class DurationExpression(CombinedExpression):
         expressions.append(sql)
         expression_params.extend(params)
         
-        expressions.append(' %s ' % self.connector)
+        expressions.append(self.connector)
         
         sql, params = self.compile(self.rhs, compiler, connection)
         expressions.append(sql)
         expression_params.extend(params)
         
         expression_wrapper = '(%s)'
-        sql = expression_wrapper % ''.join(expressions)
-        return sql, expression_params
-
-class TemporalSubtraction(CombinedExpression):
-    """Expression for subtracting two temporal fields"""
-    def as_sql(self, compiler, connection):
-        # Let the database handle the subtraction
-        return super().as_sql(compiler, connection)
-
-class CombinedExpression:
-    """Represents the combination of two expressions with an operation"""
-    ADD = '+'
-    SUB = '-'
+        sql = ' '.join(expressions)
+        return expression_wrapper % sql, expression_params
     
+    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
+        c = self.__class__(
+            self.lhs.resolve_expression(query, allow_joins, reuse, summarize, for_save),
+            self.connector,
+            self.rhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
+        )
+        c.is_summary = summarize
+        return c
+
+
+class TemporalSubtraction(DurationExpression):
+    """An expression that converts the subtraction of temporal fields to a duration"""
+    def __init__(self, lhs, rhs):
+        super().__init__(lhs, '-', rhs)
+        self._output_field = DurationField()
+    
+    @property
+    def output_field(self):
+        return self._output_field
+
+
+class CombinedExpression(Expression, Combinable):
+    """Combines two expressions with a connector"""
     def __init__(self, lhs, connector, rhs):
         self.lhs = lhs
         self.connector = connector
         self.rhs = rhs
-        self.output_field = None
+        self.is_summary = False
     
-    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
-        lhs = self.lhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
-        rhs = self.rhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
-        
-        if not isinstance(self, (DurationExpression, TemporalSubtraction)):
-            try:
-                lhs_type = lhs.output_field.get_internal_type() if hasattr(lhs, 'output_field') and lhs.output_field else None
-            except (AttributeError, FieldError):
-                lhs_type = None
-                
-            try:
-                rhs_type = rhs.output_field.get_internal_type() if hasattr(rhs, 'output_field') and rhs.output_field else None
-            except (AttributeError, FieldError):
-                rhs_type = None
-                
-            if 'DurationField' in {lhs_type, rhs_type} and lhs_type != rhs_type:
-                return DurationExpression(self.lhs, self.connector, self.rhs).resolve_expression(
-                    query, allow_joins, reuse, summarize, for_save
-                )
-                
-            datetime_fields = {'DateField', 'DateTimeField', 'TimeField'}
-            if self.connector == self.SUB and lhs_type in datetime_fields and lhs_type == rhs_type:
-                return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(
-                    query, allow_joins, reuse, summarize, for_save
-                )
-        
-        c = self.copy()
-        c.is_summary = summarize
-        c.lhs = lhs
-        c.rhs = rhs
-        return c
-    
-    def copy(self):
-        return CombinedExpression(self.lhs, self.connector, self.rhs)
+    def set_source_expressions(self, exprs):
+        self.lhs, self.rhs = exprs
     
     def as_sql(self, compiler, connection):
         expressions = []
@@ -193,21 +234,60 @@ class CombinedExpression:
         expressions.append(sql)
         expression_params.extend(params)
         
-        expressions.append(' %s ' % self.connector)
+        expressions.append(self.connector)
         
         sql, params = compiler.compile(self.rhs)
         expressions.append(sql)
         expression_params.extend(params)
         
         expression_wrapper = '(%s)'
-        sql = expression_wrapper % ''.join(expressions)
-        return sql, expression_params
+        sql = ' '.join(expressions)
+        return expression_wrapper % sql, expression_params
+    
+    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):
+        lhs = self.lhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
+        rhs = self.rhs.resolve_expression(query, allow_joins, reuse, summarize, for_save)
+        
+        if not isinstance(self, (DurationExpression, TemporalSubtraction)):
+            try:
+                lhs_type = lhs.output_field.get_internal_type()
+            except (AttributeError, FieldError):
+                lhs_type = None
+                
+            try:
+                rhs_type = rhs.output_field.get_internal_type()
+            except (AttributeError, FieldError):
+                rhs_type = None
+                
+            # Handle Duration mixed type expressions
+            if 'DurationField' in {lhs_type, rhs_type} and lhs_type != rhs_type:
+                return DurationExpression(self.lhs, self.connector, self.rhs).resolve_expression(
+                    query, allow_joins, reuse, summarize, for_save,
+                )
+                
+            # Handle temporal subtraction
+            datetime_fields = {'DateField', 'DateTimeField', 'TimeField'}
+            if self.connector == self.SUB and lhs_type in datetime_fields and lhs_type == rhs_type:
+                return TemporalSubtraction(self.lhs, self.rhs).resolve_expression(
+                    query, allow_joins, reuse, summarize, for_save,
+                )
+                
+        c = self.copy()
+        c.is_summary = summarize
+        c.lhs = lhs
+        c.rhs = rhs
+        return c
 
-class QueryCompiler:
-    """Compiles database queries"""
-    def compile(self, expression):
-        return expression.as_sql(self, None)
 
-def format_duration(duration):
-    """Format a duration object for database representation"""
-    return str(duration.total_seconds() * 1000000)
+class ExpressionWrapper(Expression):
+    """Wrapper for expressions with a specific output field"""
+    def __init__(self, expression, output_field):
+        self.expression = expression
+        self._output_field = output_field
+    
+    @property
+    def output_field(self):
+        return self._output_field
+    
+    def as_sql(self, compiler, connection):
+        return compiler.compile(self.expression)

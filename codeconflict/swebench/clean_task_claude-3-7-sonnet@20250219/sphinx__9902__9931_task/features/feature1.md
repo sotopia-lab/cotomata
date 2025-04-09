@@ -1,1 +1,1 @@
-Allow cross-reference specifier in type options by supporting prefixes (. and ~) in type targets to control reference behavior and display.
+Allow cross-reference specifier prefixes in type annotations using dot notation (.Type) and tilde notation (~package.Type) to control type display and linking.

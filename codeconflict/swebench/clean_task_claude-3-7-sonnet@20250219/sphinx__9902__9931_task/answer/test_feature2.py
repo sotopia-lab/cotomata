@@ -1,65 +1,58 @@
-"""
-Unit tests for Feature 2: Unqualified type hints configuration.
-"""
-
 import unittest
-from codebase import type_to_xref, stringify_annotation, BuildEnvironment
+from codebase import TypeProcessor
 
-
-class TestUnqualifiedTypeHints(unittest.TestCase):
-    """Test the unqualified type hints functionality."""
+class TestFeature2(unittest.TestCase):
+    """
+    Test the unqualified type names feature.
+    """
     
     def setUp(self):
-        """Set up test environment."""
-        self.env = BuildEnvironment()
-        self.env.config['autodoc_unqualified_typehints'] = True
+        # Create processor with unqualified_typehints enabled
+        self.processor = TypeProcessor(unqualified_typehints=True)
+        # Create processor with unqualified_typehints disabled for comparison
+        self.qualified_processor = TypeProcessor(unqualified_typehints=False)
     
-    def test_suppress_prefix(self):
-        """Test that module prefixes are suppressed when flag is set."""
-        xref = type_to_xref("module.submodule.Type", suppress_prefix=True)
-        self.assertEqual(xref.target, "module.submodule.Type")
-        self.assertEqual(xref.text, "Type")
-        self.assertFalse(xref.refspecific)
-    
-    def test_nested_module_prefix_suppression(self):
-        """Test that deeply nested module prefixes are suppressed."""
-        xref = type_to_xref("package.module.submodule.Class", suppress_prefix=True)
-        self.assertEqual(xref.target, "package.module.submodule.Class")
-        self.assertEqual(xref.text, "Class")
-    
-    def test_builtins_not_affected(self):
-        """Test that builtin types are not affected."""
-        xref = type_to_xref("int", suppress_prefix=True)
-        self.assertEqual(xref.target, "int")
-        self.assertEqual(xref.text, "int")
-    
-    def test_priority_with_special_prefixes(self):
-        """Test that special prefixes take priority over suppress_prefix."""
-        # Explicit ~ prefix should override suppress_prefix behavior
-        xref = type_to_xref("~module.Type", suppress_prefix=True)
-        self.assertEqual(xref.target, "module.Type")
-        self.assertEqual(xref.text, "Type")
+    def test_unqualified_type_name(self):
+        """Test that type names get simplified when unqualified_typehints is enabled."""
+        # With unqualified_typehints=True, module prefixes should be removed
+        self.assertEqual(self.processor.format_type("package.module.Type"), "Type")
+        self.assertEqual(self.processor.format_type("typing.List"), "List")
         
-        # Local reference should override suppress_prefix behavior
-        xref = type_to_xref(".OtherType", suppress_prefix=True)
-        self.assertEqual(xref.target, "OtherType")
-        self.assertEqual(xref.text, "OtherType")
-        self.assertTrue(xref.refspecific)
+        # With unqualified_typehints=False, full names should be preserved
+        self.assertEqual(self.qualified_processor.format_type("package.module.Type"), "package.module.Type")
+        self.assertEqual(self.qualified_processor.format_type("typing.List"), "typing.List")
     
-    def test_stringify_annotation_unqualified(self):
-        """Test the stringify_annotation function with unqualified=True."""
-        class CustomType:
-            __module__ = 'module'
-            __name__ = 'CustomType'
+    def test_crossref_with_unqualified_types(self):
+        """Test that crossrefs display unqualified names but target full names."""
+        result = self.processor.get_crossref("package.module.Type")
         
-        # With unqualified=False (default)
-        result = stringify_annotation(CustomType)
-        self.assertEqual(result, "module.CustomType")
+        # The reference target should still be the full name
+        self.assertEqual(result['reftarget'], "package.module.Type")
+        # But the display text should be the simplified name
+        self.assertEqual(result['reftext'], "Type")
+    
+    def test_unqualified_doesnt_affect_simple_types(self):
+        """Test that simple type names without dots aren't affected."""
+        self.assertEqual(self.processor.format_type("Type"), "Type")
+        self.assertEqual(self.processor.format_type("str"), "str")
+        self.assertEqual(self.processor.format_type("int"), "int")
+    
+    def test_unqualified_preserves_prefix_notation(self):
+        """Test that .Type and ~Type notation takes precedence over unqualified setting."""
+        # Feature 1 notation takes precedence
+        self.assertEqual(self.processor.format_type(".Type"), ".Type")
+        self.assertEqual(self.processor.format_type("~package.Type"), "~package.Type")
         
-        # With unqualified=True
-        result = stringify_annotation(CustomType, unqualified=True)
-        self.assertEqual(result, "CustomType")
+        # Verify that crossref still handles these correctly
+        dot_result = self.processor.get_crossref(".Type") 
+        self.assertEqual(dot_result['reftarget'], "Type")
+        self.assertEqual(dot_result['reftext'], "Type")
+        self.assertTrue(dot_result['refspecific'])
+        
+        tilde_result = self.processor.get_crossref("~package.Type")
+        self.assertEqual(tilde_result['reftarget'], "package.Type")
+        self.assertEqual(tilde_result['reftext'], "Type")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

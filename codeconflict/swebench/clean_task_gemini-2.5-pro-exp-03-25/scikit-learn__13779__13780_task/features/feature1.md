@@ -1,1 +1,0 @@
-Allow processing with a modifier even if some processors are disabled (`None`).
